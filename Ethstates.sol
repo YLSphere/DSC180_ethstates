@@ -7,43 +7,53 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract RealEstate is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, ERC721Pausable, Ownable {
+contract RealEstate is ERC721, ERC721URIStorage, ERC721Burnable, ERC721Pausable, Ownable {
+
     uint256 public tokenCounter;
     string public baseTokenURI;
 
-    struct RealEstateInfo {
-        address owner;
-        string zipCode;
+    struct Location {
+        uint32 zipCode;
         string city;
         string state;
+    }
+
+    struct PropertyFeatures {
         uint256 squareFootage;
         uint256 bedrooms;
         uint256 bathrooms;
         string parking;
         string additionalFeatures;
+    }
+
+    struct RealEstateInfo {
+        address owner;
+        Location location;
+        PropertyFeatures features;
         uint256 price;
         string contactDetails;
         string[] images;
-        string notes;
-        uint256 apn;
+        // string notes;
+        // uint256 apn;
+        // bool forSale;
     }
 
-    mapping(uint256 => RealEstateInfo) public realEstates;
+    RealEstateInfo[] public realEstates;
 
-    constructor(string memory _baseTokenURI) ERC721("RealEstate", "RE") {
+    constructor(string memory _baseTokenURI, address initialOwner) ERC721("RealEstate", "RE") Ownable(initialOwner) {
         baseTokenURI = _baseTokenURI;
         tokenCounter = 0;
     }
 
-    function safeMint(address to, string memory uri) public {
+    function safeMint(address to, string memory uri) public onlyOwner {
         uint256 tokenId = tokenCounter++;
         _safeMint(to, tokenId);
         string memory fullURI = string(abi.encodePacked(baseTokenURI, uri));
         _setTokenURI(tokenId, fullURI);
-}
+    }
 
     function mintRealEstate(
-        string memory _zipCode,
+        uint32 _zipCode,
         string memory _city,
         string memory _state,
         uint256 _squareFootage,
@@ -53,34 +63,46 @@ contract RealEstate is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnabl
         string memory _additionalFeatures,
         uint256 _price,
         string memory _contactDetails,
-        string[] memory _images,
-        string memory _notes,
-        uint256 _apn
-    ) 
-    external onlyOwner {
-        uint256 tokenId = tokenCounter;
+        string[] memory _images
+        // string memory _notes,
+        // uint256 _apn,
+        // bool _forSale
+    ) external onlyOwner {
         RealEstateInfo memory newRealEstate = RealEstateInfo({
             owner: msg.sender,
-            zipCode: _zipCode,
-            city: _city,
-            state: _state,
-            squareFootage: _squareFootage,
-            bedrooms: _bedrooms,
-            bathrooms: _bathrooms,
-            parking: _parking,
-            additionalFeatures: _additionalFeatures,
+            location: Location(_zipCode,_city, _state),
+            features: PropertyFeatures(_squareFootage, _bedrooms, _bathrooms, _parking, _additionalFeatures),
             price: _price,
             contactDetails: _contactDetails,
-            images: _images,
-            notes: _notes,
-            apn: _apn
+            images: _images
+            // notes: _notes,
+            // apn: _apn,
+            // forSale: _forSale
         });
 
-        realEstates[tokenId] = newRealEstate;
-        tokenCounter++;
+        realEstates.push(newRealEstate);
+        uint256 tokenId = realEstates.length - 1;
+        _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, "");
     }
+
+
+
+
 
     function updateBaseTokenURI(string memory newBaseTokenURI) external onlyOwner {
         baseTokenURI = newBaseTokenURI;
+    }
+
+    function _update(address to, uint256 tokenId, address auth) internal override(ERC721, ERC721Pausable) returns (address) {
+        return super._update(to, tokenId, auth);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, ERC721URIStorage) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function tokenURI(uint256 tokenId) public view virtual override(ERC721, ERC721URIStorage) returns (string memory) {
+        return ERC721URIStorage.tokenURI(tokenId);
     }
 }
