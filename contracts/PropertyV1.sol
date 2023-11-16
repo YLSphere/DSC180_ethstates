@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -33,10 +34,8 @@ contract PropertyV1 is
         Feature feature;
         uint256 cost;
         uint256 propertyId;
-        // owner and approver addresses
-        address owner;
-        address buyer;
         // for sale attributes
+        address buyer;
         bool wantSell;
         bool buyerApproved;
         bool sellerApproved;
@@ -46,10 +45,13 @@ contract PropertyV1 is
 
     mapping(uint256 => Property) public properties; // mapping of propertyId to Property struct
 
+    IERC20 internal usdcToken; // USDC token
+
     function initialize() public initializer {
         __ERC721_init("Property", "PROP");
         __Ownable_init();
         propertyCount = 0;
+        usdcToken = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
     }
 
     // Property addition event
@@ -122,7 +124,6 @@ contract PropertyV1 is
             feature: Feature(_yearBuilt, _squareFootage, _bedrooms, _bathrooms),
             cost: _cost,
             propertyId: propertyCount,
-            owner: _owner,
             buyer: address(0),
             wantSell: false,
             buyerApproved: false,
@@ -130,13 +131,15 @@ contract PropertyV1 is
         });
 
         _safeMint(_owner, propertyCount);
+        require(ownerOf(propertyCount) == _owner, "Owner not set");
+
         emit Add(_owner, propertyCount);
     }
 
     // Owner shall list lands for sale via this function
     function listPropertyForSale(
         uint256 _propertyId
-    ) public isPropertyOwner(_propertyId) {
+    ) external isPropertyOwner(_propertyId) {
         require(
             properties[_propertyId].wantSell == false,
             "Property is already available for sale"
@@ -147,7 +150,7 @@ contract PropertyV1 is
     // Owner shall cancel the sale via this function
     function cancelPropertySale(
         uint256 _propertyId
-    ) public isPropertyOwner(_propertyId) {
+    ) external isPropertyOwner(_propertyId) {
         require(
             properties[_propertyId].wantSell == true,
             "Property is not available for sale"
@@ -158,7 +161,7 @@ contract PropertyV1 is
     // Owner shall remove lands via this function
     function removeProperty(
         uint256 _propertyId
-    ) public isPropertyOwner(_propertyId) {
+    ) external isPropertyOwner(_propertyId) {
         require(_exists(_propertyId), "Property with this ID does not exist");
         require(
             properties[_propertyId].wantSell == false,
@@ -172,7 +175,7 @@ contract PropertyV1 is
     function agreeOnBuyer(
         uint _propertyId,
         address _buyer
-    ) public isPropertyOwner(_propertyId) {
+    ) external isPropertyOwner(_propertyId) {
         require(
             properties[_propertyId].buyer == address(0),
             "Buyer already set"
@@ -183,16 +186,21 @@ contract PropertyV1 is
     // Seller shall clear the agreed buyer via this function
     function clearAgreedBuyer(
         uint256 _propertyId
-    ) public isPropertyOwner(_propertyId) {
+    ) external isPropertyOwner(_propertyId) {
+        require(properties[_propertyId].buyer != address(0), "Buyer not set");
         require(
-            properties[_propertyId].buyer != address(0),
-            "Buyer not set"
+            properties[_propertyId].sellerApproved == false,
+            "Transfer already approved by the seller"
+        );
+        require(
+            properties[_propertyId].buyerApproved == false,
+            "Transfer already approved by the buyer"
         );
         properties[_propertyId].buyer = address(0);
     }
 
     // Buyer approves the transfer
-    function approveTransferAsBuyer(uint256 _propertyId) public {
+    function approveTransferAsBuyer(uint256 _propertyId) external {
         require(
             properties[_propertyId].buyer == msg.sender,
             "Caller is not the agreed approver for this land transfer"
@@ -202,32 +210,49 @@ contract PropertyV1 is
             "Transfer already approved by the buyer"
         );
         properties[_propertyId].buyerApproved = true;
+        usdcToken.approve(ownerOf(_propertyId), properties[_propertyId].cost);
+
+        checkAndCompleteTransfer(_propertyId);
     }
 
     // Seller approves the transfer
     function approveTransferAsSeller(
         uint256 _propertyId
-    ) public isPropertyOwner(_propertyId) {
+    ) external isPropertyOwner(_propertyId) {
         require(
             properties[_propertyId].sellerApproved == false,
             "Transfer already approved by the seller"
         );
         properties[_propertyId].sellerApproved = true;
+
+        checkAndCompleteTransfer(_propertyId);
     }
 
     // Function to check if both buyer and seller have approved the transfer
     // If approved, complete the transfer
-    function checkAndCompleteTransfer(
-        uint256 _propertyId
-    ) public payable isAgreedBuyer(_propertyId) {
-        address payable buyer = payable(properties[_propertyId].buyer);
-        address payable seller = payable(ownerOf(_propertyId));
+    function checkAndCompleteTransfer(uint256 _propertyId) internal {
+        if (
+            properties[_propertyId].buyerApproved &&
+            properties[_propertyId].sellerApproved
+        ) {
+            address buyer = properties[_propertyId].buyer;
+            address seller = ownerOf(_propertyId);
 
-        _transfer(seller, buyer, _propertyId); // transfer land to buyer
-        properties[_propertyId].wantSell = false; // remove from sale
-        seller.transfer(properties[_propertyId].cost); // transfer cost to seller
-        buyer.transfer(msg.value - properties[_propertyId].cost); // return extra payment to buyer (if any
+            usdcToken.transferFrom(buyer, seller, properties[_propertyId].cost); // transfer cost to seller (USDC)
+            _transfer(seller, buyer, _propertyId); // transfer property nft to buyer
+            require(ownerOf(_propertyId) == buyer, "Transfer failed");
 
-        emit Transfer(seller, buyer, _propertyId, properties[_propertyId].cost);
+            properties[_propertyId].wantSell = false; // remove from sale
+            properties[_propertyId].buyer = address(0); // reset buyer
+            properties[_propertyId].buyerApproved = false; // reset buyer approval
+            properties[_propertyId].sellerApproved = false; // reset seller approval
+
+            emit Transfer(
+                seller,
+                buyer,
+                _propertyId,
+                properties[_propertyId].cost
+            );
+        }
     }
 }
