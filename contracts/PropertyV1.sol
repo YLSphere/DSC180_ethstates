@@ -57,6 +57,9 @@ contract PropertyV1 is
     // Property addition event
     event Add(address indexed _owner, uint256 _propertyId);
 
+    // Property removal event
+    event Remove(address indexed _owner, uint256 _propertyId);
+
     // Property transfer event
     event Transfer(
         address indexed _seller,
@@ -155,6 +158,10 @@ contract PropertyV1 is
             properties[_propertyId].wantSell == true,
             "Property is not available for sale"
         );
+        require(
+            properties[_propertyId].buyer == address(0),
+            "Buyer already set"
+        );
         properties[_propertyId].wantSell = false;
     }
 
@@ -169,6 +176,8 @@ contract PropertyV1 is
         );
         _burn(_propertyId);
         delete properties[_propertyId];
+
+        emit Remove(msg.sender, _propertyId);
     }
 
     // Seller agree on the buyer before initiating the transfer process
