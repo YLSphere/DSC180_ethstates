@@ -5,7 +5,7 @@ import Marketplace from '../Marketplace.json';
 import { useLocation } from "react-router";
 
 export default function SellNFT () {
-    const [formParams, updateFormParams] = useState({ name: '', description: '', price: ''});
+    const [formParams, updateFormParams] = useState({squareFootage: '', bedrooms: '', bathrooms: '', parking: '', additionalFeatures: '', street: '', city: '', state: '', zipCode: '', contactDetails: '', price: ''});
     const [fileURL, setFileURL] = useState(null);
     const ethers = require("ethers");
     const [message, updateMessage] = useState('');
@@ -45,19 +45,19 @@ export default function SellNFT () {
             console.log("Error during file upload", e);
         }
     }
-
+  
     //This function uploads the metadata to IPFS
     async function uploadMetadataToIPFS() {
-        const {name, description, price} = formParams;
+        const {squareFootage, bedrooms, bathrooms, parking, additionalFeatures, street, city, state, zipCode, contactDetails, price} = formParams;
         //Make sure that none of the fields are empty
-        if( !name || !description || !price || !fileURL)
+        if( !squareFootage || !bedrooms || !fileURL|| !bathrooms|| !parking|| !additionalFeatures|| !street|| !city|| !state|| !zipCode|| !contactDetails|| !price)
         {
             updateMessage("Please fill all the fields!")
             return -1;
         }
 
         const nftJSON = {
-            name, description, price, image: fileURL
+            squareFootage, bedrooms, bathrooms, parking, additionalFeatures, street, city, state, zipCode, contactDetails, price, image: fileURL
         }
 
         try {
@@ -102,7 +102,7 @@ export default function SellNFT () {
             alert("Successfully listed your NFT!");
             enableButton();
             updateMessage("");
-            updateFormParams({ name: '', description: '', price: ''});
+            updateFormParams({squareFootage: '', bedrooms: '', bathrooms: '', parking: '', additionalFeatures: '', street: '', city: '', state: '', zipCode: '', contactDetails: '', price: ''});
             window.location.replace("/")
         }
         catch(e) {
@@ -114,29 +114,64 @@ export default function SellNFT () {
     return (
         <div className="">
         <Navbar></Navbar>
-        <div className="flex flex-col place-items-center mt-10" id="nftForm">
-            <form className="bg-white shadow-md rounded px-8 pt-4 pb-8 mb-4">
-            <h3 className="text-center font-bold text-purple-500 mb-8">Upload your NFT to the marketplace</h3>
+        <div className=" flex flex-col place-items-center mt-10" id="nftForm">
+            <form className="bg-white shadow-md rounded px-10 pt-4 pb-20 mb-4">
+            <h3 className="text-center font-bold text-black-500 mb-8">Upload your property to the marketplace</h3>
                 <div className="mb-4">
-                    <label className="block text-purple-500 text-sm font-bold mb-2" htmlFor="name">NFT Name</label>
-                    <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="Axie#4563" onChange={e => updateFormParams({...formParams, name: e.target.value})} value={formParams.name}></input>
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="name">Street Name</label>
+                    <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="1111 El Camino Drive" onChange={e => updateFormParams({...formParams, street: e.target.value})} value={formParams.street}></input>
+                </div>
+                <div className="mb-4">
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="name">City</label>
+                    <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="San Diego" onChange={e => updateFormParams({...formParams, city: e.target.value})} value={formParams.city}></input>
+                </div>
+                <div className="mb-4">
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="name">State</label>
+                    <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="CA" onChange={e => updateFormParams({...formParams, state: e.target.value})} value={formParams.state}></input>
+                </div>
+                <div className="mb-4">
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="name">Zipcode</label>
+                    <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="11111" onChange={e => updateFormParams({...formParams, zipCode: e.target.value})} value={formParams.zipCode}></input>
+                </div>
+
+                <div className="mb-4">
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="name">Square Footage</label>
+                    <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="960" onChange={e => updateFormParams({...formParams, squareFootage: e.target.value})} value={formParams.squareFootage}></input>
+                </div>
+                <div className="mb-4">
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="name">Bedrooms</label>
+                    <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="2" onChange={e => updateFormParams({...formParams, bedrooms: e.target.value})} value={formParams.bedrooms}></input>
+                </div>
+                <div className="mb-4">
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="name">Bathrooms</label>
+                    <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="2" onChange={e => updateFormParams({...formParams, bathrooms: e.target.value})} value={formParams.bathrooms}></input>
+                </div>
+                <div className="mb-4">
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="name">Parking Spaces</label>
+                    <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="1" onChange={e => updateFormParams({...formParams, parking: e.target.value})} value={formParams.parking}></input>
+                </div>
+
+                <div className="mb-4">
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="name">Contact email</label>
+                    <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" placeholder="example@gmail.com" onChange={e => updateFormParams({...formParams, contactDetails: e.target.value})} value={formParams.contactDetails}></input>
+                </div>
+
+                <div className="mb-6">
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="description">Additional Features</label>
+                    <textarea className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" cols="40" rows="5" id="description" type="text" placeholder="Property Description" value={formParams.additionalFeatures} onChange={e => updateFormParams({...formParams, additionalFeatures: e.target.value})}></textarea>
                 </div>
                 <div className="mb-6">
-                    <label className="block text-purple-500 text-sm font-bold mb-2" htmlFor="description">NFT Description</label>
-                    <textarea className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" cols="40" rows="5" id="description" type="text" placeholder="Axie Infinity Collection" value={formParams.description} onChange={e => updateFormParams({...formParams, description: e.target.value})}></textarea>
-                </div>
-                <div className="mb-6">
-                    <label className="block text-purple-500 text-sm font-bold mb-2" htmlFor="price">Price (in ETH)</label>
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="price">Price (in ETH)</label>
                     <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="number" placeholder="Min 0.01 ETH" step="0.01" value={formParams.price} onChange={e => updateFormParams({...formParams, price: e.target.value})}></input>
                 </div>
                 <div>
-                    <label className="block text-purple-500 text-sm font-bold mb-2" htmlFor="image">Upload Image (&lt;500 KB)</label>
+                    <label className="block text-black-500 text-sm font-bold mb-2" htmlFor="image">Upload Image (&lt;500 KB)</label>
                     <input type={"file"} onChange={OnChangeFile}></input>
                 </div>
                 <br></br>
                 <div className="text-red-500 text-center">{message}</div>
-                <button onClick={listNFT} className="font-bold mt-10 w-full bg-purple-500 text-white rounded p-2 shadow-lg" id="list-button">
-                    List NFT
+                <button onClick={listNFT} className="font-bold mt-10 w-full bg-blue-500 text-white rounded p-2 shadow-lg" id="list-button">
+                    List Property!
                 </button>
             </form>
         </div>

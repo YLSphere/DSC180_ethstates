@@ -11,7 +11,7 @@ body {
   /*font-family: 'M PLUS 1p', sans-serif;*/
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: black;
+  background-color: rgb(41, 40, 40);
   animation-duration: 3s;
   animation-timing-function: linear;
   animation-delay: 0s;
