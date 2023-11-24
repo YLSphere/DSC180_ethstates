@@ -5,33 +5,15 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
 
 contract PropertyV1 is
     Initializable,
-    ERC721EnumerableUpgradeable,
+    ERC721URIStorageUpgradeable,
     OwnableUpgradeable
 {
-    // Property location
-    struct Location {
-        string street;
-        string city;
-        string state;
-        uint32 zipCode;
-    }
-
-    // Property feature
-    struct Feature {
-        uint32 yearBuilt;
-        uint32 squareFootage;
-        uint32 bedrooms;
-        uint32 bathrooms;
-    }
-
     struct Property {
         // location and feature
-        Location location;
-        Feature feature;
         uint256 cost;
         uint256 propertyId;
         // for sale attributes
@@ -45,13 +27,10 @@ contract PropertyV1 is
 
     mapping(uint256 => Property) public properties; // mapping of propertyId to Property struct
 
-    IERC20 internal usdcToken; // USDC token
-
     function initialize() public initializer {
         __ERC721_init("Property", "PROP");
         __Ownable_init();
         propertyCount = 0;
-        usdcToken = IERC20(address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48));
     }
 
     // Property addition event
@@ -104,27 +83,13 @@ contract PropertyV1 is
     // Owner shall add lands via this function
     function addProperty(
         address _owner,
-        string memory _street,
-        string memory _city,
-        string memory _state,
-        uint32 _zipCode,
-        uint32 _yearBuilt,
-        uint32 _squareFootage,
-        uint32 _bedrooms,
-        uint32 _bathrooms,
+        string memory _uri,
         uint256 _cost
     ) external onlyOwner {
-        require(bytes(_street).length > 0, "Street cannot be empty");
-        require(bytes(_city).length > 0, "City cannot be empty");
-        require(bytes(_state).length > 0, "State cannot be empty");
-        require(_zipCode > 0, "Zip code cannot be zero");
-        require(_yearBuilt > 0, "Year built cannot be zero");
-        require(_squareFootage > 0, "Square footage cannot be zero");
+        require(bytes(_uri).length > 0, "URI cannot be empty");
         require(_cost > 0, "Cost cannot be zero");
         propertyCount++;
         properties[propertyCount] = Property({
-            location: Location(_street, _city, _state, _zipCode),
-            feature: Feature(_yearBuilt, _squareFootage, _bedrooms, _bathrooms),
             cost: _cost,
             propertyId: propertyCount,
             buyer: address(0),
@@ -134,6 +99,7 @@ contract PropertyV1 is
         });
 
         _safeMint(_owner, propertyCount);
+        _setTokenURI(propertyCount, _uri);
         require(ownerOf(propertyCount) == _owner, "Owner not set");
 
         emit Add(_owner, propertyCount);
@@ -209,7 +175,9 @@ contract PropertyV1 is
     }
 
     // Buyer approves the transfer
-    function approveTransferAsBuyer(uint256 _propertyId) external {
+    function approveTransferAsBuyer(uint256 _propertyId) external payable {
+        require(_exists(_propertyId), "Property with this ID does not exist");
+        require(msg.value >= properties[_propertyId].cost, "Insufficient payment");
         require(
             properties[_propertyId].buyer == msg.sender,
             "Caller is not the agreed approver for this land transfer"
@@ -219,7 +187,7 @@ contract PropertyV1 is
             "Transfer already approved by the buyer"
         );
         properties[_propertyId].buyerApproved = true;
-        usdcToken.approve(ownerOf(_propertyId), properties[_propertyId].cost);
+        payable(msg.sender).transfer(msg.value - properties[_propertyId].cost); // refund excess payment
 
         checkAndCompleteTransfer(_propertyId);
     }
@@ -247,7 +215,7 @@ contract PropertyV1 is
             address buyer = properties[_propertyId].buyer;
             address seller = ownerOf(_propertyId);
 
-            usdcToken.transferFrom(buyer, seller, properties[_propertyId].cost); // transfer cost to seller (USDC)
+            payable(seller).transfer(properties[_propertyId].cost); // transfer cost to seller
             _transfer(seller, buyer, _propertyId); // transfer property nft to buyer
             require(ownerOf(_propertyId) == buyer, "Transfer failed");
 
