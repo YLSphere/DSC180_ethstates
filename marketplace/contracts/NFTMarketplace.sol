@@ -16,7 +16,7 @@ contract NFTMarketplace is ERC721URIStorage {
     //owner is the contract address that created the smart contract
     address payable owner;
     //The fee charged by the marketplace to be allowed to list an NFT
-    uint256 listPrice = 0.001 ether;
+    uint256 listPrice = 0.01 ether;
 
     //The structure to store info about a listed token
     struct ListedToken {
@@ -68,7 +68,7 @@ contract NFTMarketplace is ERC721URIStorage {
     //The first time a token is created, it is listed here TO BE REPLACED
     function createToken(string memory tokenURI, uint256 price) public payable returns (uint) {
         //Make sure the sender sent enough ETH to pay for listing
-        require(msg.value == listPrice, "Please have enough ether to list your NFT.");
+        require(msg.value >= listPrice, "Please have enough ether to list your NFT.");
         //Just sanity check
         require(price > 0, "Make sure the price isn't negative");
         //Increment the tokenId counter, which is keeping track of the number of minted NFTs

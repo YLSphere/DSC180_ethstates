@@ -12,13 +12,13 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 });
 
 module.exports = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: "sepolia",
   networks: {
     hardhat: {
-      chainId: 1337
+      chainId: 11155111
     },
-    mumbai: {
-      url: `https://polygon-mumbai.g.alchemy.com/v2/nAhiCHKvZkhkp4A7PkkCIBON0-BXW26d`,
+    sepolia: {
+      url: "https://eth-sepolia.g.alchemy.com/v2/dCdBA95lq6QqjtUQNDLX8rRuAOZr1vBv",
       //accounts: [process.env.privateKey]
     },
     matic: {
@@ -27,7 +27,7 @@ module.exports = {
     },
     goerli: {
       url: process.env.REACT_APP_ALCHEMY_API_URL,
-      accounts: [ process.env.REACT_APP_PRIVATE_KEY ]
+      accounts: [ process.env.REACT_APP_PRIVATE_KEY]
     }
   },
   solidity: {
