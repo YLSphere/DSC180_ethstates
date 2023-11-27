@@ -12,3 +12,9 @@ node_modules
 # solidity-coverage files
 /coverage
 /coverage.json
+
+# Next.js files
+/.next
+
+# openzeppelin files
+/.openzeppelin
