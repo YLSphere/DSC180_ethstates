@@ -4,16 +4,29 @@
   "description": "DSC180 Final Project - Blockchain Property platform",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.14.18",
+    "@mui/material": "^5.14.18",
     "@openzeppelin/contracts": "4.9.3",
+    "@rainbow-me/rainbowkit": "^1.3.0",
     "dotenv": "^16.3.1",
     "hardhat": "^2.18.3",
-    "react": "^18.2.0"
+    "next": "^14.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "viem": "^1.19.9",
+    "wagmi": "^1.4.7"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
