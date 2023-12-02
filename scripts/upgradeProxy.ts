@@ -1,7 +1,7 @@
 import { ethers, upgrades } from "hardhat";
 
 // TO DO: Place the address of your proxy here!
-const proxyAddress = "";
+const proxyAddress = "0x0696415dE53e87fBF9EEd8DB6007D01451996A42";
 
 async function main(): Promise<void> {
   const PropertyV2 = await ethers.getContractFactory("PropertyV2");

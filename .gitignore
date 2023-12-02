@@ -13,8 +13,5 @@ node_modules
 /coverage
 /coverage.json
 
-# Next.js files
-/.next
-
 # openzeppelin files
 /.openzeppelin
