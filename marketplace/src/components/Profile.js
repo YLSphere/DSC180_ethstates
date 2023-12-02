@@ -88,7 +88,7 @@ export default function Profile () {
                     })}
                 </div>
                 <div className="mt-10 text-xl">
-                    {data.length == 0 ? "Oops, No NFT data to display (Are you logged in?)":""}
+                    {data.length === 0 ? "Oops, No NFT data to display (Are you logged in?)":""}
                 </div>
             </div>
             </div>

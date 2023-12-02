@@ -2,6 +2,7 @@ const { ethers } = require("hardhat");
 const hre = require("hardhat");
 const fs = require("fs");
 
+
 async function main() {
   const [deployer] = await ethers.getSigners();
   const balance = await deployer.getBalance();
