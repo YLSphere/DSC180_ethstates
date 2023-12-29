@@ -16,6 +16,7 @@ contract PropertyV1 is
         // location and feature
         uint256 cost;
         uint256 propertyId;
+        string uri;
         // for sale attributes
         address buyer;
         bool wantSell;
@@ -81,28 +82,25 @@ contract PropertyV1 is
     }
 
     // Owner shall add lands via this function
-    function addProperty(
-        address _owner,
-        string memory _uri,
-        uint256 _cost
-    ) external onlyOwner {
+    function addProperty(string memory _uri, uint256 _cost) external {
         require(bytes(_uri).length > 0, "URI cannot be empty");
         require(_cost > 0, "Cost cannot be zero");
         propertyCount++;
         properties[propertyCount] = Property({
             cost: _cost,
             propertyId: propertyCount,
+            uri: _uri,
             buyer: address(0),
             wantSell: false,
             buyerApproved: false,
             sellerApproved: false
         });
 
-        _safeMint(_owner, propertyCount);
+        _safeMint(_msgSender(), propertyCount);
         _setTokenURI(propertyCount, _uri);
-        require(ownerOf(propertyCount) == _owner, "Owner not set");
+        require(ownerOf(propertyCount) == _msgSender(), "Owner not set");
 
-        emit Add(_owner, propertyCount);
+        emit Add(_msgSender(), propertyCount);
     }
 
     // Owner shall list lands for sale via this function
@@ -177,7 +175,10 @@ contract PropertyV1 is
     // Buyer approves the transfer
     function approveTransferAsBuyer(uint256 _propertyId) external payable {
         require(_exists(_propertyId), "Property with this ID does not exist");
-        require(msg.value >= properties[_propertyId].cost, "Insufficient payment");
+        require(
+            msg.value >= properties[_propertyId].cost,
+            "Insufficient payment"
+        );
         require(
             properties[_propertyId].buyer == msg.sender,
             "Caller is not the agreed approver for this land transfer"
@@ -231,5 +232,52 @@ contract PropertyV1 is
                 properties[_propertyId].cost
             );
         }
+    }
+
+    // Function to get all the properties owned by a specific address
+    function getPropertiesByOwner(
+        address _owner
+    ) external view returns (Property[] memory) {
+        uint256 propertyCountByOwner = balanceOf(_owner);
+        Property[] memory propertiesByOwner = new Property[](
+            propertyCountByOwner
+        );
+        uint256 counter = 0;
+        for (
+            uint256 i = 1;
+            i <= propertyCount && counter < propertyCountByOwner;
+            i++
+        ) {
+            if (ownerOf(i) == _owner) {
+                propertiesByOwner[counter] = properties[i];
+                counter++;
+            }
+        }
+        return propertiesByOwner;
+    }
+
+    // Function to get all the properties listed for sale
+    function getPropertiesForSale() external view returns (Property[] memory) {
+        uint256 propertyCountForSale = 0;
+        for (uint256 i = 1; i <= propertyCount; i++) {
+            if (properties[i].wantSell) {
+                propertyCountForSale++;
+            }
+        }
+        Property[] memory propertiesForSale = new Property[](
+            propertyCountForSale
+        );
+        uint256 counter = 0;
+        for (
+            uint256 i = 1;
+            i <= propertyCount && counter < propertyCountForSale;
+            i++
+        ) {
+            if (properties[i].wantSell) {
+                propertiesForSale[counter] = properties[i];
+                counter++;
+            }
+        }
+        return propertiesForSale;
     }
 }
