@@ -4,26 +4,16 @@ import {
   FormControl,
   FormLabel,
   Input,
+  useToast,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
+import Dropzone from "../components/templates/form/Dropzone";
 
-import pinata from "../services/Pinata";
+import { pinataImage } from "../queries/pinata";
+import { useAddProperty } from "../hooks/dapp/useDapp";
 
-interface PinataContent {
-  streetAddress: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  squareFootage: number;
-  bedrooms: number;
-  bathrooms: number;
-  parkingSpots: number;
-  addititonalFeatures: string;
-  price: number;
-  forSale: boolean;
-  image: string;
-}
+import { PinataContent } from "../types/dapp";
 
 const formFields = [
   {
@@ -38,6 +28,13 @@ const formFields = [
     label: "City",
     placeholder: "City",
     propName: "city",
+    isRequired: true,
+  },
+  {
+    id: "state",
+    label: "State",
+    placeholder: "State",
+    propName: "state",
     isRequired: true,
   },
   {
@@ -97,6 +94,8 @@ const formFields = [
 ];
 
 export default function ListProperty() {
+  const toast = useToast();
+  const addProperty = useAddProperty();
   const [pinataContent, setPinataContent] = useState<PinataContent>({
     streetAddress: "",
     city: "",
@@ -109,9 +108,40 @@ export default function ListProperty() {
     addititonalFeatures: "",
     price: 0,
     forSale: false,
-    image: "",
+    images: [],
   });
   const { address, isConnected } = useAccount();
+
+  useEffect(() => {
+    // When the mutation is loading, show a toast
+    if (addProperty.isLoading) {
+      toast({
+        status: "loading",
+        title: "Property NFT pending",
+        description: "Please wait",
+      });
+    }
+
+    // When the mutation fails, show a toast
+    if (addProperty.isError) {
+      toast({
+        status: "error",
+        title: "Property NFT rejected",
+        description: "Something wrong",
+        duration: 5000,
+      });
+    }
+
+    // When the mutation is successful, show a toast
+    if (addProperty.isSuccess) {
+      toast({
+        status: "success",
+        title: "Property NFT minted",
+        description: "Looks great",
+        duration: 5000,
+      });
+    }
+  }, [addProperty]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     // Prevent the default form submission behavior
@@ -125,14 +155,37 @@ export default function ListProperty() {
         },
       };
 
-      pinata
-        .post("/pinning/pinJSONToIPFS", {
-          pinataContent,
-          pinataMetadata,
-        })
-        .then(({ data }) => console.log(data))
-        .catch(console.log);
+      addProperty.mutate({ address, pinataContent, pinataMetadata });
     }
+  }
+
+  async function handleUpload(
+    files: File[],
+    setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
+  ) {
+    setIsLoading(true);
+
+    const pinataMetadata = {
+      name: "EthStates Property Image",
+      keyvalues: {
+        ownerAddress: address,
+      },
+    };
+    const cids = await Promise.all(
+      files.map(async (file) => {
+        const response = await pinataImage.post("/pinning/pinFileToIPFS", {
+          file,
+          pinataMetadata,
+        });
+        return response.data.IpfsHash;
+      })
+    );
+
+    setPinataContent({
+      ...pinataContent,
+      images: cids,
+    });
+    setIsLoading(false);
   }
 
   return (
@@ -161,7 +214,9 @@ export default function ListProperty() {
             </FormControl>
           ))}
 
-          <Button mt={4} colorScheme="teal" type="submit">
+          <Dropzone onUpload={handleUpload} />
+
+          <Button my={4} colorScheme="teal" type="submit">
             Submit
           </Button>
         </form>
