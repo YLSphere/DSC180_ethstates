@@ -8,16 +8,15 @@ import { Nft } from "../types/dapp";
 
 export default function Marketplace() {
   const { address, isConnected } = useAccount();
-  const [nfts, setNfts] = useState<Nft[]>([]);
+  const [nfts, setNfts] = useState<Nft[] | undefined>([]);
   const { isLoading, data } = useGetAllPropertiesForSale(address);
-  const propertyCount = 10;
 
   useEffect(() => {
     if (isConnected && !isLoading) {
       console.log(data);
       setNfts(data);
     }
-  }, [isConnected, isLoading]);
+  }, [isConnected, isLoading, data]);
 
   return (
     <main>
@@ -41,6 +40,7 @@ export default function Marketplace() {
               propertyId={nft.propertyId}
               beds={nft.bedrooms}
               baths={nft.bathrooms}
+              streetAddress={nft.streetAddress}
               formattedPrice={new Intl.NumberFormat("en-US", {
                 style: "currency",
                 currency: "USD",

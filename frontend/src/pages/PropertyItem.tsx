@@ -9,6 +9,7 @@ export default function PropertyItem() {
   const id = location.state.id;
   const { address, isConnected } = useAccount();
 
+
   return (
     <main>
       <Container maxWidth="container.lg">

@@ -56,6 +56,7 @@ export function useGetAllPropertiesByOwner(address: `0x${string}` | undefined) {
       );
     },
     retry: 2,
+    refetchInterval: 10000,
   });
 }
 
@@ -77,6 +78,7 @@ export function useGetAllPropertiesForSale(address: `0x${string}` | undefined) {
       );
     },
     retry: 2,
+    refetchInterval: 10000,
   });
 }
 
@@ -90,6 +92,7 @@ export function useParticularProperty(
       const dapp = await initializeDapp(address);
       return dapp.properties(id as number);
     },
+    refetchInterval: 10000,
   });
 }
 

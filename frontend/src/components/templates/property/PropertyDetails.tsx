@@ -23,6 +23,7 @@ import {
   useParticularProperty,
 } from "../../../hooks/dapp/useDapp";
 import { Result, ResultIndex } from "../../../types/dapp";
+import { useAccount } from "wagmi";
 
 // const PropertyDetails = () => {
 //   const [selectedSize, setSelectedSize] = useState<string>("");
@@ -279,22 +280,86 @@ import { Result, ResultIndex } from "../../../types/dapp";
 
 interface Props {
   address: `0x${string}` | undefined;
-  id: string | undefined;
+  id: number | undefined;
 }
 
 const PropertyDetails = (props: Props) => {
+  const toast = useToast();
   const { id, address } = props;
+  const { isConnected } = useAccount();
   const { isLoading, data } = useParticularProperty(address, id);
   const [result, setResult] = useState<Result | undefined>();
   const listForSale = useListForSale();
   const cancelForSale = useCancelForSale();
 
   useEffect(() => {
-    if (!isLoading) {
+    if (isConnected && !isLoading) {
       console.log(data);
       setResult(data);
     }
-  }, [isLoading]);
+  }, [isConnected, isLoading, data]);
+
+  useEffect(() => {
+    // When the mutation is loading, show a toast
+    if (listForSale.isLoading) {
+      toast({
+        status: "loading",
+        title: "Property NFT pending to be listed",
+        description: "Please wait",
+      });
+    }
+
+    // When the mutation fails, show a toast
+    if (listForSale.isError) {
+      toast({
+        status: "error",
+        title: "Property NFT rejected to be listed",
+        description: "Something wrong",
+        duration: 5000,
+      });
+    }
+
+    // When the mutation is successful, show a toast
+    if (listForSale.isSuccess) {
+      toast({
+        status: "success",
+        title: "Property NFT listed",
+        description: "Looks great",
+        duration: 5000,
+      });
+    }
+  }, [listForSale.isLoading, listForSale.isError, listForSale.isSuccess]);
+
+  useEffect(() => {
+    // When the mutation is loading, show a toast
+    if (cancelForSale.isLoading) {
+      toast({
+        status: "loading",
+        title: "Property NFT pending to be removed from sale",
+        description: "Please wait",
+      });
+    }
+
+    // When the mutation fails, show a toast
+    if (cancelForSale.isError) {
+      toast({
+        status: "error",
+        title: "Property NFT rejected to be removed from sale",
+        description: "Something wrong",
+        duration: 5000,
+      });
+    }
+
+    // When the mutation is successful, show a toast
+    if (cancelForSale.isSuccess) {
+      toast({
+        status: "success",
+        title: "Property NFT removed from sale",
+        description: "Looks great",
+        duration: 5000,
+      });
+    }
+  }, [cancelForSale.isLoading, cancelForSale.isError, cancelForSale.isSuccess]);
 
   return (
     <Box>

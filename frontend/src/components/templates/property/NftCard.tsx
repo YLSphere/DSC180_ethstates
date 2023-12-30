@@ -7,19 +7,28 @@ interface Props {
   propertyId?: number;
   beds?: number;
   baths?: number;
+  streetAddress?: string;
   formattedPrice?: string;
   imageUrl?: string;
 }
 
 export default function NftCard(props: Props) {
-  const { h, isLoading, propertyId, beds, baths, formattedPrice, imageUrl } =
-    props;
+  const {
+    h,
+    isLoading,
+    propertyId,
+    beds,
+    baths,
+    streetAddress,
+    formattedPrice,
+    imageUrl,
+  } = props;
   const property = {
     imageUrl: imageUrl || "https://bit.ly/2Z4KKcF",
     imageAlt: "Rear view of modern home with pool",
     beds: beds || 3,
     baths: baths || 2,
-    title: "Modern home in city center in the heart of historic Los Angeles",
+    title: streetAddress || "Modern home in city center in the heart of historic Los Angeles",
     formattedPrice: formattedPrice || "$1,900.00",
     reviewCount: 34,
     rating: 4,
@@ -74,7 +83,9 @@ export default function NftCard(props: Props) {
             lineHeight="tight"
             noOfLines={1}
           >
-            {property.title}
+            <Link to="/property" state={{ id: propertyId }}>
+              {property.title}
+            </Link>
           </Box>
 
           <Box>

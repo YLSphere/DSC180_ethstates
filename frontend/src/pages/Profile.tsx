@@ -13,14 +13,14 @@ export default function Profile() {
   const [nfts, setNfts] = useState<Nft[]>([]);
 
   const { address, isConnected } = useAccount();
-  const { isLoading, isSuccess, data } = useGetAllPropertiesByOwner(address);
+  const { isLoading, data } = useGetAllPropertiesByOwner(address);
 
   useEffect(() => {
-    if (isConnected && isSuccess) {
+    if (isConnected && !isLoading) {
       console.log(data);
       setNfts(data);
     }
-  }, [isConnected, data]);
+  }, [isConnected, isLoading, data]);
 
   return (
     <main>
@@ -40,6 +40,7 @@ export default function Profile() {
                 propertyId={nft.propertyId}
                 beds={nft.bedrooms}
                 baths={nft.bathrooms}
+                streetAddress={nft.streetAddress}
                 formattedPrice={new Intl.NumberFormat("en-US", {
                   style: "currency",
                   currency: "USD",
