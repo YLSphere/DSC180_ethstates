@@ -9,7 +9,6 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 
 import pinata from "../services/Pinata";
-
 interface PinataContent {
   streetAddress: string;
   city: string;
@@ -23,6 +22,7 @@ interface PinataContent {
   price: number;
   forSale: boolean;
   image: string;
+  propID: number;
 }
 
 const formFields = [
@@ -96,6 +96,7 @@ const formFields = [
   },
 ];
 
+let d1 = new Date().getTime()
 export default function ListProperty() {
   const [pinataContent, setPinataContent] = useState<PinataContent>({
     streetAddress: "",
@@ -110,8 +111,11 @@ export default function ListProperty() {
     price: 0,
     forSale: false,
     image: "",
+    propID: d1,
   });
   const { address, isConnected } = useAccount();
+  
+
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     // Prevent the default form submission behavior
@@ -119,7 +123,7 @@ export default function ListProperty() {
 
     if (isConnected) {
       const pinataMetadata = {
-        name: "EthStates Property",
+        name: "ETHStates Property " + d1.toString(),
         keyvalues: {
           ownerAddress: address,
         },
@@ -130,9 +134,17 @@ export default function ListProperty() {
           pinataContent,
           pinataMetadata,
         })
-        .then(({ data }) => console.log(data))
+        .then(function (response) {
+          console.log("image uploaded", response.data.IpfsHash)
+          return {
+             success: true,
+             // Returns  IPFS Hash Link
+             pinataURL: "https://gateway.pinata.cloud/ipfs/" + response.data.IpfsHash
+         };
+      })
         .catch(console.log);
     }
+
   }
 
   return (
