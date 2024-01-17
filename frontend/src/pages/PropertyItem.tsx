@@ -1,13 +1,25 @@
-import { Container } from "@chakra-ui/react";
-import { useParams } from "react-router-dom";
+import { Container, Text } from "@chakra-ui/react";
+import { useLocation } from "react-router-dom";
+
+import { PropertyDetails } from "../components/templates/property/PropertyDetails";
+import { useAccount } from "wagmi";
 
 export default function PropertyItem() {
-  const { id } = useParams();
+  const location = useLocation();
+  const id = location.state.id;
+  const { address, isConnected } = useAccount();
+
 
   return (
     <main>
-      <Container>
+      <Container maxWidth="container.lg">
         <h1>Hello, Property Item {id} Page!</h1>
+
+        {isConnected ? (
+          <PropertyDetails id={id} address={address} />
+        ) : (
+          <Text>Connect to your wallet first!</Text>
+        )}
       </Container>
     </main>
   );

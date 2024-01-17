@@ -5,6 +5,8 @@ import "@openzeppelin/hardhat-upgrades";
 import { config as dotenvConfig } from "dotenv";
 dotenvConfig();
 
+import "./tasks/faucet";
+
 const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.20",
