@@ -93,6 +93,7 @@ const formFields = [
   },
 ];
 
+let d1 = new Date().getTime()
 export default function ListProperty() {
   const toast = useToast();
   const addProperty = useAddProperty();
@@ -111,6 +112,8 @@ export default function ListProperty() {
     images: [],
   });
   const { address, isConnected } = useAccount();
+  
+
 
   useEffect(() => {
     // When the mutation is loading, show a toast
@@ -149,7 +152,7 @@ export default function ListProperty() {
 
     if (isConnected) {
       const pinataMetadata = {
-        name: "EthStates Property",
+        name: "ETHStates Property " + d1.toString(),
         keyvalues: {
           ownerAddress: address,
         },
@@ -157,6 +160,7 @@ export default function ListProperty() {
 
       addProperty.mutate({ address, pinataContent, pinataMetadata });
     }
+
   }
 
   async function handleUpload(
