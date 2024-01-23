@@ -1,4 +1,5 @@
-import { Badge, Box, Container, Heading, Spinner } from "@chakra-ui/react";
+
+import { Badge, Box, Container, Heading, Spinner, Flex, FormControl, FormLabel, Input, Select } from "@chakra-ui/react";
 import NftCard from "../components/templates/property/NftCard";
 import NftCollection from "../components/templates/property/NftCollection";
 import { useGetAllPropertiesForSale } from "../hooks/dapp/useDapp";
@@ -10,6 +11,13 @@ export default function Marketplace() {
   const { address, isConnected } = useAccount();
   const [nfts, setNfts] = useState<Nft[] | undefined>([]);
   const { isLoading, data } = useGetAllPropertiesForSale(address);
+  const [filters, setFilters] = useState({
+    bedrooms: '',
+    bathrooms: '',
+    city: '',
+    state: '',
+    zipCode:''
+  });
 
   useEffect(() => {
     if (isConnected && !isLoading) {
@@ -18,6 +26,23 @@ export default function Marketplace() {
     }
   }, [isConnected, isLoading, data]);
 
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+    console.log("Filters updated to:", { ...filters, [name]: value }); // Debugging
+  };
+
+  const filteredNfts = nfts?.filter(nft =>
+    (filters.bedrooms === '' || nft.bedrooms === parseInt(filters.bedrooms)) &&
+    (filters.bathrooms === '' || nft.bathrooms === parseInt(filters.bathrooms)) &&
+    (filters.city === '' || nft.city.toLowerCase().includes(filters.city.toLowerCase())) &&
+    (filters.state === '' || nft.state.toLowerCase().includes(filters.state.toLowerCase())) &&
+    (filters.zipCode === '' || nft.zipCode.includes(filters.zipCode))
+
+  
+  );
+    
+  console.log("Filtered NFTs:", filteredNfts);
   return (
     <main>
       {isLoading ? (
@@ -42,6 +67,26 @@ export default function Marketplace() {
               {nfts?.length}
             </Badge>
           </Heading>
+        <Flex wrap="wrap" justifyContent="space-between" my={5}>
+          <FormControl w="200px" mr={2}>
+            <FormLabel>Bedrooms</FormLabel>
+            <Input name="bedrooms" onChange={handleFilterChange} placeholder="Filter by Bedrooms"/>
+          </FormControl>
+          <FormControl w="200px" mr={2}>
+            <FormLabel>City</FormLabel>
+            <Input name="city" onChange={handleFilterChange} placeholder="Filter by City" />
+          </FormControl>
+
+          <FormControl w="200px" mr={2}>
+            <FormLabel>State</FormLabel>
+            <Input name="state" onChange={handleFilterChange} placeholder="Filter by State" />
+          </FormControl>
+
+          <FormControl w="200px" mr={2}>
+            <FormLabel>Zip Code</FormLabel>
+            <Input name="zipCode" onChange={handleFilterChange} placeholder="Filter by Zip Code" />
+          </FormControl>
+          </Flex>
           <NftCollection>
             {/* Demo */}
             {/* {Array(propertyCount)
@@ -50,7 +95,7 @@ export default function Marketplace() {
               <NftCard key={i} isLoading={true} />
             ))} */}
 
-            {nfts?.map((nft, i) => (
+            {filteredNfts?.map((nft, i) => (
               <NftCard
                 key={i}
                 propertyId={nft.propertyId}
