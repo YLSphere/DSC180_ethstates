@@ -13,7 +13,7 @@ export default function PropertyItem() {
   return (
     <main>
       <Container maxWidth="container.lg">
-        <h1>Hello, Property Item {id} Page!</h1>
+        <h1>Hello, Property Item {id.toString()} Page!</h1>
 
         {isConnected ? (
           <PropertyDetails id={id} address={address} />

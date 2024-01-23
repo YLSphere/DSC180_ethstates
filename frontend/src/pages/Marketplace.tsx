@@ -1,4 +1,4 @@
-import { Container, Heading } from "@chakra-ui/react";
+import { Badge, Box, Container, Heading, Spinner } from "@chakra-ui/react";
 import NftCard from "../components/templates/property/NftCard";
 import NftCollection from "../components/templates/property/NftCollection";
 import { useGetAllPropertiesForSale } from "../hooks/dapp/useDapp";
@@ -20,41 +20,58 @@ export default function Marketplace() {
 
   return (
     <main>
-      <Container maxWidth="container.lg" my={5}>
-        <Heading as="h1" size="xl" mt={8}>
-          Marketplace
-        </Heading>
-        <NftCollection>
-          {/* Demo */}
-          {/* {Array(propertyCount)
+      {isLoading ? (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="90vh"
+        >
+          <Spinner size="xl" color="green" />
+        </Box>
+      ) : (
+        <Container maxWidth="container.lg" my={5}>
+          <Heading as="h1" size="xl" mt={8}>
+            Marketplace{" "}
+            <Badge
+              borderRadius="full"
+              fontSize="x-large"
+              px="2"
+              colorScheme="green"
+            >
+              {nfts?.length}
+            </Badge>
+          </Heading>
+          <NftCollection>
+            {/* Demo */}
+            {/* {Array(propertyCount)
             .fill("")
             .map((_, i) => (
               <NftCard key={i} isLoading={true} />
             ))} */}
 
-          {nfts?.map((nft, i) => (
-            <NftCard
-              h="200px"
-              isLoading={isLoading}
-              key={i}
-              propertyId={nft.propertyId}
-              beds={nft.bedrooms}
-              baths={nft.bathrooms}
-              streetAddress={nft.streetAddress}
-              formattedPrice={new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-                maximumFractionDigits: 0,
-              }).format(nft.price)}
-              imageUrl={
-                nft.images[0]
-                  ? `https://gateway.pinata.cloud/ipfs/${nft.images[0]}`
-                  : ""
-              }
-            />
-          ))}
-        </NftCollection>
-      </Container>
+            {nfts?.map((nft, i) => (
+              <NftCard
+                key={i}
+                propertyId={nft.propertyId}
+                beds={nft.bedrooms}
+                baths={nft.bathrooms}
+                streetAddress={nft.streetAddress}
+                formattedPrice={new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                  maximumFractionDigits: 0,
+                }).format(nft.price)}
+                imageUrl={
+                  nft.images[0]
+                    ? `https://gateway.pinata.cloud/ipfs/${nft.images[0]}`
+                    : ""
+                }
+              />
+            ))}
+          </NftCollection>
+        </Container>
+      )}
     </main>
   );
 }
