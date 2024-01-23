@@ -2,7 +2,6 @@ import { Box, Badge, Image } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 
 interface Props {
-  h?: string | string[];
   isLoading?: boolean;
   propertyId?: number;
   beds?: number;
@@ -13,14 +12,8 @@ interface Props {
 }
 
 export default function NftCard(props: Props) {
-  const {
-    propertyId,
-    beds,
-    baths,
-    streetAddress,
-    formattedPrice,
-    imageUrl,
-  } = props;
+  const { propertyId, beds, baths, streetAddress, formattedPrice, imageUrl } =
+    props;
   const property = {
     imageUrl: imageUrl || "https://bit.ly/2Z4KKcF",
     imageAlt: "Rear view of modern home with pool",
@@ -36,13 +29,15 @@ export default function NftCard(props: Props) {
 
   return (
     <Box maxW="sm" borderWidth="1px" borderRadius="lg" overflow="hidden">
-      <Link to="/property" state={{ id: propertyId }}>
-        <Image
-          src={property.imageUrl}
-          alt={property.imageAlt}
-          draggable={false}
-        />
-      </Link>
+      <Box overflow="hidden" height="200px">
+        <Link to="/property" state={{ id: propertyId }}>
+          <Image
+            src={property.imageUrl}
+            alt={property.imageAlt}
+            draggable={false}
+          />
+        </Link>
+      </Box>
 
       <Box p="6">
         <Box display="flex" alignItems="baseline">

@@ -64,7 +64,9 @@ export default function Marketplace() {
                 }).format(nft.price)}
                 imageUrl={
                   nft.images[0]
-                    ? `https://gateway.pinata.cloud/ipfs/${nft.images[0]}`
+                    ? `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${
+                        nft.images[0]
+                      }`
                     : ""
                 }
               />

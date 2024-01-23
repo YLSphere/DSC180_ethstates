@@ -20,6 +20,11 @@ export enum ResultIndex {
 
 export interface Nft {
   propertyId: number;
+  uri?: string;
+  buyer?: `0x${string}`;
+  wantSell?: boolean;
+  buyerApproved?: boolean;
+  sellerApproved?: boolean;
   streetAddress: string;
   city: string;
   state: string;
