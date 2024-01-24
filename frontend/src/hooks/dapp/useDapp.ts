@@ -60,6 +60,30 @@ export function useGetAllPropertiesByOwner(address: `0x${string}` | undefined) {
   });
 }
 
+export function useGetPropertyCount(address: `0x${string}` | undefined) {
+  return useQuery({
+    queryKey: ["dapp", "getPropertyCount", address],
+    queryFn: async () => {
+      const dapp = await initializeDapp(address);
+      return dapp.getPropertyCount();
+    },
+    retry: 2,
+    refetchInterval: 10000,
+  });
+}
+
+export function useGetListedPropertyCount(address: `0x${string}` | undefined) {
+  return useQuery({
+    queryKey: ["dapp", "getListedPropertyCount", address],
+    queryFn: async () => {
+      const dapp = await initializeDapp(address);
+      return dapp.getListedPropertyCount();
+    },
+    retry: 2,
+    refetchInterval: 10000,
+  });
+}
+
 export function useGetAllPropertiesForSale(address: `0x${string}` | undefined) {
   return useQuery({
     queryKey: ["dapp", "getAllPropertiesForSale", address],
@@ -90,7 +114,19 @@ export function useParticularProperty(
     queryKey: ["dapp", "particularProperty", address, id?.toString()],
     queryFn: async () => {
       const dapp = await initializeDapp(address);
-      return dapp.properties(id as number);
+      const result = await dapp.properties(id as number);
+      const response = await pinataGateway.get(
+        `/ipfs/${result[ResultIndex.URI]}`
+      );
+      return {
+        uri: result[ResultIndex.URI],
+        buyer: result[ResultIndex.BUYER],
+        wantSell: result[ResultIndex.WANT_SELL],
+        propertyId: result[ResultIndex.PROPERTY_ID],
+        buyerApproved: result[ResultIndex.BUYER_APPROVED],
+        sellerApproved: result[ResultIndex.SELLER_APPROVED],
+        ...response.data,
+      };
     },
     refetchInterval: 10000,
   });
