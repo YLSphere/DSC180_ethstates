@@ -18,7 +18,7 @@ npm install
 Once installed, on a new terminal, go to the repository's root folder and run this to deploy your contract:
 
 ```sh
-npx hardhat run scripts/deployProxy.ts --network goerli
+npx hardhat run scripts/deployProxy.ts --network localhost
 ```
 
 Use the implementation address from output:
