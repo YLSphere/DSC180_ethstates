@@ -160,7 +160,7 @@ describe("EthState", function () {
         .withArgs(owner.address, 1, listingData.sellPrice);
       await expect(
         property.bid(1, listingData.bids[0].price)
-      ).to.be.revertedWith("Buyer cannot be owner");
+      ).to.be.revertedWith("Owner cannot bid");
     });
 
     it("should fail if the bidder already bid on the property", async function () {
@@ -178,6 +178,189 @@ describe("EthState", function () {
       await expect(
         property.connect(user1).bid(1, listingData.bids[0].price)
       ).to.be.revertedWith("Buyer already bid on this property");
+    });
+
+    it("should fail if property unlisted while bidding", async function () {
+      const { property, owner, user1, propertyData, listingData } =
+        await loadFixture(fixture);
+      await expect(property.addProperty(propertyData.uri))
+        .to.emit(property, "Add")
+        .withArgs(owner.address, 1);
+
+      await expect(property.listProperty(1, listingData.sellPrice))
+        .to.emit(property, "List")
+        .withArgs(owner.address, 1, listingData.sellPrice);
+
+      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
+        .to.emit(property, "Offer")
+        .withArgs(user1.address, 1, listingData.bids[0].price);
+
+      await expect(property.unlistProperty(1))
+        .to.emit(property, "Unlist")
+        .withArgs(owner.address, 1);
+
+      await expect(
+        property.connect(user1).bid(1, listingData.bids[0].price)
+      ).to.be.revertedWith("Property is not listed");
+    });
+  });
+
+  describe("Accept an offer", function () {
+    it("should accept an offer", async function () {
+      const { property, owner, user1, user2, propertyData, listingData } =
+        await loadFixture(fixture);
+
+      await expect(property.addProperty(propertyData.uri))
+        .to.emit(property, "Add")
+        .withArgs(owner.address, 1);
+
+      await expect(property.listProperty(1, listingData.sellPrice))
+        .to.emit(property, "List")
+        .withArgs(owner.address, 1, listingData.sellPrice);
+
+      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
+        .to.emit(property, "Offer")
+        .withArgs(user1.address, 1, listingData.bids[0].price);
+
+      await expect(property.connect(user2).bid(1, listingData.bids[1].price))
+        .to.emit(property, "Offer")
+        .withArgs(user2.address, 1, listingData.bids[1].price);
+
+      await expect(property.acceptOffer(1, user1.address))
+        .to.emit(property, "Accept")
+        .withArgs(owner.address, 1, listingData.bids[0].price);
+
+      const listing = await property.listings(1);
+      expect(listing.sellerApproved).to.equal(true);
+      expect(listing.buyerApproved).to.equal(false);
+    });
+
+    it("should fail if the caller is not the owner", async function () {
+      const { property, owner, user1, user2, propertyData, listingData } =
+        await loadFixture(fixture);
+
+      await expect(property.addProperty(propertyData.uri))
+        .to.emit(property, "Add")
+        .withArgs(owner.address, 1);
+
+      await expect(property.listProperty(1, listingData.sellPrice))
+        .to.emit(property, "List")
+        .withArgs(owner.address, 1, listingData.sellPrice);
+
+      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
+        .to.emit(property, "Offer")
+        .withArgs(user1.address, 1, listingData.bids[0].price);
+
+      await expect(
+        property.connect(user1).acceptOffer(1, user1.address)
+      ).to.be.revertedWith("Caller is not the owner of this property");
+    });
+
+    it("should fail if the property is not listed", async function () {
+      const { property, owner, user1, propertyData } = await loadFixture(
+        fixture
+      );
+
+      await expect(property.addProperty(propertyData.uri))
+        .to.emit(property, "Add")
+        .withArgs(owner.address, 1);
+
+      await expect(property.acceptOffer(1, user1.address)).to.be.revertedWith(
+        "Property is not listed"
+      );
+    });
+
+    it("should fail if the property doesn't exist", async function () {
+      const { property, user1 } = await loadFixture(fixture);
+
+      await expect(property.acceptOffer(1, user1.address)).to.be.revertedWith(
+        "Property with this ID does not exist"
+      );
+    });
+
+    it("shoulf fail if the bid doesn't exist", async function () {
+      const { property, owner, user1, propertyData, listingData } =
+        await loadFixture(fixture);
+
+      await expect(property.addProperty(propertyData.uri))
+        .to.emit(property, "Add")
+        .withArgs(owner.address, 1);
+
+      await expect(property.listProperty(1, listingData.sellPrice))
+        .to.emit(property, "List")
+        .withArgs(owner.address, 1, listingData.sellPrice);
+
+      await expect(property.acceptOffer(1, user1.address)).to.be.revertedWith(
+        "Buyer not found in bids"
+      );
+    });
+  });
+
+  describe("Buyer approve a transfer", function () {
+    it("should approve a transfer", async function () {
+      const { property, owner, user1, user2, propertyData, listingData } =
+        await loadFixture(fixture);
+
+      await expect(property.addProperty(propertyData.uri))
+        .to.emit(property, "Add")
+        .withArgs(owner.address, 1);
+
+      await expect(property.listProperty(1, listingData.sellPrice))
+        .to.emit(property, "List")
+        .withArgs(owner.address, 1, listingData.sellPrice);
+
+      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
+        .to.emit(property, "Offer")
+        .withArgs(user1.address, 1, listingData.bids[0].price);
+
+      await expect(property.acceptOffer(1, user1.address))
+        .to.emit(property, "Accept")
+        .withArgs(owner.address, 1, listingData.bids[0].price);
+
+      const ownerBalance = await ethers.provider.getBalance(owner.address);
+      const user1Balance = await ethers.provider.getBalance(user1.address);
+
+      expect(
+        await property
+          .connect(user1)
+          .approveTransferAsBuyer(1, { value: listingData.bids[0].price })
+      )
+        .to.emit(property, "Transfer")
+        .withArgs(owner.address, user1.address, 1, listingData.bids[0].price);
+      expect(await property.ownerOf(1)).to.equal(user1.address);
+      expect(await ethers.provider.getBalance(owner.address)).to.equal(
+        ownerBalance + BigInt(listingData.bids[0].price)
+      );
+      expect(
+        await ethers.provider.getBalance(user1.address)
+      ).to.lessThanOrEqual(user1Balance - BigInt(listingData.bids[0].price));
+    });
+
+    it("should fail if the caller is not the buyer", async function () {
+      const { property, owner, user1, user2, propertyData, listingData } =
+        await loadFixture(fixture);
+
+      await expect(property.addProperty(propertyData.uri))
+        .to.emit(property, "Add")
+        .withArgs(owner.address, 1);
+
+      await expect(property.listProperty(1, listingData.sellPrice))
+        .to.emit(property, "List")
+        .withArgs(owner.address, 1, listingData.sellPrice);
+
+      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
+        .to.emit(property, "Offer")
+        .withArgs(user1.address, 1, listingData.bids[0].price);
+
+      await expect(property.acceptOffer(1, user1.address))
+        .to.emit(property, "Accept")
+        .withArgs(owner.address, 1, listingData.bids[0].price);
+
+      await expect(
+        property.connect(owner).approveTransferAsBuyer(1, {
+          value: listingData.bids[0].price,
+        })
+      ).to.be.revertedWith("Caller is not the buyer of this property");
     });
   });
 });
