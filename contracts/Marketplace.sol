@@ -226,4 +226,29 @@ contract MarketplaceContract is PropertyContract {
 
         transfer(_propertyId);
     }
+
+    // =========== Utility functions ===========
+
+    // Function to get specific listing
+    function getListing(
+        uint256 _propertyId
+    ) external view returns (Listing memory) {
+        return listings[_propertyId];
+    }
+
+    // Function to get all active listings
+    function getActiveListings() external view returns (Listing[] memory) {
+        Listing[] memory activeListings = new Listing[](listingCount);
+        uint256 activeListingCount = 0;
+        for (uint256 i = 1; i <= propertyCount; i++) {
+            if (listings[i].propertyId == i) {
+                activeListings[activeListingCount] = listings[i];
+                activeListingCount++;
+            }
+            if (activeListingCount == listingCount) {
+                break;
+            }
+        }
+        return activeListings;
+    }
 }

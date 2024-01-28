@@ -85,4 +85,27 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
     function transfer() internal virtual {
         revert("Not implemented");
     }
+
+    // =========== Utility functions ===========
+    
+    // Function to get the property details by owner
+    function getPropertiesByOwner(address _owner)
+        external
+        view
+        returns (Property[] memory)
+    {
+        uint256 propertyListCount = 0;
+        uint256 propertyCountByOwner = balanceOf(_owner);
+        Property[] memory propertyList = new Property[](propertyCountByOwner);
+        for (uint256 i = 1; i <= propertyCount; i++) {
+            if (ownerOf(i) == _owner) {
+                propertyList[propertyListCount] = properties[i];
+                propertyListCount++;
+            }
+            if (propertyListCount == propertyCountByOwner) {
+                break;
+            }
+        }
+        return propertyList;
+    }
 }

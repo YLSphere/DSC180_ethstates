@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { PropertyDetails } from "../components/templates/property/PropertyDetails";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
-import { useParticularProperty } from "../hooks/dapp/useDapp";
+import { useParticularProperty } from "../hooks/dapp/useProperty";
 import { Nft } from "../types/dapp";
 
 export default function PropertyItem() {
@@ -37,7 +37,7 @@ export default function PropertyItem() {
           <h1>Hello, Property Item {id.toString()} Page!</h1>
 
           {isConnected ? (
-            <PropertyDetails id={id} address={address} nft={nft} />
+            <PropertyDetails id={id} address={address} nft={nft} isOwner={address == nft?.owner} />
           ) : (
             <Text>Connect to your wallet first!</Text>
           )}
