@@ -15,7 +15,7 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
 
     mapping(uint256 => Property) public properties; // mapping of propertyId to Property struct
 
-    function __PropertyContract_init() public {
+    function __PropertyContract_init() internal {
         __ERC721_init("Property", "PROP");
         propertyCount = 0;
     }
@@ -34,9 +34,14 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
         uint256 _sellPrice
     );
 
+    // Modifier to check if the property exists
+    modifier propertyExists(uint256 _propertyId) {
+        require(_exists(_propertyId), "Property with this ID does not exist");
+        _;
+    }
+
     // Modifier to check if the caller is the owner of a specific property
     modifier isPropertyOwner(uint256 _propertyId) {
-        require(_exists(_propertyId), "Property with this ID does not exist");
         require(
             ownerOf(_propertyId) == _msgSender(),
             "Caller is not the owner of this property"
@@ -63,7 +68,12 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
     // Owner shall remove lands via this function
     function removeProperty(
         uint256 _propertyId
-    ) external virtual isPropertyOwner(_propertyId) {
+    )
+        external
+        virtual
+        propertyExists(_propertyId)
+        isPropertyOwner(_propertyId)
+    {
         require(_exists(_propertyId), "Property with this ID does not exist");
         _burn(_propertyId);
         delete properties[_propertyId];
@@ -72,7 +82,7 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
     }
 
     // Function to transfer a property
-    function transfer() virtual internal {
+    function transfer() internal virtual {
         revert("Not implemented");
     }
 }

@@ -25,6 +25,14 @@ contract MarketplaceContract is PropertyContract {
 
     mapping(uint256 => Listing) public listings; // mapping of propertyId to Listing struct
 
+    modifier isListed(uint256 _propertyId) {
+        require(
+            listings[_propertyId].propertyId == _propertyId,
+            "Property is not listed"
+        );
+        _;
+    }
+
     modifier bidsIncludeBuyerOrNot(
         uint256 _propertyId,
         address _buyer,
@@ -45,7 +53,7 @@ contract MarketplaceContract is PropertyContract {
         _;
     }
 
-    function __MarketplaceContract_init() public {
+    function __MarketplaceContract_init() internal {
         __PropertyContract_init();
         listingCount = 0;
     }
@@ -74,7 +82,7 @@ contract MarketplaceContract is PropertyContract {
     function listProperty(
         uint256 _propertyId,
         uint256 _sellPrice
-    ) external isPropertyOwner(_propertyId) {
+    ) external propertyExists(_propertyId) isPropertyOwner(_propertyId) {
         require(_exists(_propertyId), "Property with this ID does not exist");
         require(_sellPrice > 0, "Sell price cannot be zero");
         require(
@@ -83,7 +91,7 @@ contract MarketplaceContract is PropertyContract {
         );
 
         listingCount++;
-        
+
         Listing storage listing = listings[_propertyId];
         listing.propertyId = _propertyId;
         listing.sellPrice = _sellPrice;
@@ -94,12 +102,12 @@ contract MarketplaceContract is PropertyContract {
     // Function to unlist a property from sale
     function unlistProperty(
         uint256 _propertyId
-    ) external isPropertyOwner(_propertyId) {
-        require(_exists(_propertyId), "Property with this ID does not exist");
-        require(
-            listings[_propertyId].propertyId == _propertyId,
-            "Property is not listed"
-        );
+    )
+        external
+        propertyExists(_propertyId)
+        isPropertyOwner(_propertyId)
+        isListed(_propertyId)
+    {
         require(
             listings[_propertyId].buyerApproved == false &&
                 listings[_propertyId].sellerApproved == false,
@@ -116,13 +124,13 @@ contract MarketplaceContract is PropertyContract {
     function bid(
         uint256 _propertyId,
         uint256 _bidPrice
-    ) external bidsIncludeBuyerOrNot(_propertyId, _msgSender(), false) {
-        require(_exists(_propertyId), "Property with this ID does not exist");
-        require(ownerOf(_propertyId) != _msgSender(), "Buyer cannot be owner");
-        require(
-            listings[_propertyId].propertyId == _propertyId,
-            "Property is not listed"
-        );
+    )
+        external
+        propertyExists(_propertyId)
+        isListed(_propertyId)
+        bidsIncludeBuyerOrNot(_propertyId, _msgSender(), false)
+    {
+        require(_msgSender() != ownerOf(_propertyId), "Owner cannot bid");
         require(
             listings[_propertyId].acceptedBid.buyer == address(0) &&
                 listings[_propertyId].acceptedBid.bidPrice == 0,
@@ -137,19 +145,16 @@ contract MarketplaceContract is PropertyContract {
     }
 
     // Function to accept a bid on a listing property
-    function acceptBid(
+    function acceptOffer(
         uint256 _propertyId,
         address _buyer
     )
         external
+        propertyExists(_propertyId)
         isPropertyOwner(_propertyId)
+        isListed(_propertyId)
         bidsIncludeBuyerOrNot(_propertyId, _buyer, true)
     {
-        require(_exists(_propertyId), "Property with this ID does not exist");
-        require(
-            listings[_propertyId].propertyId == _propertyId,
-            "Property is not listed"
-        );
         require(
             listings[_propertyId].acceptedBid.buyer == address(0) &&
                 listings[_propertyId].acceptedBid.bidPrice == 0,
@@ -168,14 +173,16 @@ contract MarketplaceContract is PropertyContract {
             }
         }
 
-        emit Offer(
-            _buyer,
+        emit Accept(
+            _msgSender(),
             _propertyId,
             listings[_propertyId].acceptedBid.bidPrice
         );
     }
 
-    function transfer(uint256 _propertyId) internal {
+    function transfer(
+        uint256 _propertyId
+    ) internal propertyExists(_propertyId) {
         require(
             listings[_propertyId].buyerApproved &&
                 listings[_propertyId].sellerApproved,
@@ -195,8 +202,9 @@ contract MarketplaceContract is PropertyContract {
     }
 
     // Buyer approves the transfer
-    function approveTransferAsBuyer(uint256 _propertyId) external payable {
-        require(_exists(_propertyId), "Property with this ID does not exist");
+    function approveTransferAsBuyer(
+        uint256 _propertyId
+    ) external payable propertyExists(_propertyId) isListed(_propertyId) {
         require(
             listings[_propertyId].acceptedBid.buyer == _msgSender(),
             "Caller is not the buyer of this property"
