@@ -159,7 +159,7 @@ export function useBuyerAgreementToSale() {
     mutationKey: ["dapp", "buyerAgreementToSale"],
     mutationFn: async ({ address, id }: SaleProps) => {
       const dapp = await initializeDapp(address);
-      return dapp.approveTransferAsBuyer(id as number {});
+      return dapp.approveTransferAsBuyer(id as number);
     },
   });
 }
