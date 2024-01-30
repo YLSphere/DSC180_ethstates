@@ -20,6 +20,7 @@ interface Props {
   id: number;
   address: `0x${string}` | undefined;
   nft: Nft | undefined;
+  isOwner: boolean;
 }
 
 const colors = {
@@ -73,7 +74,7 @@ const PropertyDetails = (props: Props) => {
   
   useEffect(() => {
     // When the mutation is loading, show a toast
-    if (listForSale.isLoading) {
+    if (list.isPending) {
       toast({
         status: "loading",
         title: "Property NFT pending to be listed",
@@ -82,7 +83,7 @@ const PropertyDetails = (props: Props) => {
     }
 
     // When the mutation fails, show a toast
-    if (listForSale.isError) {
+    if (list.isError) {
       toast({
         status: "error",
         title: "Property NFT rejected to be listed",
@@ -92,7 +93,7 @@ const PropertyDetails = (props: Props) => {
     }
 
     // When the mutation is successful, show a toast
-    if (listForSale.isSuccess) {
+    if (list.isSuccess) {
       toast({
         status: "success",
         title: "Property NFT listed",
@@ -101,11 +102,11 @@ const PropertyDetails = (props: Props) => {
       });
       setReload(!reload);
     }
-  }, [listForSale.isLoading, listForSale.isError, listForSale.isSuccess]);
+  }, [list]);
 
   useEffect(() => {
     // When the mutation is loading, show a toast
-    if (cancelForSale.isLoading) {
+    if (unlist.isPending) {
       toast({
         status: "loading",
         title: "Property NFT pending to be removed from sale",
@@ -114,7 +115,7 @@ const PropertyDetails = (props: Props) => {
     }
 
     // When the mutation fails, show a toast
-    if (cancelForSale.isError) {
+    if (unlist.isError) {
       toast({
         status: "error",
         title: "Property NFT rejected to be removed from sale",
@@ -124,7 +125,7 @@ const PropertyDetails = (props: Props) => {
     }
 
     // When the mutation is successful, show a toast
-    if (cancelForSale.isSuccess) {
+    if (unlist.isSuccess) {
       toast({
         status: "success",
         title: "Property NFT removed from sale",

@@ -5,13 +5,14 @@ import {
   FormLabel,
   Input,
   useToast,
+  Text,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import Dropzone from "../components/templates/form/Dropzone";
 
 import { pinataImage } from "../queries/pinata";
-import { useAddProperty } from "../hooks/dapp/useDapp";
+import { useAddProperty } from "../hooks/dapp/useProperty";
 
 import { PinataContent } from "../types/dapp";
 
@@ -93,11 +94,12 @@ const formFields = [
   },
 ];
 
-let d1 = new Date().getTime()
 export default function ListProperty() {
   const toast = useToast();
   const addProperty = useAddProperty();
+  const { address, isConnected } = useAccount();
   const [pinataContent, setPinataContent] = useState<PinataContent>({
+    owner: address,
     streetAddress: "",
     city: "",
     state: "",
@@ -111,9 +113,7 @@ export default function ListProperty() {
     forSale: false,
     images: [],
   });
-  const { address, isConnected } = useAccount();
-  
-
+  const date = new Date().getTime();
 
   useEffect(() => {
     // When the mutation is loading, show a toast
@@ -152,7 +152,7 @@ export default function ListProperty() {
 
     if (isConnected) {
       const pinataMetadata = {
-        name: "ETHStates Property " + d1.toString(),
+        name: "ETHStates Property " + date.toString(),
         keyvalues: {
           ownerAddress: address,
         },
@@ -160,7 +160,6 @@ export default function ListProperty() {
 
       addProperty.mutate({ address, pinataContent, pinataMetadata });
     }
-
   }
 
   async function handleUpload(
@@ -190,6 +189,25 @@ export default function ListProperty() {
       images: cids,
     });
     setIsLoading(false);
+  }
+
+  // Wallet not connected
+  if (!isConnected) {
+    return (
+      <main>
+        <Container
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="90vh"
+          maxWidth="container.lg"
+        >
+          <Text fontSize={"3xl"} color={"gray.500"}>
+            Connect to your wallet first!
+          </Text>
+        </Container>
+      </main>
+    );
   }
 
   return (

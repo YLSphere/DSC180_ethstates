@@ -1,31 +1,60 @@
-export interface Result {
-  0: number; // price
-  1: number; // propertyId
-  2: string; // uri
-  3: `0x${string}`; // buyer
-  4: boolean; // wantSell
-  5: boolean; // buyerApproved
-  6: boolean; // sellerApproved
+export interface PropertyResult {
+  0: number; // propertyId
+  1: string; // uri
 }
 
-export enum ResultIndex {
-  PRICE,
+export enum PropertyResultIndex {
   PROPERTY_ID,
   URI,
-  BUYER,
-  WANT_SELL,
+}
+
+export interface ListingResult {
+  0: number; // propertyId
+  1: number; // sellPrice
+  2: boolean; // buyerApproved
+  3: boolean; // sellerApproved
+  4: BidResult[]; // bids
+  5: BidResult; // acceptedBid
+}
+
+export enum ListingResultIndex {
+  PROPERTY_ID,
+  SELL_PRICE,
   BUYER_APPROVED,
   SELLER_APPROVED,
+  BIDS,
+  ACCEPTED_BID,
+}
+
+export interface BidResult {
+  0: `0x${string}`; // bidder
+  1: number; // bidPrice
+}
+
+export enum BidResultIndex {
+  BIDDER,
+  BID_PRICE,
+}
+
+export interface Bid {
+  bidder: `0x${string}`;
+  bidPrice: number;
 }
 
 export interface Nft {
+  // Property data
   propertyId: number;
   uri?: string;
-  buyer?: `0x${string}`;
-  owner?: `0x${string}`;
-  wantSell?: boolean;
+
+  // Listing data
+  sellPrice?: number;
   buyerApproved?: boolean;
   sellerApproved?: boolean;
+  bids?: BidResult[];
+  acceptedBid?: BidResult;
+
+  // Pinata data
+  owner: `0x${string}` | undefined;
   streetAddress: string;
   city: string;
   state: string;
@@ -41,6 +70,7 @@ export interface Nft {
 }
 
 export interface PinataContent {
+  owner: `0x${string}` | undefined;
   streetAddress: string;
   city: string;
   state: string;
@@ -68,7 +98,15 @@ export interface AddPropertyProps {
   pinataMetadata: PinataMetadata;
 }
 
-export interface SaleProps {
+export interface ListingProps {
   address: `0x${string}` | undefined;
   id: number | undefined;
+  sellPrice?: number;
+}
+
+export interface BidProps {
+  address: `0x${string}` | undefined;
+  id: number | undefined;
+  bidder?: `0x${string}`;
+  bidPrice?: number;
 }

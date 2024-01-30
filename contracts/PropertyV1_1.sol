@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
@@ -24,7 +23,17 @@ contract PropertyV1_1 is
         bool sellerApproved;
     }
 
+    struct Bid {
+        address buyer;
+        uint256 propertyId;
+        uint256 cost;
+    }
+
     uint256 public propertyCount; // total number of properties via this contract
+
+    uint256 public listedPropertyCount; // total number of properties listed for sale
+
+    mapping(uint256 => Bid[]) public propertyBids; // mapping of propertyId to array of bids
 
     mapping(uint256 => Property) public properties; // mapping of propertyId to Property struct
 
@@ -48,11 +57,21 @@ contract PropertyV1_1 is
         uint256 _sellPrice
     );
 
+    // Property bid offer event
+    event Offer(address indexed _buyer, uint256 _propertyId, uint256 _bidPrice);
+
+    // Accept bid event
+    event AcceptBid(
+        address indexed _owner,
+        address indexed _buyer,
+        uint256 _propertyId
+    );
+
     // Modifier to check if the caller is the owner of a specific property
     modifier isPropertyOwner(uint256 _propertyId) {
         require(_exists(_propertyId), "Property with this ID does not exist");
         require(
-            ownerOf(_propertyId) == msg.sender,
+            ownerOf(_propertyId) == _msgSender(),
             "Caller is not the owner of this property"
         );
         _;
@@ -62,7 +81,7 @@ contract PropertyV1_1 is
     modifier isAgreedBuyer(uint256 _propertyId) {
         require(_exists(_propertyId), "Property with this ID does not exist");
         require(
-            properties[_propertyId].buyer == msg.sender,
+            properties[_propertyId].buyer == _msgSender(),
             "Caller is not the agreed approver for this property transfer"
         );
         require(
@@ -78,6 +97,26 @@ contract PropertyV1_1 is
             properties[_propertyId].cost <= msg.value,
             "Insufficient payment"
         );
+        _;
+    }
+
+    modifier bidsIncludeBuyerOrNot(
+        uint256 _propertyId,
+        address _buyer,
+        bool _include
+    ) {
+        bool found = false;
+        for (uint256 i = 0; i < propertyBids[_propertyId].length; i++) {
+            if (propertyBids[_propertyId][i].buyer == _buyer) {
+                found = true;
+                break;
+            }
+        }
+        if (_include) {
+            require(found, "Buyer not found in bids");
+        } else {
+            require(!found, "Buyer already bid on this property");
+        }
         _;
     }
 
@@ -112,6 +151,7 @@ contract PropertyV1_1 is
             "Property is already available for sale"
         );
         properties[_propertyId].wantSell = true;
+        listedPropertyCount++;
     }
 
     // Owner shall cancel the sale via this function
@@ -127,6 +167,8 @@ contract PropertyV1_1 is
             "Buyer already set"
         );
         properties[_propertyId].wantSell = false;
+        delete propertyBids[_propertyId];
+        listedPropertyCount--;
     }
 
     // Owner shall remove lands via this function
@@ -141,19 +183,60 @@ contract PropertyV1_1 is
         _burn(_propertyId);
         delete properties[_propertyId];
 
-        emit Remove(msg.sender, _propertyId);
+        emit Remove(_msgSender(), _propertyId);
+    }
+
+    function bid(
+        uint256 _propertyId,
+        uint256 _cost
+    ) external bidsIncludeBuyerOrNot(_propertyId, _msgSender(), false) {
+        require(_exists(_propertyId), "Property with this ID does not exist");
+        require(ownerOf(_propertyId) != _msgSender(), "Buyer cannot be owner");
+        require(
+            properties[_propertyId].buyer == address(0),
+            "Buyer already set"
+        );
+        require(
+            properties[_propertyId].wantSell == true,
+            "Property is not available for sale"
+        );
+
+        propertyBids[_propertyId].push(
+            Bid({buyer: _msgSender(), propertyId: _propertyId, cost: _cost})
+        );
+
+        emit Offer(_msgSender(), _propertyId, _cost);
+    }
+
+    // Get bids for a specific property
+    function getBids(uint256 _propertyId) external view returns (Bid[] memory) {
+        Bid[] memory bids = new Bid[](propertyBids[_propertyId].length);
+        for (uint256 i = 0; i < propertyBids[_propertyId].length; i++) {
+            bids[i] = propertyBids[_propertyId][i];
+        }
+        return bids;
     }
 
     // Seller agree on the buyer before initiating the transfer process
     function agreeOnBuyer(
         uint _propertyId,
         address _buyer
-    ) external isPropertyOwner(_propertyId) {
+    )
+        external
+        isPropertyOwner(_propertyId)
+        bidsIncludeBuyerOrNot(_propertyId, _buyer, true) // Buyer should have bid on this property
+    {
         require(
             properties[_propertyId].buyer == address(0),
             "Buyer already set"
         );
         properties[_propertyId].buyer = _buyer;
+
+        emit AcceptBid(
+            _msgSender(),
+            _buyer,
+            _propertyId
+        );
     }
 
     // Seller shall clear the agreed buyer via this function
@@ -180,7 +263,7 @@ contract PropertyV1_1 is
             "Insufficient payment"
         );
         require(
-            properties[_propertyId].buyer == msg.sender,
+            properties[_propertyId].buyer == _msgSender(),
             "Caller is not the agreed approver for this land transfer"
         );
         require(
@@ -188,7 +271,9 @@ contract PropertyV1_1 is
             "Transfer already approved by the buyer"
         );
         properties[_propertyId].buyerApproved = true;
-        payable(msg.sender).transfer(msg.value - properties[_propertyId].cost); // refund excess payment
+        payable(_msgSender()).transfer(
+            msg.value - properties[_propertyId].cost
+        ); // refund excess payment
 
         checkAndCompleteTransfer(_propertyId);
     }
@@ -224,6 +309,8 @@ contract PropertyV1_1 is
             properties[_propertyId].buyer = address(0); // reset buyer
             properties[_propertyId].buyerApproved = false; // reset buyer approval
             properties[_propertyId].sellerApproved = false; // reset seller approval
+
+            delete propertyBids[_propertyId]; // delete bids
 
             emit Transfer(
                 seller,
@@ -414,21 +501,19 @@ contract Financing is
 
     mapping(uint256 => Mortgage) public mortgages; // mapping of propertyId to Mortgage struct
 
-    // Modifier to ensure the property is mortgaged
-    modifier isMortgaged(uint256 _propertyId) {
-        require(
-            mortgages[_propertyId].propertyId == _propertyId,
-            "Property is not mortgaged"
-        );
-        _;
-    }
-
-    // Modifier to ensure the property is not mortgaged
-    modifier isNotMortgaged(uint256 _propertyId) {
-        require(
-            mortgages[_propertyId].propertyId == 0,
-            "Property is mortgaged"
-        );
+    // Modifier to ensure the property is mortgaged or not
+    modifier isMortgagedOrNot(uint256 _propertyId, bool _isMortgaged) {
+        if (_isMortgaged) {
+            require(
+                mortgages[_propertyId].propertyId == _propertyId,
+                "Property is not mortgaged"
+            );
+        } else {
+            require(
+                mortgages[_propertyId].propertyId == 0,
+                "Property is mortgaged"
+            );
+        }
         _;
     }
 
@@ -445,7 +530,11 @@ contract Financing is
         uint256 _amount,
         uint256 _monthlyInterestRate,
         uint256 _durationInMonths
-    ) external isPropertyOwner(_propertyId) isNotMortgaged(_propertyId) {
+    )
+        external
+        isPropertyOwner(_propertyId) // Only owner can mortgage
+        isMortgagedOrNot(_propertyId, false) // Property should not be mortgaged
+    {
         require(
             properties[_propertyId].wantSell == false,
             "Property is available for sale. Please cancel the sale first"
@@ -485,7 +574,7 @@ contract Financing is
     // Loaner shall pay monthly mortgage payment via this function
     function makeMortgagePayment(
         uint256 _propertyId
-    ) external payable isMortgaged(_propertyId) {
+    ) external payable isMortgagedOrNot(_propertyId, true) {
         require(_msgSender() == mortgages[_propertyId].loaner, "Not loaner");
         require(
             msg.value >= mortgages[_propertyId].monthlyPayment,

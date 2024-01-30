@@ -9,7 +9,7 @@ import "./tasks/faucet";
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.20",
+    version: "0.8.23",
     settings: {
       optimizer: {
         enabled: true,
@@ -19,17 +19,17 @@ const config: HardhatUserConfig = {
   },
   defaultNetwork: "localhost",
   networks: {
-    goerli: {
-      url: process.env.ALCHEMY_GOERLI_URL,
+    polygon: {
+      url: process.env.ALCHEMY_POLYGON_URL,
       accounts: [process.env.PRIVATE_KEY!],
     },
-    sepolia: {
-      url: process.env.ALCHEMY_SEPOLIA_URL,
+    polygonMumbai: {
+      url: process.env.ALCHEMY_MUMBAI_URL,
       accounts: [process.env.PRIVATE_KEY!],
     },
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_KEY,
+    apiKey: process.env.POLYGONSCAN_KEY,
   },
 };
 

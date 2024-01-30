@@ -16,7 +16,7 @@ import {
   ledgerWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
-import { mainnet, goerli, sepolia, hardhat } from "wagmi/chains";
+import { polygon, polygonMumbai, hardhat } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 
 // import `ChakraProvider` component
@@ -26,7 +26,7 @@ import { ChakraProvider } from "@chakra-ui/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [mainnet, goerli, sepolia, hardhat],
+  [polygon, polygonMumbai, hardhat],
   [publicProvider()]
 );
 
