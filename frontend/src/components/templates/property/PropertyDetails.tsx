@@ -1,26 +1,31 @@
 import { Box, Button, Text, Image, useToast } from "@chakra-ui/react";
 import { useEffect } from "react";
-import {
-  useCancelForSale,
-  useListForSale,
-} from "../../../hooks/dapp/useDapp";
-import { Nft } from "../../../types/dapp";
+import { useUnlist, useList } from "../../../hooks/dapp/useListing";
+import { BidResultIndex, Nft } from "../../../types/dapp";
+import { useAcceptOffer, useBid } from "../../../hooks/dapp/useBidding";
 
 interface Props {
   id: number;
   address: `0x${string}` | undefined;
   nft: Nft | undefined;
+  isOwner: boolean;
 }
 
 const PropertyDetails = (props: Props) => {
   const toast = useToast();
-  const { id, address, nft } = props;
-  const listForSale = useListForSale();
-  const cancelForSale = useCancelForSale();
+  const { id, address, nft, isOwner } = props;
+
+  // listing hooks
+  const list = useList();
+  const unlist = useUnlist();
+
+  // bidding hooks
+  const bid = useBid();
+  const acceptOffer = useAcceptOffer();
 
   useEffect(() => {
     // When the mutation is loading, show a toast
-    if (listForSale.isLoading) {
+    if (list.isPending) {
       toast({
         status: "loading",
         title: "Property NFT pending to be listed",
@@ -29,7 +34,7 @@ const PropertyDetails = (props: Props) => {
     }
 
     // When the mutation fails, show a toast
-    if (listForSale.isError) {
+    if (list.isError) {
       toast({
         status: "error",
         title: "Property NFT rejected to be listed",
@@ -39,7 +44,7 @@ const PropertyDetails = (props: Props) => {
     }
 
     // When the mutation is successful, show a toast
-    if (listForSale.isSuccess) {
+    if (list.isSuccess) {
       toast({
         status: "success",
         title: "Property NFT listed",
@@ -47,11 +52,11 @@ const PropertyDetails = (props: Props) => {
         duration: 5000,
       });
     }
-  }, [listForSale.isLoading, listForSale.isError, listForSale.isSuccess]);
+  }, [list]);
 
   useEffect(() => {
     // When the mutation is loading, show a toast
-    if (cancelForSale.isLoading) {
+    if (unlist.isPending) {
       toast({
         status: "loading",
         title: "Property NFT pending to be removed from sale",
@@ -60,7 +65,7 @@ const PropertyDetails = (props: Props) => {
     }
 
     // When the mutation fails, show a toast
-    if (cancelForSale.isError) {
+    if (unlist.isError) {
       toast({
         status: "error",
         title: "Property NFT rejected to be removed from sale",
@@ -70,7 +75,7 @@ const PropertyDetails = (props: Props) => {
     }
 
     // When the mutation is successful, show a toast
-    if (cancelForSale.isSuccess) {
+    if (unlist.isSuccess) {
       toast({
         status: "success",
         title: "Property NFT removed from sale",
@@ -78,26 +83,70 @@ const PropertyDetails = (props: Props) => {
         duration: 5000,
       });
     }
-  }, [cancelForSale.isLoading, cancelForSale.isError, cancelForSale.isSuccess]);
+  }, [unlist]);
+
+  const listingButton = () => {
+    if (isOwner) {
+      return nft?.sellPrice == 0 ? (
+        <Button
+          onClick={() => list.mutate({ address, id, sellPrice: nft?.price })}
+        >
+          List
+        </Button>
+      ) : (
+        <Button onClick={() => unlist.mutate({ address, id })}>Unlist</Button>
+      );
+    }
+  };
+
+  const biddingButton = () => {
+    if (
+      !isOwner &&
+      nft?.sellPrice !== 0 &&
+      nft?.acceptedBid?.[BidResultIndex.BID_PRICE] !== 0
+    ) {
+      return (
+        <Button
+          onClick={() => bid.mutate({ address, id, bidPrice: 1_200_000 })}
+        >
+          Bid
+        </Button>
+      );
+    }
+  };
 
   return (
     <Box>
       {nft ? (
         <Box>
-          <Text>{`Price: ${nft?.price}`}</Text>
           <Text>{`Property ID: ${nft?.propertyId}`}</Text>
           <Text>{`URI: ${nft?.uri}`}</Text>
-          <Text>{`Buyer: ${nft?.buyer}`}</Text>
-          <Text>{`Want to sell? ${nft?.wantSell}`}</Text>
-          {nft.wantSell ? (
-            <Button onClick={() => cancelForSale.mutate({ address, id })}>
-              Remove From Sale
-            </Button>
-          ) : (
-            <Button onClick={() => listForSale.mutate({ address, id })}>
-              List For Sale
-            </Button>
-          )}
+
+          {listingButton()}
+
+          {biddingButton()}
+
+          {nft?.bids?.map((bid, i) => (
+            <div key={i}>
+              <Text>{`Bidder: ${bid[BidResultIndex.BIDDER]} | Price: ${
+                bid[BidResultIndex.BID_PRICE]
+              }`}</Text>
+              {isOwner && nft?.acceptedBid?.[BidResultIndex.BID_PRICE] == 0 ? (
+                <Button
+                  onClick={() =>
+                    acceptOffer.mutate({
+                      address,
+                      id: nft?.propertyId,
+                      bidder: bid[BidResultIndex.BIDDER],
+                    })
+                  }
+                >
+                  Accept Offer
+                </Button>
+              ) : null}
+            </div>
+          ))}
+
           {nft.images.map((image, i) => (
             <Image
               key={i}

@@ -3,6 +3,7 @@ import {
   ListingProps,
   ListingResult,
   ListingResultIndex,
+  Nft,
   PropertyResult,
   PropertyResultIndex,
 } from "../../types/dapp";
@@ -12,7 +13,7 @@ import { pinataGateway } from "../../queries/pinata";
 export function useGetAllListings(address: `0x${string}` | undefined) {
   return useQuery({
     queryKey: ["dapp", "getAllPropertiesForSale", address],
-    queryFn: async () => {
+    queryFn: async (): Promise<Nft[]> => {
       try {
         const dapp = await initializeDapp(address);
         const listingResults: ListingResult[] = await dapp.getActiveListings();
@@ -25,12 +26,15 @@ export function useGetAllListings(address: `0x${string}` | undefined) {
               `/ipfs/${propertyResult[PropertyResultIndex.URI]}`
             );
             return {
+              // property data
               propertyId: result[PropertyResultIndex.PROPERTY_ID],
+              // listing data
               sellPrice: result[ListingResultIndex.SELL_PRICE],
               buyerApproved: result[ListingResultIndex.BUYER_APPROVED],
               sellerApproved: result[ListingResultIndex.SELLER_APPROVED],
               bids: result[ListingResultIndex.BIDS],
               acceptedBid: result[ListingResultIndex.ACCEPTED_BID],
+              // pinata data
               ...response.data,
             };
           })

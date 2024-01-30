@@ -5,7 +5,7 @@ import { ethers, upgrades } from "hardhat";
 import { Contract, ContractFactory } from "ethers";
 
 // TODO: Update this with the actual artifact name
-const artifactName = "PropertyV1_1";
+const artifactName = "EthState";
 
 async function main(): Promise<void> {
   const Property: ContractFactory = await ethers.getContractFactory(

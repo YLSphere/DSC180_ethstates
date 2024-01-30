@@ -42,7 +42,7 @@ export interface Bid {
 }
 
 export interface Nft {
-  // Blockchain data
+  // Property data
   propertyId: number;
   uri?: string;
 

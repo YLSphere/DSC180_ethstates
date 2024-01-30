@@ -39,7 +39,7 @@ export function useGetAllPropertiesByOwner(
 ): UseQueryResult<Nft[], Error> {
   return useQuery({
     queryKey: ["dapp", "getAllPropertiesByOwner", address],
-    queryFn: async () => {
+    queryFn: async (): Promise<Nft[]> => {
       const dapp = await initializeDapp(address);
       const results: PropertyResult[] = await dapp.getPropertiesByOwner(
         address
@@ -51,6 +51,9 @@ export function useGetAllPropertiesByOwner(
           );
           return {
             propertyId: result[PropertyResultIndex.PROPERTY_ID],
+
+
+
             ...response.data,
           };
         })
@@ -86,7 +89,7 @@ export function useParticularProperty(
 ): UseQueryResult<Nft, Error> {
   return useQuery({
     queryKey: ["dapp", "particularProperty", address, id?.toString()],
-    queryFn: async () => {
+    queryFn: async (): Promise<Nft> => {
       try {
         const dapp = await initializeDapp(address);
         const propertyResult: PropertyResult = await dapp.properties(
@@ -100,15 +103,16 @@ export function useParticularProperty(
         );
 
         return {
+          // property data
           propertyId: propertyResult[PropertyResultIndex.PROPERTY_ID],
           uri: propertyResult[PropertyResultIndex.URI],
-
+          // listing data
           sellPrice: listingResult[ListingResultIndex.SELL_PRICE],
           buyerApproved: listingResult[ListingResultIndex.BUYER_APPROVED],
           sellerApproved: listingResult[ListingResultIndex.SELLER_APPROVED],
           bids: listingResult[ListingResultIndex.BIDS],
           acceptedBid: listingResult[ListingResultIndex.ACCEPTED_BID],
-
+          // pinata data
           ...response.data,
         };
       } catch (error) {

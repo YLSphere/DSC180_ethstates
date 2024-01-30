@@ -13,14 +13,13 @@ export default function Profile() {
   const [nfts, setNfts] = useState<Nft[] | undefined>([]);
 
   const { address, isConnected } = useAccount();
-  const { isLoading, data } = useGetAllPropertiesByOwner(address);
+  const { isFetched, data } = useGetAllPropertiesByOwner(address);
 
   useEffect(() => {
-    if (isConnected && !isLoading) {
-      console.log(data);
+    if (isConnected && isFetched) {
       setNfts(data);
     }
-  }, [isConnected, isLoading, data]);
+  }, [isConnected, isFetched]);
 
   // Wallet not connected
   if (!isConnected) {
@@ -42,7 +41,7 @@ export default function Profile() {
   }
 
   // NFTs are loading
-  if (isLoading) {
+  if (!isFetched) {
     return (
       <main>
         <Container
