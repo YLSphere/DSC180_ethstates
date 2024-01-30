@@ -1,6 +1,6 @@
 // contracts/Marketplace.sol
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.23;
 
 import "./Property.sol";
 
@@ -9,6 +9,8 @@ contract MarketplaceContract is PropertyContract {
         address buyer;
         uint256 bidPrice;
     }
+
+    
 
     struct Listing {
         // Sale
@@ -19,6 +21,7 @@ contract MarketplaceContract is PropertyContract {
         // Bidding
         Bid[] bids;
         Bid acceptedBid;
+        // TODO: Buy Out
     }
 
     uint256 public listingCount; // total number of listings via this contract
@@ -76,6 +79,13 @@ contract MarketplaceContract is PropertyContract {
         address indexed _seller,
         uint256 _propertyId,
         uint256 _bidPrice
+    );
+
+    // BuyOut event
+    event BuyOut(
+        address indexed _buyer,
+        uint256 _propertyId,
+        uint256 _buyOutPrice
     );
 
     // Function to list a property for sale
@@ -180,6 +190,7 @@ contract MarketplaceContract is PropertyContract {
         );
     }
 
+    // Function to transfer the property to the buyer
     function transfer(
         uint256 _propertyId
     ) internal propertyExists(_propertyId) {
@@ -199,6 +210,24 @@ contract MarketplaceContract is PropertyContract {
         delete listings[_propertyId]; // remove from sale
 
         emit Transfer(seller, buyer, _propertyId, bidPrice);
+    }
+
+    // Seller approves the transfer
+    function approveTransferAsSeller(
+        uint256 _propertyId
+    ) external propertyExists(_propertyId) isListed(_propertyId) {
+        require(
+            _msgSender() == ownerOf(_propertyId),
+            "Caller is not the owner of this property"
+        );
+        require(
+            listings[_propertyId].sellerApproved == false,
+            "Transfer already approved by the seller"
+        );
+
+        listings[_propertyId].sellerApproved = true;
+
+        transfer(_propertyId);
     }
 
     // Buyer approves the transfer
@@ -225,6 +254,34 @@ contract MarketplaceContract is PropertyContract {
         ); // refund excess payment
 
         transfer(_propertyId);
+    }
+
+    // Function to buy out a property
+    function buyOut(
+        uint256 _propertyId
+    ) external payable propertyExists(_propertyId) isListed(_propertyId) {
+        require(
+            listings[_propertyId].acceptedBid.buyer == address(0) &&
+                listings[_propertyId].acceptedBid.bidPrice == 0,
+            "Bid already set"
+        );
+        require(
+            msg.value >= listings[_propertyId].sellPrice,
+            "Insufficient payment for buy out"
+        );
+
+        listings[_propertyId].buyerApproved = true;
+
+        listings[_propertyId].acceptedBid = Bid({
+            buyer: _msgSender(),
+            bidPrice: listings[_propertyId].sellPrice
+        });
+
+        payable(_msgSender()).transfer(
+            msg.value - listings[_propertyId].sellPrice
+        ); // refund excess payment
+
+        emit BuyOut(_msgSender(), _propertyId, listings[_propertyId].sellPrice);
     }
 
     // =========== Utility functions ===========

@@ -1,6 +1,6 @@
 // contracts/Financing.sol
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.23;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
