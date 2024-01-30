@@ -1,4 +1,4 @@
-import { Box, Container, Spinner, Text } from "@chakra-ui/react";
+import { Box, Container, Spinner, Text, Image } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 
 import { PropertyDetails } from "../components/templates/property/PropertyDetails";
@@ -11,6 +11,7 @@ import { initializeDapp } from "../queries/dapp";
 export default function PropertyItem() {
   const location = useLocation();
   const id = location.state.id;
+
   const { address, isConnected } = useAccount();
   const { isFetched, data } = useParticularProperty(address, id);
   const [nft, setNft] = useState<Nft | undefined>();
@@ -49,8 +50,8 @@ export default function PropertyItem() {
         </Box>
       ) : (
         <Container maxWidth="container.lg">
-          <h1>Hello, Property Item {id.toString()} Page!</h1>
-
+          {/* <h1>Hello, Property Item {id.toString()} Page!</h1> */}
+          
           {isConnected ? (
             <PropertyDetails
               id={id}

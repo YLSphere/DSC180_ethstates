@@ -367,7 +367,126 @@ contract PropertyV1_1 is
         }
         return propertiesForSale;
     }
+}
 
+contract Financing is
+    Initializable,
+    ERC721URIStorageUpgradeable,
+    OwnableUpgradeable
+{
+    struct Mortgage {
+        address loaner;
+        uint256 propertyId;
+        uint256 amount;
+        uint256 monthlyInterestRate;
+        uint256 durationInMonths;
+        uint256 monthlyPayment;
+        uint256 paidMonths;
+    }
+
+    mapping(uint256 => Mortgage) public mortgages; // mapping of propertyId to Mortgage struct
+
+    // Modifier to ensure the property is mortgaged
+    modifier isMortgaged(uint256 _propertyId) {
+        require(
+            mortgages[_propertyId].propertyId == _propertyId,
+            "Property is not mortgaged"
+        );
+        _;
+    }
+
+    // Modifier to ensure the property is not mortgaged
+    modifier isNotMortgaged(uint256 _propertyId) {
+        require(
+            mortgages[_propertyId].propertyId == 0,
+            "Property is mortgaged"
+        );
+        _;
+    }
+
+    event Fund(address indexed _from, uint256 _amount);
+
+    // Fund the bank
+    receive() external payable {
+        emit Fund(_msgSender(), msg.value);
+    }
+
+    // Bank shall lend money to the owner of the property
+    function mortgageProperty(
+        uint256 _propertyId,
+        uint256 _amount,
+        uint256 _monthlyInterestRate,
+        uint256 _durationInMonths
+    ) external isPropertyOwner(_propertyId) isNotMortgaged(_propertyId) {
+        require(
+            properties[_propertyId].wantSell == false,
+            "Property is available for sale. Please cancel the sale first"
+        );
+        require(
+            properties[_propertyId].buyer == address(0),
+            "Buyer already set"
+        );
+        require(
+            properties[_propertyId].buyerApproved == false,
+            "Transfer already approved by the buyer"
+        );
+        require(
+            properties[_propertyId].sellerApproved == false,
+            "Transfer already approved by the seller"
+        );
+
+        payable(_msgSender()).transfer(_amount); // transfer money to owner
+        _transfer(_msgSender(), address(this), _propertyId); // transfer property nft to contract
+        require(ownerOf(_propertyId) == address(this), "Transfer failed");
+        _approve(_msgSender(), _propertyId); // approve loaner to sell property nft
+
+        mortgages[_propertyId] = Mortgage({
+            loaner: _msgSender(),
+            propertyId: _propertyId,
+            amount: _amount,
+            monthlyInterestRate: _monthlyInterestRate,
+            durationInMonths: _durationInMonths,
+            monthlyPayment: _amount *
+                ((_monthlyInterestRate *
+                    (1 + _monthlyInterestRate) ** _durationInMonths) /
+                    ((1 + _monthlyInterestRate) ** _durationInMonths - 1)),
+            paidMonths: 0
+        });
+    }
+
+    // Loaner shall pay monthly mortgage payment via this function
+    function makeMortgagePayment(
+        uint256 _propertyId
+    ) external payable isMortgaged(_propertyId) {
+        require(_msgSender() == mortgages[_propertyId].loaner, "Not loaner");
+        require(
+            msg.value >= mortgages[_propertyId].monthlyPayment,
+            "Insufficient payment"
+        );
+        require(
+            mortgages[_propertyId].paidMonths <
+                mortgages[_propertyId].durationInMonths,
+            "Mortgage already paid"
+        );
+        mortgages[_propertyId].paidMonths++;
+        payable(mortgages[_propertyId].loaner).transfer(
+            msg.value - mortgages[_propertyId].monthlyPayment
+        ); // refund excess payment
+
+        if (
+            mortgages[_propertyId].paidMonths ==
+            mortgages[_propertyId].durationInMonths
+        ) {
+            // if mortgage is paid
+            _transfer(address(this), _msgSender(), _propertyId); // transfer property nft to owner
+            require(ownerOf(_propertyId) == _msgSender(), "Transfer failed");
+            delete mortgages[_propertyId];
+        }
+    }
+
+}
+
+/* 
     // ============ Bank ============
 
     struct Mortgage {
@@ -481,4 +600,5 @@ contract PropertyV1_1 is
             delete mortgages[_propertyId];
         }
     }
-}
+*/
+
