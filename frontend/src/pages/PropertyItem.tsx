@@ -36,7 +36,7 @@ export default function PropertyItem() {
       ) : (
         <Container maxWidth="container.lg">
           {/* <h1>Hello, Property Item {id.toString()} Page!</h1> */}
-
+          
           {isConnected ? (
             <PropertyDetails id={id} address={address} nft={nft} />
           ) : (

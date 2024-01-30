@@ -1,15 +1,18 @@
-import { Box, Button, Text, Image, useToast, Center} from "@chakra-ui/react";
-import { useEffect } from "react";
+import { Box, Button, Text, useToast, Center, Container} from "@chakra-ui/react";
+import { useState, useEffect, useRef } from 'react';
+import ReactModal from 'react-modal';
+import "../../../style.css";
 
 import {
   useCancelForSale,
   useListForSale,
+  useBuyerAgreementToSale,
+
 } from "../../../hooks/dapp/useDapp";
 import { Nft } from "../../../types/dapp";
 
-import React from "react";
-import ReactDOM from "react-dom";
 import Slideshow from "../../../Slideshow";
+import ModalMenu from "../../../ModalMenu";
 
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 
@@ -38,16 +41,36 @@ const config = {
   useSystemColorMode: false
 };
 
+const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+  },
+};
+
 const theme = extendTheme({ colors, config });
 
 const rootElement = document.getElementById("root");
 
 const PropertyDetails = (props: Props) => {
+  // const ethers = require('hardhat');
   const toast = useToast();
+  const [reload, setReload] = useState(false);
   const { id, address, nft } = props;
+ 
+  const buyerAgreementToSale = useBuyerAgreementToSale();
   const listForSale = useListForSale();
   const cancelForSale = useCancelForSale();
 
+  const [modalIsOpenBuyMenu, setIsOpenBuyMenu] = useState(false);
+  const [modalIsOpenBidMenu, setIsOpenBidMenu] = useState(false);
+
+  
+  
   useEffect(() => {
     // When the mutation is loading, show a toast
     if (listForSale.isLoading) {
@@ -63,7 +86,7 @@ const PropertyDetails = (props: Props) => {
       toast({
         status: "error",
         title: "Property NFT rejected to be listed",
-        description: "Something wrong",
+        description: "Something went wrong",
         duration: 5000,
       });
     }
@@ -73,9 +96,10 @@ const PropertyDetails = (props: Props) => {
       toast({
         status: "success",
         title: "Property NFT listed",
-        description: "Looks great",
+        description: "Looks great!",
         duration: 5000,
       });
+      setReload(!reload);
     }
   }, [listForSale.isLoading, listForSale.isError, listForSale.isSuccess]);
 
@@ -94,7 +118,7 @@ const PropertyDetails = (props: Props) => {
       toast({
         status: "error",
         title: "Property NFT rejected to be removed from sale",
-        description: "Something wrong",
+        description: "Something went wrong",
         duration: 5000,
       });
     }
@@ -104,43 +128,131 @@ const PropertyDetails = (props: Props) => {
       toast({
         status: "success",
         title: "Property NFT removed from sale",
-        description: "Looks great",
+        description: "Looks great!",
         duration: 5000,
       });
+      setReload(!reload);
     }
   }, [cancelForSale.isLoading, cancelForSale.isError, cancelForSale.isSuccess]);
+// ============ Buying ============
 
-  return (
-    <Center>
+useEffect(() => {
+  // When the mutation is loading, show a toast
+  if (buyerAgreementToSale.isLoading) {
+    toast({
+      status: "loading",
+      title: "Agreement to buy property is pending...",
+      description: "Please wait",
+    });
+  }
+
+  // When the mutation fails, show a toast
+  if (buyerAgreementToSale.isError) {
+    toast({
+      status: "error",
+      title: "Agreement to buy property is rejected",
+      description: "Something went wrong",
+      duration: 5000,
+    });
+  }
+
+  // When the mutation is successful, show a toast
+  if (buyerAgreementToSale.isSuccess) {
+    toast({
+      status: "success",
+      title: "Agreement to buy property was successful! Waiting on seller...",
+      description: "Looks great!",
+      duration: 5000,
+    });
+  }
+}, [buyerAgreementToSale.isLoading, buyerAgreementToSale.isError, buyerAgreementToSale.isSuccess]);
+
+// ============ Offer Menu ============
+  
+ReactModal.setAppElement(rootElement);
+function openModalBuyMenu() {
+  setIsOpenBuyMenu(true);
+}
+function closeModalBuyMenu() {
+  setIsOpenBuyMenu(false);
+}
+
+function openModalBidMenu() {
+  setIsOpenBidMenu(true);
+}
+function closeModalBidMenu() {
+  setIsOpenBidMenu(false);
+}
+
+    return (
       
-      {nft ? (
-        <Box maxW = '800px' mt = {4}>
-        <ChakraProvider theme={theme}>
-          <Slideshow images= {nft.images}/>
-        </ChakraProvider>
+      <Container maxW = '800px'>
+        <ReactModal shouldCloseOnOverlayClick = {true} style={customStyles} isOpen={modalIsOpenBuyMenu} onRequestClose={closeModalBuyMenu} closeTimeoutMS={500} contentLabel="buyMenu">
+            <div className="buyOfferMenu">
+              <ChakraProvider theme={theme}>
+                <ModalMenu />
+              </ChakraProvider>
+            </div>
+        </ ReactModal>
 
-          <Text fontSize='2xl' mb = {2}> Property Details</Text> 
-          <Text>{`Price: ${nft?.price}`}</Text>
-          <Text>{`Property ID: ${nft?.propertyId}`}</Text>
-          <Text>{`URI: ${nft?.uri}`}</Text>
-          <Text>{`Buyer: ${nft?.buyer}`}</Text>
-          <Text>{`Want to sell? ${nft?.wantSell}`}</Text>
-          {nft.wantSell ? (
-            <Button onClick={() => cancelForSale.mutate({ address, id })}>
-              Remove From Sale
-            </Button>
+        <ReactModal shouldCloseOnOverlayClick = {true} style={customStyles} isOpen={modalIsOpenBidMenu} onRequestClose={closeModalBidMenu} closeTimeoutMS={500} contentLabel="bidMenu">
+            <div className="bidOfferMenu">
+              <ChakraProvider theme={theme}>
+                <ModalMenu />
+              </ChakraProvider>
+            </div>
+        </ ReactModal>
+        
+        <Center>
+          {nft ? (
+            <Box maxW = '800px' mt = {4}>
+            <ChakraProvider theme={theme}>
+              <Slideshow images= {nft.images}/>
+            </ChakraProvider>
+    
+              <Text fontSize='2xl' mb = {2}> Property Details</Text> 
+              <Text>{`Price: ${nft?.price}`}</Text>
+              <Text>{`Property ID: ${nft?.propertyId}`}</Text>
+              <Text>{`URI: ${nft?.uri}`}</Text>
+              <Text>{`Buyer: ${nft?.buyer}`}</Text>
+              {nft.wantSell ? (
+                <Button onClick={() => cancelForSale.mutate({ address, id })}>
+                  Remove From Sale
+                </Button>
+              ) : (
+                <Button onClick={() => listForSale.mutate({ address, id })}>
+                  List For Sale
+                </Button>
+              )}
+              
+            </Box>
           ) : (
-            <Button onClick={() => listForSale.mutate({ address, id })}>
-              List For Sale
-            </Button>
+            <Text>Nothin for now</Text>
           )}
           
-        </Box>
-      ) : (
-        <Text>Nothin for now</Text>
-      )}
-    </Center>
-  );
-};
+          
+        </Center>
+        <Center>
+          {nft?.owner == props.address && // CHANGE == to != FOR DEPLOYMENT
+            <Button colorScheme='blue' onClick={() => buyerAgreementToSale.mutate({ address, id })}>
+              Buy Now!
+            </Button>}
+          {nft?.owner == props.address &&
+
+              <Container>
+                <Button colorScheme='blue' onClick={openModalBuyMenu}>
+                  Buy Offers
+                </Button>
+                <Button colorScheme='green' onClick={openModalBidMenu}>
+                  Bid Offers
+                </Button>
+              </Container>
+              
+              }
+              
+        </Center>
+      </Container>
+    );
+  };
 
 export { PropertyDetails };

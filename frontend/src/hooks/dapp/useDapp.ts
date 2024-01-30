@@ -114,12 +114,14 @@ export function useParticularProperty(
     queryKey: ["dapp", "particularProperty", address, id?.toString()],
     queryFn: async () => {
       const dapp = await initializeDapp(address);
+      const owner = await dapp.ownerOf(id as number);
       const result = await dapp.properties(id as number);
       const response = await pinataGateway.get(
         `/ipfs/${result[ResultIndex.URI]}`
       );
       return {
         uri: result[ResultIndex.URI],
+        owner: owner, 
         buyer: result[ResultIndex.BUYER],
         wantSell: result[ResultIndex.WANT_SELL],
         propertyId: result[ResultIndex.PROPERTY_ID],
@@ -148,6 +150,16 @@ export function useCancelForSale() {
     mutationFn: async ({ address, id }: SaleProps) => {
       const dapp = await initializeDapp(address);
       return dapp.cancelPropertySale(id as number);
+    },
+  });
+}
+
+export function useBuyerAgreementToSale() {
+  return useMutation({
+    mutationKey: ["dapp", "buyerAgreementToSale"],
+    mutationFn: async ({ address, id }: SaleProps) => {
+      const dapp = await initializeDapp(address);
+      return dapp.approveTransferAsBuyer(id as number {});
     },
   });
 }

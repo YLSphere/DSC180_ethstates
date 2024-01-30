@@ -22,6 +22,7 @@ export interface Nft {
   propertyId: number;
   uri?: string;
   buyer?: `0x${string}`;
+  owner?: `0x${string}`;
   wantSell?: boolean;
   buyerApproved?: boolean;
   sellerApproved?: boolean;
