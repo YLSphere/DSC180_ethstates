@@ -1,15 +1,18 @@
-import { Box, Button, Text, useToast, Center, Container} from "@chakra-ui/react";
-import { useState, useEffect, useRef } from 'react';
-import ReactModal from 'react-modal';
+import {
+  Box,
+  Button,
+  Text,
+  useToast,
+  Center,
+  Container,
+} from "@chakra-ui/react";
+import { useState, useEffect } from "react";
+import ReactModal from "react-modal";
 import "../../../style.css";
 
-import {
-  useCancelForSale,
-  useListForSale,
-  useBuyerAgreementToSale,
-
-} from "../../../hooks/dapp/useDapp";
-import { Nft } from "../../../types/dapp";
+import { useBuyerAgreementToSale } from "../../../hooks/dapp/useDapp";
+import { useUnlist, useList } from "../../../hooks/dapp/useListing";
+import { BidResultIndex, Nft } from "../../../types/dapp";
 
 import Slideshow from "../../../Slideshow";
 import ModalMenu from "../../../ModalMenu";
@@ -34,22 +37,22 @@ const colors = {
     600: "#3c4178",
     700: "#2a2f57",
     800: "#181c37",
-    900: "#080819"
-  }
+    900: "#080819",
+  },
 };
 const config = {
   initialColorMode: "dark",
-  useSystemColorMode: false
+  useSystemColorMode: false,
 };
 
 const customStyles = {
   content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
-    transform: 'translate(-50%, -50%)',
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    marginRight: "-50%",
+    transform: "translate(-50%, -50%)",
   },
 };
 
@@ -62,16 +65,14 @@ const PropertyDetails = (props: Props) => {
   const toast = useToast();
   const [reload, setReload] = useState(false);
   const { id, address, nft } = props;
- 
+
   const buyerAgreementToSale = useBuyerAgreementToSale();
-  const listForSale = useListForSale();
-  const cancelForSale = useCancelForSale();
+  const list = useList();
+  const unlist = useUnlist();
 
   const [modalIsOpenBuyMenu, setIsOpenBuyMenu] = useState(false);
   const [modalIsOpenBidMenu, setIsOpenBidMenu] = useState(false);
 
-  
-  
   useEffect(() => {
     // When the mutation is loading, show a toast
     if (list.isPending) {
@@ -102,7 +103,7 @@ const PropertyDetails = (props: Props) => {
       });
       setReload(!reload);
     }
-  }, [list]);
+  }, [list.isPending, list.isError, list.isSuccess]);
 
   useEffect(() => {
     // When the mutation is loading, show a toast
@@ -134,126 +135,148 @@ const PropertyDetails = (props: Props) => {
       });
       setReload(!reload);
     }
-  }, [cancelForSale.isLoading, cancelForSale.isError, cancelForSale.isSuccess]);
-// ============ Buying ============
+  }, [unlist.isPending, unlist.isError, unlist.isSuccess]);
+  // ============ Buying ============
 
-useEffect(() => {
-  // When the mutation is loading, show a toast
-  if (buyerAgreementToSale.isLoading) {
-    toast({
-      status: "loading",
-      title: "Agreement to buy property is pending...",
-      description: "Please wait",
-    });
+  useEffect(() => {
+    // When the mutation is loading, show a toast
+    if (buyerAgreementToSale.isLoading) {
+      toast({
+        status: "loading",
+        title: "Agreement to buy property is pending...",
+        description: "Please wait",
+      });
+    }
+
+    // When the mutation fails, show a toast
+    if (buyerAgreementToSale.isError) {
+      toast({
+        status: "error",
+        title: "Agreement to buy property is rejected",
+        description: "Something went wrong",
+        duration: 5000,
+      });
+    }
+
+    // When the mutation is successful, show a toast
+    if (buyerAgreementToSale.isSuccess) {
+      toast({
+        status: "success",
+        title: "Agreement to buy property was successful! Waiting on seller...",
+        description: "Looks great!",
+        duration: 5000,
+      });
+    }
+  }, [
+    buyerAgreementToSale.isLoading,
+    buyerAgreementToSale.isError,
+    buyerAgreementToSale.isSuccess,
+  ]);
+
+  // ============ Offer Menu ============
+
+  ReactModal.setAppElement(rootElement);
+  function openModalBuyMenu() {
+    setIsOpenBuyMenu(true);
+  }
+  function closeModalBuyMenu() {
+    setIsOpenBuyMenu(false);
   }
 
-  // When the mutation fails, show a toast
-  if (buyerAgreementToSale.isError) {
-    toast({
-      status: "error",
-      title: "Agreement to buy property is rejected",
-      description: "Something went wrong",
-      duration: 5000,
-    });
+  function openModalBidMenu() {
+    setIsOpenBidMenu(true);
+  }
+  function closeModalBidMenu() {
+    setIsOpenBidMenu(false);
   }
 
-  // When the mutation is successful, show a toast
-  if (buyerAgreementToSale.isSuccess) {
-    toast({
-      status: "success",
-      title: "Agreement to buy property was successful! Waiting on seller...",
-      description: "Looks great!",
-      duration: 5000,
-    });
-  }
-}, [buyerAgreementToSale.isLoading, buyerAgreementToSale.isError, buyerAgreementToSale.isSuccess]);
+  return (
+    <Container maxW="800px">
+      <ReactModal
+        shouldCloseOnOverlayClick={true}
+        style={customStyles}
+        isOpen={modalIsOpenBuyMenu}
+        onRequestClose={closeModalBuyMenu}
+        closeTimeoutMS={500}
+        contentLabel="buyMenu"
+      >
+        <div className="buyOfferMenu">
+          <ChakraProvider theme={theme}>
+            <ModalMenu />
+          </ChakraProvider>
+        </div>
+      </ReactModal>
 
-// ============ Offer Menu ============
-  
-ReactModal.setAppElement(rootElement);
-function openModalBuyMenu() {
-  setIsOpenBuyMenu(true);
-}
-function closeModalBuyMenu() {
-  setIsOpenBuyMenu(false);
-}
+      <ReactModal
+        shouldCloseOnOverlayClick={true}
+        style={customStyles}
+        isOpen={modalIsOpenBidMenu}
+        onRequestClose={closeModalBidMenu}
+        closeTimeoutMS={500}
+        contentLabel="bidMenu"
+      >
+        <div className="bidOfferMenu">
+          <ChakraProvider theme={theme}>
+            <ModalMenu />
+          </ChakraProvider>
+        </div>
+      </ReactModal>
 
-function openModalBidMenu() {
-  setIsOpenBidMenu(true);
-}
-function closeModalBidMenu() {
-  setIsOpenBidMenu(false);
-}
-
-    return (
-      
-      <Container maxW = '800px'>
-        <ReactModal shouldCloseOnOverlayClick = {true} style={customStyles} isOpen={modalIsOpenBuyMenu} onRequestClose={closeModalBuyMenu} closeTimeoutMS={500} contentLabel="buyMenu">
-            <div className="buyOfferMenu">
-              <ChakraProvider theme={theme}>
-                <ModalMenu />
-              </ChakraProvider>
-            </div>
-        </ ReactModal>
-
-        <ReactModal shouldCloseOnOverlayClick = {true} style={customStyles} isOpen={modalIsOpenBidMenu} onRequestClose={closeModalBidMenu} closeTimeoutMS={500} contentLabel="bidMenu">
-            <div className="bidOfferMenu">
-              <ChakraProvider theme={theme}>
-                <ModalMenu />
-              </ChakraProvider>
-            </div>
-        </ ReactModal>
-        
-        <Center>
-          {nft ? (
-            <Box maxW = '800px' mt = {4}>
+      <Center>
+        {nft ? (
+          <Box maxW="800px" mt={4}>
             <ChakraProvider theme={theme}>
-              <Slideshow images= {nft.images}/>
+              <Slideshow images={nft.images} />
             </ChakraProvider>
-    
-              <Text fontSize='2xl' mb = {2}> Property Details</Text> 
-              <Text>{`Price: ${nft?.price}`}</Text>
-              <Text>{`Property ID: ${nft?.propertyId}`}</Text>
-              <Text>{`URI: ${nft?.uri}`}</Text>
-              <Text>{`Buyer: ${nft?.buyer}`}</Text>
-              {nft.wantSell ? (
-                <Button onClick={() => cancelForSale.mutate({ address, id })}>
-                  Remove From Sale
-                </Button>
-              ) : (
-                <Button onClick={() => listForSale.mutate({ address, id })}>
-                  List For Sale
-                </Button>
-              )}
-              
-            </Box>
-          ) : (
-            <Text>Nothin for now</Text>
-          )}
-          
-          
-        </Center>
-        <Center>
-          {nft?.owner == props.address && // CHANGE == to != FOR DEPLOYMENT
-            <Button colorScheme='blue' onClick={() => buyerAgreementToSale.mutate({ address, id })}>
-              Buy Now!
-            </Button>}
-          {nft?.owner == props.address &&
 
-              <Container>
-                <Button colorScheme='blue' onClick={openModalBuyMenu}>
-                  Buy Offers
-                </Button>
-                <Button colorScheme='green' onClick={openModalBidMenu}>
-                  Bid Offers
-                </Button>
-              </Container>
-              
-              }
-              
-        </Center>
-      </Container>
-    );
-  };
+            <Text fontSize="2xl" mb={2}>
+              {" "}
+              Property Details
+            </Text>
+            <Text>{`Price: ${nft?.price}`}</Text>
+            <Text>{`Property ID: ${nft?.propertyId}`}</Text>
+            <Text>{`URI: ${nft?.uri}`}</Text>
+            <Text>{`Buyer: ${nft?.acceptedBid?.[BidResultIndex.BIDDER]}`}</Text>
+            {nft?.forSale ? (
+              <Button onClick={() => unlist.mutate({ address, id })}>
+                Remove From Sale
+              </Button>
+            ) : (
+              <Button
+                onClick={() =>
+                  list.mutate({ address, id, sellPrice: nft.price })
+                }
+              >
+                List For Sale
+              </Button>
+            )}
+          </Box>
+        ) : (
+          <Text>Nothin for now</Text>
+        )}
+      </Center>
+      <Center>
+        {nft?.owner == props.address && ( // CHANGE == to != FOR DEPLOYMENT
+          <Button
+            colorScheme="blue"
+            onClick={() => buyerAgreementToSale.mutate({ address, id })}
+          >
+            Buy Now!
+          </Button>
+        )}
+        {nft?.owner == props.address && (
+          <Container>
+            <Button colorScheme="blue" onClick={openModalBuyMenu}>
+              Buy Offers
+            </Button>
+            <Button colorScheme="green" onClick={openModalBidMenu}>
+              Bid Offers
+            </Button>
+          </Container>
+        )}
+      </Center>
+    </Container>
+  );
+};
 
 export { PropertyDetails };

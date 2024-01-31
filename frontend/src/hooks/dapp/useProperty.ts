@@ -114,6 +114,7 @@ export function useParticularProperty(
           acceptedBid: listingResult[ListingResultIndex.ACCEPTED_BID],
           // pinata data
           ...response.data,
+          forSale: listingResult[ListingResultIndex.SELL_PRICE] > 0,
         };
       } catch (error) {
         console.error(error);

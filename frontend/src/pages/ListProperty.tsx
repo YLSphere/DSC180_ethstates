@@ -110,7 +110,6 @@ export default function ListProperty() {
     parkingSpots: 0,
     addititonalFeatures: "",
     price: 0,
-    forSale: false,
     images: [],
   });
   const date = new Date().getTime();

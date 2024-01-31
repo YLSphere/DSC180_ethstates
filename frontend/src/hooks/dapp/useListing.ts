@@ -36,6 +36,7 @@ export function useGetAllListings(address: `0x${string}` | undefined) {
               acceptedBid: result[ListingResultIndex.ACCEPTED_BID],
               // pinata data
               ...response.data,
+              forSale: result[ListingResultIndex.SELL_PRICE] > 0,
             };
           })
         );

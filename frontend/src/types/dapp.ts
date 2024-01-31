@@ -81,7 +81,6 @@ export interface PinataContent {
   parkingSpots: number;
   addititonalFeatures: string;
   price: number;
-  forSale: boolean;
   images: string[];
 }
 
