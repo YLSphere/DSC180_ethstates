@@ -21,3 +21,17 @@ export function useAcceptOffer() {
     },
   });
 }
+
+export function useRemoveBid() {
+  return useMutation({
+    mutationKey: ["dapp", "removeBid"],
+    mutationFn: async ({ address, id, bidder }: BidProps) => {
+      const dapp = await initializeDapp(address);
+      try{
+      return dapp.removeBid(id as number, bidder);
+      } catch (error){
+        console.error('Error removing bid:', error);
+      }
+    },
+  });
+}

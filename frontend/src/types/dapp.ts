@@ -37,7 +37,7 @@ export enum BidResultIndex {
 }
 
 export interface Bid {
-  bidder: `0x${string}`;
+  bidder: `0x${string}`| undefined;
   bidPrice: number;
 }
 
@@ -106,6 +106,6 @@ export interface ListingProps {
 export interface BidProps {
   address: `0x${string}` | undefined;
   id: number | undefined;
-  bidder?: `0x${string}`;
+  bidder?: `0x${string}` | undefined;
   bidPrice?: number;
 }

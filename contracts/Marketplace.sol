@@ -126,6 +126,7 @@ contract MarketplaceContract is PropertyContract {
 
         listingCount--;
         delete listings[_propertyId];
+        delete listings[_propertyId].bids;
 
         emit Unlist(_msgSender(), _propertyId);
     }
@@ -182,12 +183,27 @@ contract MarketplaceContract is PropertyContract {
                 break;
             }
         }
+        delete listings[_propertyId].bids;
 
         emit Accept(
             _msgSender(),
             _propertyId,
             listings[_propertyId].acceptedBid.bidPrice
         );
+        
+    }
+    function removeBid(
+        uint256 _propertyId,
+        address _buyer
+        ) public {
+        for (uint256 i = 0; i < listings[_propertyId].bids.length; i++) {
+            if (listings[_propertyId].bids[i].buyer == _buyer) {
+                // Swap with the last element and then pop
+                listings[_propertyId].bids[i] = listings[_propertyId].bids[listings[_propertyId].bids.length - 1];
+                listings[_propertyId].bids.pop();
+                break;
+            }
+        }
     }
 
     // Function to transfer the property to the buyer

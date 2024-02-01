@@ -15,9 +15,12 @@ import { useUnlist, useList } from "../../../hooks/dapp/useListing";
 import { BidResultIndex, Nft } from "../../../types/dapp";
 
 import Slideshow from "../../../Slideshow";
-import ModalMenu from "../../../ModalMenu";
+import {BuyMenu} from "../../../Modals/BuyMenu";
+import {BidMenu} from "../../../Modals/BidMenu";
 
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
+// import { useParticularProperty } from "../../../hooks/dapp/useProperty";
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
   id: number;
@@ -63,7 +66,7 @@ const rootElement = document.getElementById("root");
 const PropertyDetails = (props: Props) => {
   // const ethers = require('hardhat');
   const toast = useToast();
-  const [reload, setReload] = useState(false);
+  const navigate = useNavigate();
   const { id, address, nft } = props;
 
   const buyerAgreementToSale = useBuyerAgreementToSale();
@@ -101,7 +104,7 @@ const PropertyDetails = (props: Props) => {
         description: "Looks great!",
         duration: 5000,
       });
-      setReload(!reload);
+      window.setTimeout(function(){location.reload()},5000)
     }
   }, [list.isPending, list.isError, list.isSuccess]);
 
@@ -133,45 +136,12 @@ const PropertyDetails = (props: Props) => {
         description: "Looks great!",
         duration: 5000,
       });
-      setReload(!reload);
+      window.setTimeout(function(){location.reload()},5000);
     }
   }, [unlist.isPending, unlist.isError, unlist.isSuccess]);
   // ============ Buying ============
 
-  useEffect(() => {
-    // When the mutation is loading, show a toast
-    if (buyerAgreementToSale.isLoading) {
-      toast({
-        status: "loading",
-        title: "Agreement to buy property is pending...",
-        description: "Please wait",
-      });
-    }
 
-    // When the mutation fails, show a toast
-    if (buyerAgreementToSale.isError) {
-      toast({
-        status: "error",
-        title: "Agreement to buy property is rejected",
-        description: "Something went wrong",
-        duration: 5000,
-      });
-    }
-
-    // When the mutation is successful, show a toast
-    if (buyerAgreementToSale.isSuccess) {
-      toast({
-        status: "success",
-        title: "Agreement to buy property was successful! Waiting on seller...",
-        description: "Looks great!",
-        duration: 5000,
-      });
-    }
-  }, [
-    buyerAgreementToSale.isLoading,
-    buyerAgreementToSale.isError,
-    buyerAgreementToSale.isSuccess,
-  ]);
 
   // ============ Offer Menu ============
 
@@ -190,6 +160,12 @@ const PropertyDetails = (props: Props) => {
     setIsOpenBidMenu(false);
   }
 
+  
+  
+  const linkToBidPage = () => {
+    // Navigate to bid page
+    navigate('/property/bids', { state: { id: nft?.propertyId }});
+  };
   return (
     <Container maxW="800px">
       <ReactModal
@@ -200,9 +176,9 @@ const PropertyDetails = (props: Props) => {
         closeTimeoutMS={500}
         contentLabel="buyMenu"
       >
-        <div className="buyOfferMenu">
+        <div>
           <ChakraProvider theme={theme}>
-            <ModalMenu />
+            <BuyMenu />
           </ChakraProvider>
         </div>
       </ReactModal>
@@ -215,9 +191,12 @@ const PropertyDetails = (props: Props) => {
         closeTimeoutMS={500}
         contentLabel="bidMenu"
       >
-        <div className="bidOfferMenu">
+        <div>
           <ChakraProvider theme={theme}>
-            <ModalMenu />
+            <BidMenu 
+            id = {id} 
+            address = {address}
+            nft = {nft}/>
           </ChakraProvider>
         </div>
       </ReactModal>
@@ -237,39 +216,55 @@ const PropertyDetails = (props: Props) => {
             <Text>{`Property ID: ${nft?.propertyId}`}</Text>
             <Text>{`URI: ${nft?.uri}`}</Text>
             <Text>{`Buyer: ${nft?.acceptedBid?.[BidResultIndex.BIDDER]}`}</Text>
-            {nft?.forSale ? (
-              <Button onClick={() => unlist.mutate({ address, id })}>
-                Remove From Sale
-              </Button>
-            ) : (
-              <Button
-                onClick={() =>
-                  list.mutate({ address, id, sellPrice: nft.price })
-                }
-              >
-                List For Sale
-              </Button>
-            )}
+            {(nft?.owner != address && nft?.sellerApproved == false) ? (
+              <Box>
+                  {nft?.forSale ? (
+                <Button onClick={() => unlist.mutate({ address, id })}>
+                  Remove From Sale
+                </Button>
+              ) : (
+                <Button
+                  onClick={() =>
+                    list.mutate({ address, id, sellPrice: nft.price })
+                  }
+                >
+                  List For Sale
+                </Button>
+              )}
+              </Box>
+              ): (nft?.sellerApproved == true) 
+              ? (<Text mt = {4}>The property is in the process of transaction or is sold.</Text>) 
+              : (<Text mt = {4}>You are the owner of the property.</Text>)}
+            
           </Box>
         ) : (
           <Text>Nothin for now</Text>
         )}
       </Center>
       <Center>
-        {nft?.owner == props.address && ( // CHANGE == to != FOR DEPLOYMENT
+        {nft?.owner != props.address && ( // CHANGE == to != FOR DEPLOYMENT
+        <Container>
           <Button
-            colorScheme="blue"
+            colorScheme="teal"
             onClick={() => buyerAgreementToSale.mutate({ address, id })}
           >
             Buy Now!
           </Button>
+          <Button
+            colorScheme="red"
+            onClick={linkToBidPage}
+          >
+            Bids
+          </Button>
+        </Container>
+          
         )}
         {nft?.owner == props.address && (
           <Container>
-            <Button colorScheme="blue" onClick={openModalBuyMenu}>
+            <Button colorScheme="teal" onClick={openModalBuyMenu}>
               Buy Offers
             </Button>
-            <Button colorScheme="green" onClick={openModalBidMenu}>
+            <Button colorScheme="red" onClick={openModalBidMenu}>
               Bid Offers
             </Button>
           </Container>
