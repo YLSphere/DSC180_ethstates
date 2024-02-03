@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Nft } from "../../../types/dapp";
+import { BidResult, Nft } from "../types/dapp";
 import { useEffect, useState } from "react";
 import {
   ButtonGroup,
@@ -45,7 +45,7 @@ const BidMenu = (props: Props) => {
       toast({
         status: "loading",
         title: "Removing Bid...",
-        description: "Please wait",
+        description: "Please confirm on Metamask.",
       });
     }
 
@@ -77,7 +77,7 @@ const BidMenu = (props: Props) => {
       toast({
         status: "loading",
         title: "Accepting Bid...",
-        description: "Please wait",
+        description: "Please confirm on Metamask.",
       });
     }
 
@@ -86,7 +86,7 @@ const BidMenu = (props: Props) => {
       toast({
         status: "error",
         title: "An error occured",
-        description: "Something wrong",
+        description: "Something went wrong.",
         duration: 5000,
       });
     }
@@ -96,7 +96,7 @@ const BidMenu = (props: Props) => {
       toast({
         status: "success",
         title: "Bid Accepted",
-        description: "Looks great!",
+        description: "Looks great! Waiting on Buyer to approve.",
         duration: 5000,
       });
       window.setTimeout(function(){location.reload()},10000);
@@ -155,7 +155,7 @@ const BidMenu = (props: Props) => {
             },
           }}
         >
-          {nft?.bids.map((bid:string, tid:number) => {
+          {nft?.bids?.map((bid: BidResult, tid: number) => {
             return (
               <Tr
                 key={tid}

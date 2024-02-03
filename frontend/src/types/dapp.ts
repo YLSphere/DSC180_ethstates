@@ -107,5 +107,5 @@ export interface BidProps {
   address: `0x${string}` | undefined;
   id: number | undefined;
   bidder?: `0x${string}` | undefined;
-  bidPrice?: number;
+  bidPrice?: bigint;
 }

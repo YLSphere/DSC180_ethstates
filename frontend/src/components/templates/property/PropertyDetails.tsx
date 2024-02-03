@@ -5,14 +5,16 @@ import {
   useToast,
   Center,
   Container,
+  VStack,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import ReactModal from "react-modal";
 import "../../../style.css";
 
-import { useBuyerAgreementToSale } from "../../../hooks/dapp/useDapp";
 import { useUnlist, useList } from "../../../hooks/dapp/useListing";
+import {useEndBiddingProcess, useApproveTransferAsBuyer} from "../../../hooks/dapp/useBidding";
 import { BidResultIndex, Nft } from "../../../types/dapp";
+import {useGetAllPropertiesByOwner} from "../../../hooks/dapp/useProperty";
 
 import Slideshow from "../../../Slideshow";
 import {BuyMenu} from "../../../Modals/BuyMenu";
@@ -22,6 +24,7 @@ import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 // import { useParticularProperty } from "../../../hooks/dapp/useProperty";
 import { useNavigate } from 'react-router-dom';
 
+ReactModal.setAppElement('body');
 interface Props {
   id: number;
   address: `0x${string}` | undefined;
@@ -69,7 +72,10 @@ const PropertyDetails = (props: Props) => {
   const navigate = useNavigate();
   const { id, address, nft } = props;
 
-  const buyerAgreementToSale = useBuyerAgreementToSale();
+  const endBiddingProcess = useEndBiddingProcess();
+  const approveTransferAsBuyer= useApproveTransferAsBuyer();
+
+  const { isFetched, data } = useGetAllPropertiesByOwner(address);
   const list = useList();
   const unlist = useUnlist();
 
@@ -82,7 +88,7 @@ const PropertyDetails = (props: Props) => {
       toast({
         status: "loading",
         title: "Property NFT pending to be listed",
-        description: "Please wait",
+        description: "Please confirm on Metamask",
       });
     }
 
@@ -114,7 +120,7 @@ const PropertyDetails = (props: Props) => {
       toast({
         status: "loading",
         title: "Property NFT pending to be removed from sale",
-        description: "Please wait",
+        description: "Please confirm on Metamask",
       });
     }
 
@@ -139,6 +145,71 @@ const PropertyDetails = (props: Props) => {
       window.setTimeout(function(){location.reload()},5000);
     }
   }, [unlist.isPending, unlist.isError, unlist.isSuccess]);
+
+  useEffect(() => {
+    // When the mutation is loading, show a toast
+    if (approveTransferAsBuyer.isPending) {
+      toast({
+        status: "loading",
+        title: "Initiating transfer...",
+        description: "Please confirm on Metamask.",
+      });
+    }
+
+    // When the mutation fails, show a toast
+    if (approveTransferAsBuyer.isError) {
+      toast({
+        status: "error",
+        title: "An error occured",
+        description: "Something went wrong",
+        duration: 5000,
+      });
+    }
+
+    // When the mutation is successful, show a toast
+    if (approveTransferAsBuyer.isSuccess) {
+      toast({
+        status: "success",
+        title: "Transfer complete",
+        description: "You now own this property!",
+        duration: 10000,
+      });
+      
+      window.setTimeout(function(){location.reload()},10000);
+    }
+  }, [approveTransferAsBuyer.isPending, approveTransferAsBuyer.isError, approveTransferAsBuyer.isSuccess]);
+
+  useEffect(() => {
+    // When the mutation is loading, show a toast
+    if (endBiddingProcess.isPending) {
+      toast({
+        status: "loading",
+        title: "Ending the transaction process",
+        description: "Please confirm on Metamask.",
+      });
+    }
+
+    // When the mutation fails, show a toast
+    if (endBiddingProcess.isError) {
+      toast({
+        status: "error",
+        title: "An error occured",
+        description: "Something went wrong",
+        duration: 5000,
+      });
+    }
+
+    // When the mutation is successful, show a toast
+    if (endBiddingProcess.isSuccess) {
+      toast({
+        status: "success",
+        title: "Ended transaction process",
+        description: "Looks great!",
+        duration: 10000,
+      });
+      window.setTimeout(function(){location.reload()},10000);
+    }
+  }, [endBiddingProcess.isPending, endBiddingProcess.isError, endBiddingProcess.isSuccess]);
   // ============ Buying ============
 
 
@@ -160,12 +231,14 @@ const PropertyDetails = (props: Props) => {
     setIsOpenBidMenu(false);
   }
 
-  
+  // ============ Bidding ============
   
   const linkToBidPage = () => {
     // Navigate to bid page
     navigate('/property/bids', { state: { id: nft?.propertyId }});
   };
+
+
   return (
     <Container maxW="800px">
       <ReactModal
@@ -207,6 +280,7 @@ const PropertyDetails = (props: Props) => {
             <ChakraProvider theme={theme}>
               <Slideshow images={nft.images} />
             </ChakraProvider>
+          
 
             <Text fontSize="2xl" mb={2}>
               {" "}
@@ -216,7 +290,7 @@ const PropertyDetails = (props: Props) => {
             <Text>{`Property ID: ${nft?.propertyId}`}</Text>
             <Text>{`URI: ${nft?.uri}`}</Text>
             <Text>{`Buyer: ${nft?.acceptedBid?.[BidResultIndex.BIDDER]}`}</Text>
-            {(nft?.owner != address && nft?.sellerApproved == false) ? (
+            {(nft?.owner == address && nft?.sellerApproved == false) ? (
               <Box>
                   {nft?.forSale ? (
                 <Button onClick={() => unlist.mutate({ address, id })}>
@@ -234,7 +308,7 @@ const PropertyDetails = (props: Props) => {
               </Box>
               ): (nft?.sellerApproved == true) 
               ? (<Text mt = {4}>The property is in the process of transaction or is sold.</Text>) 
-              : (<Text mt = {4}>You are the owner of the property.</Text>)}
+              : (<Text mt = {4}></Text>)}
             
           </Box>
         ) : (
@@ -242,24 +316,23 @@ const PropertyDetails = (props: Props) => {
         )}
       </Center>
       <Center>
-        {nft?.owner != props.address && ( // CHANGE == to != FOR DEPLOYMENT
+        {(nft?.owner != props.address && nft?.sellerApproved == false) && ( // CHANGE == to != FOR DEPLOYMENT
         <Container>
           <Button
             colorScheme="teal"
-            onClick={() => buyerAgreementToSale.mutate({ address, id })}
           >
-            Buy Now!
+            Buy Now! Implement later
           </Button>
           <Button
             colorScheme="red"
             onClick={linkToBidPage}
           >
-            Bids
+            Bid
           </Button>
         </Container>
           
         )}
-        {nft?.owner == props.address && (
+        {(nft?.owner == props.address && nft?.sellerApproved == false) && (
           <Container>
             <Button colorScheme="teal" onClick={openModalBuyMenu}>
               Buy Offers
@@ -269,6 +342,21 @@ const PropertyDetails = (props: Props) => {
             </Button>
           </Container>
         )}
+        <VStack>
+          {(nft?.sellerApproved == true && props.address == nft?.acceptedBid?.[BidResultIndex.BIDDER]) && (
+            // ethers.parseEther(.toString())
+            <Button colorScheme="green" onClick={() => approveTransferAsBuyer.mutate({ address, id, bidPrice: BigInt(nft!.acceptedBid![BidResultIndex.BID_PRICE]) * BigInt(1e18)})}>
+              Confirm transaction and initiate transfer
+            </Button>
+          )}
+          <Button colorScheme="green" onClick={() => console.log(data)}>
+            owner
+          </Button>
+          {(nft?.sellerApproved == true && (nft?.owner == props.address || nft?.acceptedBid?.[BidResultIndex.BIDDER] == props.address)) &&(
+            <Button colorScheme="red" onClick={() => endBiddingProcess.mutate({ address, id})}>
+              End transaction process
+            </Button>)}
+        </VStack>
       </Center>
     </Container>
   );

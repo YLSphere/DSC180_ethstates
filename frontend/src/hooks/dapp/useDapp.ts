@@ -151,12 +151,4 @@ import {
 //   });
 // }
 
-export function useBuyerAgreementToSale() {
-  return useMutation({
-    mutationKey: ["dapp", "buyerAgreementToSale"],
-    mutationFn: async ({ address, id }: ListingProps) => {
-      const dapp = await initializeDapp(address);
-      return dapp.approveTransferAsBuyer(id as number);
-    },
-  });
-}
+

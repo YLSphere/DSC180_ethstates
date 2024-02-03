@@ -3,6 +3,8 @@
 pragma solidity ^0.8.23;
 
 import "./Property.sol";
+import "hardhat/console.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract MarketplaceContract is PropertyContract {
     struct Bid {
@@ -192,10 +194,16 @@ contract MarketplaceContract is PropertyContract {
         );
         
     }
+
+    // Function for buyer or seller to remove bid
     function removeBid(
         uint256 _propertyId,
         address _buyer
-        ) public {
+        ) external
+        propertyExists(_propertyId)
+        isListed(_propertyId)
+        bidsIncludeBuyerOrNot(_propertyId, _buyer, true)
+    {
         for (uint256 i = 0; i < listings[_propertyId].bids.length; i++) {
             if (listings[_propertyId].bids[i].buyer == _buyer) {
                 // Swap with the last element and then pop
@@ -204,6 +212,18 @@ contract MarketplaceContract is PropertyContract {
                 break;
             }
         }
+    }
+
+    // Function for buyer or seller to end Bidding process before both parties approve
+    function endBiddingProcess(
+        uint256 _propertyId
+    ) external
+        propertyExists(_propertyId)
+        isListed(_propertyId)
+    {
+        listings[_propertyId].sellerApproved = false;
+        listings[_propertyId].buyerApproved = false;
+        delete listings[_propertyId].acceptedBid;
     }
 
     // Function to transfer the property to the buyer
@@ -247,26 +267,28 @@ contract MarketplaceContract is PropertyContract {
     }
 
     // Buyer approves the transfer
+
     function approveTransferAsBuyer(
         uint256 _propertyId
     ) external payable propertyExists(_propertyId) isListed(_propertyId) {
+        uint256 price = listings[_propertyId].acceptedBid.bidPrice * 1 ether;
         require(
             listings[_propertyId].acceptedBid.buyer == _msgSender(),
             "Caller is not the buyer of this property"
         );
         require(
-            msg.value >= listings[_propertyId].acceptedBid.bidPrice,
+            msg.value >= price,
             "Insufficient payment"
         );
         require(
             listings[_propertyId].buyerApproved == false,
             "Transfer already approved by the buyer"
         );
-
+        
         listings[_propertyId].buyerApproved = true;
-
         payable(_msgSender()).transfer(
-            msg.value - listings[_propertyId].acceptedBid.bidPrice
+        
+            msg.value - price
         ); // refund excess payment
 
         transfer(_propertyId);
@@ -276,6 +298,7 @@ contract MarketplaceContract is PropertyContract {
     function buyOut(
         uint256 _propertyId
     ) external payable propertyExists(_propertyId) isListed(_propertyId) {
+        
         require(
             listings[_propertyId].acceptedBid.buyer == address(0) &&
                 listings[_propertyId].acceptedBid.bidPrice == 0,

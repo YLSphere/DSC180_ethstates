@@ -1,3 +1,4 @@
+
 import {
   Button,
   Container,
@@ -13,7 +14,7 @@ import Dropzone from "../components/templates/form/Dropzone";
 
 import { pinataImage } from "../queries/pinata";
 import { useAddProperty } from "../hooks/dapp/useProperty";
-
+import { useNavigate } from 'react-router-dom';
 import { PinataContent } from "../types/dapp";
 
 const formFields = [
@@ -96,6 +97,7 @@ const formFields = [
 
 export default function ListProperty() {
   const toast = useToast();
+  const navigate = useNavigate();
   const addProperty = useAddProperty();
   const { address, isConnected } = useAccount();
   const [pinataContent, setPinataContent] = useState<PinataContent>({
@@ -120,7 +122,7 @@ export default function ListProperty() {
       toast({
         status: "loading",
         title: "Property NFT pending",
-        description: "Please wait",
+        description: "Please confirm on Metamask",
       });
     }
 
@@ -139,9 +141,12 @@ export default function ListProperty() {
       toast({
         status: "success",
         title: "Property NFT minted",
-        description: "Looks great",
-        duration: 5000,
+        description: "Looks great, redirecting you...",
+        duration: 10000,
       });
+      setTimeout(() => {
+        navigate('/profile')
+      }, 10000)
     }
   }, [addProperty]);
 
@@ -233,8 +238,8 @@ export default function ListProperty() {
                 }
               />
             </FormControl>
-          ))}
-
+            
+          ))}    
           <Dropzone onUpload={handleUpload} />
 
           <Button my={4} colorScheme="teal" type="submit">

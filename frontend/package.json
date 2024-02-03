@@ -34,6 +34,7 @@
     "@choc-ui/logo":"latest",
     "pill-pity":"latest",
     "react-modal": "^3.14.3"
+    
   },
   "devDependencies": {
 
@@ -46,7 +47,8 @@
     "typescript": "^5.2.2",
     "vite": "^5.0.0",
     "@types/react":"latest",
-    "@types/react-dom":"latest"
+    "@types/react-dom":"latest",
+    "@types/react-modal": "latest"
   }
 }
 

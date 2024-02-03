@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { initializeDapp } from "../../queries/dapp";
-import { BidProps } from "../../types/dapp";
+import { BidProps} from "../../types/dapp";
 
 export function useBid() {
   return useMutation({
@@ -35,3 +35,24 @@ export function useRemoveBid() {
     },
   });
 }
+
+export function useEndBiddingProcess() {
+  return useMutation({
+    mutationKey: ["dapp", "endBiddingProcess"],
+    mutationFn: async ({ address, id}: BidProps) => {
+      const dapp = await initializeDapp(address);
+      return dapp.endBiddingProcess(id as number);
+    },
+  });
+}
+
+export function useApproveTransferAsBuyer() {
+  return useMutation({
+    mutationKey: ["dapp", "approveTransferAsBuyer"],
+    mutationFn: async ({ address, id, bidPrice}: BidProps) => {
+      const dapp = await initializeDapp(address);
+      return dapp.approveTransferAsBuyer(id as number, {value: bidPrice});
+    },
+  });
+}
+

@@ -14,7 +14,9 @@ import {
   FormHelperText,
   FormErrorMessage,
   useToast,
+  Switch,
 } from "@chakra-ui/react";
+import ReactModal from "react-modal";
 import Slideshow from "../Slideshow";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
@@ -25,7 +27,7 @@ import { initializeDapp } from "../queries/dapp";
 
 import {BidMenu} from "../Modals/BidMenu";
 
-
+ReactModal.setAppElement('body');
 
 const colors = {
   brand: {
@@ -41,6 +43,16 @@ const colors = {
     900: "#080819",
   },
 };
+const customStyles = {
+  content: {
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    marginRight: "-50%",
+    transform: "translate(-50%, -50%)",
+  },
+};
 const config = {
   initialColorMode: "dark",
   useSystemColorMode: false,
@@ -49,7 +61,8 @@ const theme = extendTheme({ colors, config });
 
 export default function PropertyItem() {
   const locationHere = useLocation();
-
+  const [alertIsOpen, setIsOpenAlert] = useState(false);
+  
   const bidSubmit = useBid()
 
   const toast = useToast();
@@ -62,11 +75,10 @@ export default function PropertyItem() {
   const { isFetched, data } = useParticularProperty(address, id);
 
   const [nft, setNft] = useState<Nft | undefined>();
-
+  
 
   useEffect(() => {
     if (isConnected && isFetched) {
-      console.log(data);
       setNft(data);
     }
   }, [isConnected, isFetched]);
@@ -82,10 +94,9 @@ export default function PropertyItem() {
   const handlePriceChange = (e) => {
     setPrice(e.target.value);
   };
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = () => {
     // Submit bid to bid menu
-    e.preventDefault();
-    bidSubmit.mutate({address, id, bidPrice: price})
+    bidSubmit.mutate({address, id, bidPrice: BigInt(price)});
   };
 
   useEffect(() => {
@@ -94,7 +105,7 @@ export default function PropertyItem() {
       toast({
         status: "loading",
         title: "Sending Bid...",
-        description: "Please wait",
+        description: "Please confirm on Metamask.",
       });
     }
 
@@ -125,6 +136,21 @@ export default function PropertyItem() {
     }
   }, [isConnected]);
 
+  // TERMS AND CONDITIONS MODAL
+  
+  function closeModalAlert() {
+    setIsOpenAlert(false);
+  }
+
+  const handleSwitchChange = () => {
+    setIsOpenAlert(!alertIsOpen);
+    handleSubmit();
+  };
+  function openModalAlert(e : React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setIsOpenAlert(true);
+  }
+  
   return (
     <main>
       {!isFetched ? (
@@ -139,13 +165,31 @@ export default function PropertyItem() {
       ) : (
         <Center>
         {nft ? (
-          <VStack maxW="100%" flex="1" >
+          <VStack maxW="100%" flex="1" > 
+
+            <ReactModal
+              shouldCloseOnOverlayClick={true}
+              style={customStyles}
+              isOpen={alertIsOpen}
+              onRequestClose={closeModalAlert}
+              closeTimeoutMS={500}
+              contentLabel="tas">
+                <Text>I agree that I do not have inside information and stuff</Text>
+                <Switch 
+                colorScheme='teal' 
+                isRequired
+                isChecked={!alertIsOpen}
+                onChange={handleSwitchChange}>
+                </Switch>
+            </ReactModal>
+
             <HStack>
               <Box flex="1" maxW="100%" mt={4} mb = {10} mr = {4} >
                   <ChakraProvider theme={theme}>
                     <Slideshow images={nft.images} />
                   </ChakraProvider>
                 </Box>
+
               <VStack>
                 <Box>
                   <Text fontSize="2xl" mb={2}>
@@ -158,7 +202,7 @@ export default function PropertyItem() {
                   <Text>{`Buyer: ${nft?.acceptedBid?.[BidResultIndex.BIDDER]}`}</Text>
 
                   {(nft?.owner != address && nft?.sellerApproved == false) ? (
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={openModalAlert}>
                     <FormControl  isRequired={true} isInvalid={isError} id="price">
                       <FormLabel>
                         Bid Price:
@@ -180,7 +224,7 @@ export default function PropertyItem() {
                     </FormControl>
                   </form>) : (nft?.sellerApproved == true) 
                   ? (<Text mt = {4}>The property is in the process of transaction or is sold.</Text>) 
-                  : (<Text>You are the owner of the property.</Text>)} 
+                  : (<Text></Text>)} 
                 </Box>
               </VStack>
               
