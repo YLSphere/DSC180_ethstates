@@ -101,7 +101,6 @@ export default function ListProperty() {
   const addProperty = useAddProperty();
   const { address, isConnected } = useAccount();
   const [pinataContent, setPinataContent] = useState<PinataContent>({
-    owner: address,
     streetAddress: "",
     city: "",
     state: "",

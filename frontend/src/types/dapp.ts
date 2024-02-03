@@ -70,7 +70,6 @@ export interface Nft {
 }
 
 export interface PinataContent {
-  owner: `0x${string}` | undefined;
   streetAddress: string;
   city: string;
   state: string;

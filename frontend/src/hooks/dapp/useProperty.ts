@@ -49,12 +49,14 @@ export function useGetAllPropertiesByOwner(
           const response = await pinataGateway.get(
             `/ipfs/${result[PropertyResultIndex.URI]}`
           );
+          const ownerAddress: `0x${string}` | undefined = await dapp.ownerOf(
+            result[PropertyResultIndex.PROPERTY_ID]
+          );
           return {
             propertyId: result[PropertyResultIndex.PROPERTY_ID],
 
-
-
             ...response.data,
+            owner: ownerAddress,
           };
         })
       );
@@ -98,6 +100,9 @@ export function useParticularProperty(
         const listingResult: ListingResult = await dapp.getListing(
           id as number
         );
+        const ownerAddress: `0x${string}` | undefined = await dapp.ownerOf(
+          id as number
+        );
         const response = await pinataGateway.get(
           `/ipfs/${propertyResult[PropertyResultIndex.URI]}`
         );
@@ -114,6 +119,7 @@ export function useParticularProperty(
           acceptedBid: listingResult[ListingResultIndex.ACCEPTED_BID],
           // pinata data
           ...response.data,
+          owner: ownerAddress,
           forSale: listingResult[ListingResultIndex.SELL_PRICE] > 0,
         };
       } catch (error) {
