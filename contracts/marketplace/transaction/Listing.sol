@@ -1,16 +1,14 @@
-// contracts/Marketplace.sol
+// transaction/Listing.sol
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.23;
 
-import "./Property.sol";
+import "../property/Property.sol";
+import "../finance/Financing.sol";
+import "./Bidding.sol";
 
-contract MarketplaceContract is PropertyContract {
-    struct Bid {
-        address buyer;
-        uint256 bidPrice;
-    }
-
-    
+contract ListingContract is PropertyContract, FinancingContract {
+    using Bidding for Bidding.Bid;
+    using FinancingLibrary for FinancingLibrary.Financing;
 
     struct Listing {
         // Sale
@@ -18,9 +16,12 @@ contract MarketplaceContract is PropertyContract {
         uint256 sellPrice;
         bool buyerApproved;
         bool sellerApproved;
+        // Financing
+        FinancingLibrary.Financing currentFinancing;
+        FinancingLibrary.Financing previousFinancing;
         // Bidding
-        Bid[] bids;
-        Bid acceptedBid;
+        Bidding.Bid[] bids;
+        Bidding.Bid acceptedBid;
         // TODO: Buy Out
     }
 
@@ -32,6 +33,15 @@ contract MarketplaceContract is PropertyContract {
         require(
             listings[_propertyId].propertyId == _propertyId,
             "Property is not listed"
+        );
+        _;
+    }
+
+    // Check if buyer is the accepted buyer
+    modifier isAcceptedBuyer(uint256 _propertyId, address _buyer) {
+        require(
+            listings[_propertyId].acceptedBid.buyer == _buyer,
+            "Caller is not the approved buyer"
         );
         _;
     }
@@ -56,11 +66,6 @@ contract MarketplaceContract is PropertyContract {
         _;
     }
 
-    function __MarketplaceContract_init() internal {
-        __PropertyContract_init();
-        listingCount = 0;
-    }
-
     // Listing addition event
     event List(
         address indexed _seller,
@@ -71,22 +76,11 @@ contract MarketplaceContract is PropertyContract {
     // Listing removal event
     event Unlist(address indexed _seller, uint256 _propertyId);
 
-    // Offer event
-    event Offer(address indexed _buyer, uint256 _propertyId, uint256 _bidPrice);
-
-    // Accept event
-    event Accept(
-        address indexed _seller,
-        uint256 _propertyId,
-        uint256 _bidPrice
-    );
-
-    // BuyOut event
-    event BuyOut(
-        address indexed _buyer,
-        uint256 _propertyId,
-        uint256 _buyOutPrice
-    );
+    function __ListingContract_init() internal {
+        __PropertyContract_init();
+        __FinancingContract_init();
+        listingCount = 0;
+    }
 
     // Function to list a property for sale
     function listProperty(
@@ -94,10 +88,14 @@ contract MarketplaceContract is PropertyContract {
         uint256 _sellPrice
     ) external propertyExists(_propertyId) isPropertyOwner(_propertyId) {
         require(_exists(_propertyId), "Property with this ID does not exist");
-        require(_sellPrice > 0, "Sell price cannot be zero");
         require(
             listings[_propertyId].propertyId != _propertyId,
             "Property is already listed"
+        );
+        require(_sellPrice > 0, "Sell price cannot be zero");
+        require(
+            remainingBalance(_propertyId) <= _sellPrice,
+            "Sell price cannot be less than loan amount"
         );
 
         listingCount++;
@@ -105,6 +103,7 @@ contract MarketplaceContract is PropertyContract {
         Listing storage listing = listings[_propertyId];
         listing.propertyId = _propertyId;
         listing.sellPrice = _sellPrice;
+        listing.previousFinancing = financings[_propertyId];
 
         emit List(_msgSender(), _propertyId, _sellPrice);
     }
@@ -130,6 +129,8 @@ contract MarketplaceContract is PropertyContract {
         emit Unlist(_msgSender(), _propertyId);
     }
 
+    // =========== Bidding functions ===========
+
     // Function to place a bid on a listing property
     function bid(
         uint256 _propertyId,
@@ -148,10 +149,10 @@ contract MarketplaceContract is PropertyContract {
         );
 
         listings[_propertyId].bids.push(
-            Bid({buyer: _msgSender(), bidPrice: _bidPrice})
+            Bidding.Bid({buyer: _msgSender(), bidPrice: _bidPrice})
         );
 
-        emit Offer(_msgSender(), _propertyId, _bidPrice);
+        emit Bidding.Offer(_msgSender(), _propertyId, _bidPrice);
     }
 
     // Function to accept a bid on a listing property
@@ -171,11 +172,14 @@ contract MarketplaceContract is PropertyContract {
             "Bid already set"
         );
 
-        listings[_propertyId].sellerApproved = true;
-
         // Find the bid and set it as accepted bid
         for (uint256 i = 0; i < listings[_propertyId].bids.length; i++) {
             if (listings[_propertyId].bids[i].buyer == _buyer) {
+                require( // TODO: Change loan amount to remaining balance
+                    listings[_propertyId].previousFinancing.loanAmount <=
+                        listings[_propertyId].bids[i].bidPrice,
+                    "Bid price cannot be less than loan amount"
+                );
                 listings[_propertyId].acceptedBid = listings[_propertyId].bids[
                     i
                 ];
@@ -183,105 +187,74 @@ contract MarketplaceContract is PropertyContract {
             }
         }
 
-        emit Accept(
+        listings[_propertyId].sellerApproved = true;
+
+        emit Bidding.Accept(
             _msgSender(),
             _propertyId,
             listings[_propertyId].acceptedBid.bidPrice
         );
     }
 
-    // Function to transfer the property to the buyer
-    function transfer(
-        uint256 _propertyId
-    ) internal propertyExists(_propertyId) {
-        require(
-            listings[_propertyId].buyerApproved &&
-                listings[_propertyId].sellerApproved,
-            "Transfer not approved by both parties"
+    // =========== Financing functions ===========
+
+    // Function for buyer to request financing
+    function financingRequest(
+        uint256 _propertyId,
+        address _lender,
+        uint256 _loanAmount, // in wei
+        uint256 _monthlyInterestRate, // in percentage
+        uint256 _durationInMonths
+    )
+        external
+        propertyExists(_propertyId)
+        isListed(_propertyId)
+        isAcceptedBuyer(_propertyId, _msgSender())
+    {
+        listings[_propertyId].currentFinancing = _financingRequest(
+            _propertyId,
+            _lender,
+            _loanAmount,
+            _monthlyInterestRate,
+            _durationInMonths
         );
-        address buyer = listings[_propertyId].acceptedBid.buyer;
-        address seller = ownerOf(_propertyId);
-        uint256 bidPrice = listings[_propertyId].acceptedBid.bidPrice;
-
-        payable(seller).transfer(listings[_propertyId].acceptedBid.bidPrice); // transfer cost to seller
-        _transfer(seller, buyer, _propertyId); // transfer property nft to buyer
-        require(ownerOf(_propertyId) == buyer, "Transfer failed");
-
-        delete listings[_propertyId]; // remove from sale
-
-        emit Transfer(seller, buyer, _propertyId, bidPrice);
     }
 
-    // Seller approves the transfer
-    function approveTransferAsSeller(
-        uint256 _propertyId
-    ) external propertyExists(_propertyId) isListed(_propertyId) {
-        require(
-            _msgSender() == ownerOf(_propertyId),
-            "Caller is not the owner of this property"
-        );
-        require(
-            listings[_propertyId].sellerApproved == false,
-            "Transfer already approved by the seller"
-        );
-
-        listings[_propertyId].sellerApproved = true;
-
-        transfer(_propertyId);
-    }
-
-    // Buyer approves the transfer
-    function approveTransferAsBuyer(
+    // Lender shall approve the financing request
+    function approveCurrentFinancing(
         uint256 _propertyId
     ) external payable propertyExists(_propertyId) isListed(_propertyId) {
+        FinancingLibrary.Financing storage financing = listings[_propertyId]
+            .currentFinancing;
         require(
-            listings[_propertyId].acceptedBid.buyer == _msgSender(),
-            "Caller is not the buyer of this property"
+            financing.status == FinancingLibrary.FinancingStatus.Pending,
+            "Financing not pending"
         );
-        require(
-            msg.value >= listings[_propertyId].acceptedBid.bidPrice,
-            "Insufficient payment"
+        require(financing.lender == _msgSender(), "Caller is not the lender");
+        require(msg.value >= financing.loanAmount, "Insufficient payment");
+
+        financing.approve();
+
+        emit FinanceApproval(
+            _msgSender(),
+            financing.loaner,
+            financing.propertyId
         );
-        require(
-            listings[_propertyId].buyerApproved == false,
-            "Transfer already approved by the buyer"
-        );
-
-        listings[_propertyId].buyerApproved = true;
-
-        payable(_msgSender()).transfer(
-            msg.value - listings[_propertyId].acceptedBid.bidPrice
-        ); // refund excess payment
-
-        transfer(_propertyId);
     }
 
-    // Function to buy out a property
-    function buyOut(
-        uint256 _propertyId
-    ) external payable propertyExists(_propertyId) isListed(_propertyId) {
-        require(
-            listings[_propertyId].acceptedBid.buyer == address(0) &&
-                listings[_propertyId].acceptedBid.bidPrice == 0,
-            "Bid already set"
+    // Lender shall reject the financing request
+    function rejectCurrentFinancing(uint256 _propertyId) external {
+        FinancingLibrary.Financing storage financing = listings[_propertyId]
+            .currentFinancing;
+        require(financing.lender == _msgSender(), "Caller is not the lender");
+
+        financing.reject();
+
+        emit FinanceRejection(
+            _msgSender(),
+            financing.loaner,
+            financing.propertyId
         );
-        require(
-            msg.value >= listings[_propertyId].sellPrice,
-            "Insufficient payment for buy out"
-        );
-
-        listings[_propertyId].buyerApproved = true;
-
-        listings[_propertyId].acceptedBid = Bid({
-            buyer: _msgSender(),
-            bidPrice: listings[_propertyId].sellPrice
-        });
-
-        payable(_msgSender()).transfer(
-            msg.value - listings[_propertyId].sellPrice
-        ); // refund excess payment
-
-        emit BuyOut(_msgSender(), _propertyId, listings[_propertyId].sellPrice);
     }
 
     // =========== Utility functions ===========

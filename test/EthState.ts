@@ -363,4 +363,47 @@ describe("EthState", function () {
       ).to.be.revertedWith("Caller is not the buyer of this property");
     });
   });
+
+  describe("Buy a property with financing", function () {
+    it("should receive fund with financing", async function () {
+      const { property, owner, user1, user2, propertyData, listingData } =
+        await loadFixture(fixture);
+
+      await expect(property.addProperty(propertyData.uri))
+        .to.emit(property, "Add")
+        .withArgs(owner.address, 1);
+
+      await expect(property.listProperty(1, listingData.sellPrice))
+        .to.emit(property, "List")
+        .withArgs(owner.address, 1, listingData.sellPrice);
+
+      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
+        .to.emit(property, "Offer")
+        .withArgs(user1.address, 1, listingData.bids[0].price);
+
+      await expect(property.acceptOffer(1, user1.address))
+        .to.emit(property, "Accept")
+        .withArgs(owner.address, 1, listingData.bids[0].price);
+
+      await property.addLender(user2.address);
+
+      await expect(
+        property
+          .connect(user1)
+          .financingRequest(1, user2.address, 1_000_000, 5, 1)
+      )
+        .to.emit(property, "FinanceRequest")
+        .withArgs(user2.address, user1.address, 1);
+
+      const user1Balance = await ethers.provider.getBalance(user1.address);
+      await expect(
+        property.connect(user2).approveCurrentFinancing(1, { value: 1_000_000 })
+      )
+        .to.emit(property, "FinanceApproval")
+        .withArgs(user2.address, user1.address, 1);
+      expect(await ethers.provider.getBalance(user1.address)).to.be.equal(
+        user1Balance + BigInt(1_000_000)
+      );
+    });
+  });
 });
