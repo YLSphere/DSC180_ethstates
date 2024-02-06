@@ -6,6 +6,7 @@ import {
   ButtonGroup,
   Flex,
   IconButton,
+  Button,
   Table,
   Tbody,
   Td,
@@ -14,9 +15,11 @@ import {
   Tr,
   useColorModeValue,
   useToast,
+  Tooltip,
 } from "@chakra-ui/react";
-import {VscAccount, VscChromeClose, VscCheck} from "react-icons/vsc";
+import {VscAccount, VscChromeClose, VscCheck, VscArrowRight, VscArrowLeft} from "react-icons/vsc";
 import { useAcceptOffer, useRemoveBid } from "../hooks/dapp/useBidding";
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface Props {
   id: number;
@@ -28,6 +31,8 @@ const BidMenu = (props: Props) => {
   const acceptOffer = useAcceptOffer()
   const removeBid = useRemoveBid()
   const toast = useToast();
+  const navigate = useNavigate();
+  const locationHere = useLocation();
 
   const header = ["Address", "Bid Price", "Actions"];
   const color1 = useColorModeValue("gray.400", "gray.400");
@@ -103,6 +108,8 @@ const BidMenu = (props: Props) => {
     }
   }, [acceptOffer]);
 
+
+
   return (
     
     <Flex
@@ -113,6 +120,32 @@ const BidMenu = (props: Props) => {
       alignItems="center"
       justifyContent="center"
     >
+      {(locationHere.pathname =='/property') ? (
+        <Button 
+        rightIcon={<VscArrowRight />} 
+        colorScheme = 'blue'
+        onClick={() => navigate('/property/bids', { state: { id: nft?.propertyId }})}
+        aria-label="More"
+        size = 'sm'
+        position="absolute"
+        right={5}
+        bottom = {5}>
+          View More
+      </Button>
+      ) : (
+        <Button 
+        leftIcon={<VscArrowLeft />} 
+        colorScheme = 'blue'
+        onClick={() => navigate('/property', { state: { id: nft?.propertyId }})}
+        aria-label="More"
+        size = 'sm'
+        position="absolute"
+        right={5}
+        bottom = {0}>
+          View Less
+      </Button>
+      )}
+      
       <Table
         w="full"
         bg="white"
@@ -225,24 +258,30 @@ const BidMenu = (props: Props) => {
                 <Td>
                   <ButtonGroup variant="solid" size="sm" spacing={3}>
                   {nft?.owner == address && (
-                    <IconButton
+                    <Tooltip label="Accept Offer" fontSize="sm">
+                      <IconButton
                       colorScheme="teal"
                       icon={<VscCheck />}
                       aria-label="Accept"
                       onClick={() => {acceptOffer.mutate({ address, id, bidder: bid[0] as `0x${string}`})}}
-                    />)}
-                    <IconButton
-                      colorScheme="red"
-                      icon={<VscChromeClose />}
-                      aria-label="Reject"
-                      onClick={() => {removeBid.mutate({ address, id, bidder: bid[0] as `0x${string}`})}}
-                    />
-                    <IconButton
-                      colorScheme="blue"
-                      variant="outline"
-                      icon={<VscAccount />}
-                      aria-label="View"
-                    />
+                      />
+                    </Tooltip>)}
+                    <Tooltip label="Remove Offer" fontSize="sm">
+                      <IconButton
+                        colorScheme="red"
+                        icon={<VscChromeClose />}
+                        aria-label="Reject"
+                        onClick={() => {removeBid.mutate({ address, id, bidder: bid[0] as `0x${string}`})}}
+                      />
+                    </Tooltip>
+                    <Tooltip label="View Profile" fontSize="sm">
+                      <IconButton
+                        colorScheme="blue"
+                        variant="outline"
+                        icon={<VscAccount />}
+                        aria-label="View"
+                      />
+                    </Tooltip>
                   </ButtonGroup>
                 </Td>
               </Tr>

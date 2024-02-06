@@ -1,11 +1,13 @@
 export interface PropertyResult {
   0: number; // propertyId
   1: string; // uri
+  2: number;
 }
 
 export enum PropertyResultIndex {
   PROPERTY_ID,
   URI,
+  PRICE,
 }
 
 export interface ListingResult {
@@ -45,6 +47,7 @@ export interface Nft {
   // Property data
   propertyId: number;
   uri?: string;
+  price: number;
 
   // Listing data
   sellPrice?: number;
@@ -64,7 +67,7 @@ export interface Nft {
   bathrooms: number;
   parkingSpots: number;
   addititonalFeatures: string;
-  price: number;
+  // price: number;
   forSale: boolean;
   images: string[];
 }

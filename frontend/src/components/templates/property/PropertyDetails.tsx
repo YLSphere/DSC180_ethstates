@@ -6,15 +6,30 @@ import {
   Center,
   Container,
   VStack,
+  HStack,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
+  Input,
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef} from "react";
+import { debounce } from 'lodash';
 import ReactModal from "react-modal";
+import { FaEthereum } from "react-icons/fa";
 import "../../../style.css";
 
-import { useUnlist, useList } from "../../../hooks/dapp/useListing";
+import { useUnlist, useList, useChangePrice } from "../../../hooks/dapp/useListing";
 import {useEndBiddingProcess, useApproveTransferAsBuyer} from "../../../hooks/dapp/useBidding";
 import { BidResultIndex, Nft } from "../../../types/dapp";
-import {useGetAllPropertiesByOwner} from "../../../hooks/dapp/useProperty";
 
 import Slideshow from "../../../Slideshow";
 import {BuyMenu} from "../../../Modals/BuyMenu";
@@ -75,13 +90,18 @@ const PropertyDetails = (props: Props) => {
   const endBiddingProcess = useEndBiddingProcess();
   const approveTransferAsBuyer= useApproveTransferAsBuyer();
 
-  const { isFetched, data } = useGetAllPropertiesByOwner(address);
   const list = useList();
   const unlist = useUnlist();
-
+  const changePrice = useChangePrice();
+  
   const [modalIsOpenBuyMenu, setIsOpenBuyMenu] = useState(false);
   const [modalIsOpenBidMenu, setIsOpenBidMenu] = useState(false);
-
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const btnRef = useRef();
+  const [sliderValue, setSliderValue] = useState(0);
+  const [customPrice, setCustomPrice] = useState('');
+  
+  // ============ Toasts ============
   useEffect(() => {
     // When the mutation is loading, show a toast
     if (list.isPending) {
@@ -210,11 +230,45 @@ const PropertyDetails = (props: Props) => {
       window.setTimeout(function(){location.reload()},10000);
     }
   }, [endBiddingProcess.isPending, endBiddingProcess.isError, endBiddingProcess.isSuccess]);
+
+  
+  useEffect(() => {
+    // When the mutation is loading, show a toast
+    if (changePrice.isPending) {
+      toast({
+        status: "loading",
+        title: "Changing Price of property",
+        description: "Please confirm on Metamask",
+      });
+    }
+
+    // When the mutation fails, show a toast
+    if (changePrice.isError) {
+      toast({
+        status: "error",
+        title: "Price not changed",
+        description: "Something went wrong",
+        duration: 5000,
+      });
+    }
+
+    // When the mutation is successful, show a toast
+    if (changePrice.isSuccess) {
+      toast({
+        status: "success",
+        title: "Price changed successfully",
+        description: "Looks great!",
+        duration: 5000,
+      });
+      window.setTimeout(function(){location.reload()},5000)
+    }
+  }, [changePrice.isPending, changePrice.isError, changePrice.isSuccess]);
+
   // ============ Buying ============
 
 
 
-  // ============ Offer Menu ============
+  // ============ Modals and component helper functions ============
 
   ReactModal.setAppElement(rootElement);
   function openModalBuyMenu() {
@@ -230,6 +284,22 @@ const PropertyDetails = (props: Props) => {
   function closeModalBidMenu() {
     setIsOpenBidMenu(false);
   }
+
+  const updateSlider = (value: number) => {
+    setSliderValue(value);
+  };
+  const debouncedUpdateSlider = debounce(updateSlider, 300);
+
+  function priceChangeInput(event){
+    if (event.target.value == ''){
+      setCustomPrice('');
+      setSliderValue(0);
+    } else{
+      setCustomPrice(event.target.value);
+      debouncedUpdateSlider(event.target.value);
+    }
+  }
+
 
   // ============ Bidding ============
   
@@ -280,13 +350,53 @@ const PropertyDetails = (props: Props) => {
             <ChakraProvider theme={theme}>
               <Slideshow images={nft.images} />
             </ChakraProvider>
-          
+            
+            <HStack spacing = '0.1rem' mt = {5}>
+              <FaEthereum size={30}/> 
+              <Text fontSize='2xl'>{nft?.price.toString()}</Text>
+              <Box ml = {2}>{(nft?.owner == address) && (<Button ref={btnRef} size = 'sm' colorScheme="blue" onClick={onOpen}>Change Price</Button>)}</Box>
+            </HStack>
+            <Drawer
+              isOpen={isOpen}
+              placement='right'
+              onClose={onClose}
+              finalFocusRef={btnRef}
+              size= 'sm'>
+              <DrawerOverlay />
+              <DrawerContent>
+                <DrawerCloseButton />
+                <DrawerHeader>Change Price</DrawerHeader>
+                <DrawerBody>
+                  <Slider 
+                    defaultValue={0} 
+                    min={0} 
+                    max={(parseInt(nft?.price,10) * 2)}
+                    onChange={(v) => {setSliderValue(v); setCustomPrice(v.toString())}}
+                    value = {sliderValue}>
+                    <SliderTrack bg='red.100'>
+                      <SliderFilledTrack bg='teal' />
+                    </SliderTrack>
+                    <SliderThumb boxSize={6} />
+                  </Slider>
+                  <HStack>
+                    <FaEthereum size={40}/>
+                    <Text fontSize={40}>{sliderValue.toString()} </Text> 
+                  </HStack>
+                  <Input type = 'number' onChange = {priceChangeInput} value={customPrice} />
+                </DrawerBody>
+                <DrawerFooter>
+                  <Button variant='outline' mr={3} onClick={onClose}>
+                    Cancel
+                  </Button>
+                  <Button colorScheme='blue' onClick={() => {changePrice.mutate({address, id, sellPrice: sliderValue});onClose}}>Change</Button>
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
 
             <Text fontSize="2xl" mb={2}>
-              {" "}
               Property Details
             </Text>
-            <Text>{`Price: ${nft?.price}`}</Text>
+            
             <Text>{`Property ID: ${nft?.propertyId}`}</Text>
             <Text>{`URI: ${nft?.uri}`}</Text>
             <Text>{`Buyer: ${nft?.acceptedBid?.[BidResultIndex.BIDDER]}`}</Text>
@@ -349,9 +459,6 @@ const PropertyDetails = (props: Props) => {
               Confirm transaction and initiate transfer
             </Button>
           )}
-          <Button colorScheme="green" onClick={() => console.log(data)}>
-            owner
-          </Button>
           {(nft?.sellerApproved == true && (nft?.owner == props.address || nft?.acceptedBid?.[BidResultIndex.BIDDER] == props.address)) &&(
             <Button colorScheme="red" onClick={() => endBiddingProcess.mutate({ address, id})}>
               End transaction process

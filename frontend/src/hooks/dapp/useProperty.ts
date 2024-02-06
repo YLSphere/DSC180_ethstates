@@ -25,7 +25,7 @@ export function useAddProperty() {
           pinataContent,
           pinataMetadata,
         });
-        return promise.then(({ data }) => dapp.addProperty(data.IpfsHash));
+        return promise.then(({ data }) => dapp.addProperty(data.IpfsHash, pinataContent.price));
       } catch (error) {
         console.error(error);
         throw error;
@@ -54,9 +54,12 @@ export function useGetAllPropertiesByOwner(
           );
           return {
             propertyId: result[PropertyResultIndex.PROPERTY_ID],
+            
 
             ...response.data,
             owner: ownerAddress,
+            // CHANGE UP ON PINATA CONTENT
+            price: result[PropertyResultIndex.PRICE],
           };
         })
       );
@@ -106,11 +109,11 @@ export function useParticularProperty(
         const response = await pinataGateway.get(
           `/ipfs/${propertyResult[PropertyResultIndex.URI]}`
         );
-
         return {
           // property data
           propertyId: propertyResult[PropertyResultIndex.PROPERTY_ID],
           uri: propertyResult[PropertyResultIndex.URI],
+          
           // listing data
           sellPrice: listingResult[ListingResultIndex.SELL_PRICE],
           buyerApproved: listingResult[ListingResultIndex.BUYER_APPROVED],
@@ -120,7 +123,9 @@ export function useParticularProperty(
           // pinata data
           ...response.data,
           owner: ownerAddress,
-          forSale: listingResult[ListingResultIndex.SELL_PRICE] > 0,
+          forSale: listingResult[ListingResultIndex.PROPERTY_ID] > 0,
+          // CHANGE UP ON PINATA CONTENT
+          price: propertyResult[PropertyResultIndex.PRICE],
         };
       } catch (error) {
         console.error(error);

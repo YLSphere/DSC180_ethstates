@@ -22,12 +22,15 @@ export function useGetAllListings(address: `0x${string}` | undefined) {
             const propertyResult: PropertyResult = await dapp.properties(
               result[ListingResultIndex.PROPERTY_ID]
             );
+            console.log(propertyResult);
             const response = await pinataGateway.get(
               `/ipfs/${propertyResult[PropertyResultIndex.URI]}`
             );
+            
             return {
               // property data
               propertyId: result[PropertyResultIndex.PROPERTY_ID],
+              
               // listing data
               sellPrice: result[ListingResultIndex.SELL_PRICE],
               buyerApproved: result[ListingResultIndex.BUYER_APPROVED],
@@ -36,7 +39,9 @@ export function useGetAllListings(address: `0x${string}` | undefined) {
               acceptedBid: result[ListingResultIndex.ACCEPTED_BID],
               // pinata data
               ...response.data,
-              forSale: result[ListingResultIndex.SELL_PRICE] > 0,
+              forSale: result[ListingResultIndex.PROPERTY_ID] > 0,
+              // CHANGE UP ON PINATA CONTENT
+              price: propertyResult[PropertyResultIndex.PRICE],
             };
           })
         );
@@ -69,3 +74,16 @@ export function useUnlist() {
     },
   });
 }
+
+
+//NEEDS CHANGING
+export function useChangePrice() {
+  return useMutation({
+    mutationKey: ["dapp", "changePrice"],
+    mutationFn: async ({ address, id, sellPrice}: ListingProps) => {
+      const dapp = await initializeDapp(address);
+      return dapp.changePrice(id as number, sellPrice);
+    },
+  });
+}
+

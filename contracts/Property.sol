@@ -9,6 +9,7 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
         // location and feature
         uint256 propertyId;
         string uri;
+        uint256 price;
     }
 
     uint256 public propertyCount; // total number of properties via this contract
@@ -50,12 +51,13 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
     }
 
     // Owner shall add lands via this function
-    function addProperty(string memory _uri) external {
+    function addProperty(string memory _uri, uint256 _price) external {
         require(bytes(_uri).length > 0, "URI cannot be empty");
         propertyCount++;
         properties[propertyCount] = Property({
             propertyId: propertyCount,
-            uri: _uri
+            uri: _uri,
+            price: _price
         });
 
         _safeMint(_msgSender(), propertyCount);
@@ -77,6 +79,7 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
         require(_exists(_propertyId), "Property with this ID does not exist");
         _burn(_propertyId);
         delete properties[_propertyId];
+        propertyCount--;
 
         emit Remove(_msgSender(), _propertyId);
     }

@@ -1,5 +1,6 @@
-import { Box, Badge, Image } from "@chakra-ui/react";
+import { Box, Badge, Image, HStack, Text } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
+import { FaEthereum } from "react-icons/fa";
 
 interface Props {
   isLoading?: boolean;
@@ -7,12 +8,12 @@ interface Props {
   beds?: number;
   baths?: number;
   streetAddress?: string;
-  formattedPrice?: string;
+  price?: string;
   imageUrl?: string;
 }
 
 export default function NftCard(props: Props) {
-  const { propertyId, beds, baths, streetAddress, formattedPrice, imageUrl } =
+  const { propertyId, beds, baths, streetAddress, price, imageUrl } =
     props;
   const property = {
     imageUrl: imageUrl || "https://bit.ly/2Z4KKcF",
@@ -22,7 +23,7 @@ export default function NftCard(props: Props) {
     title:
       streetAddress ||
       "Modern home in city center in the heart of historic Los Angeles",
-    formattedPrice: formattedPrice || "$1,900.00",
+    price: price || "$1,900.00",
     reviewCount: 34,
     rating: 4,
   };
@@ -68,12 +69,10 @@ export default function NftCard(props: Props) {
           </Link>
         </Box>
 
-        <Box>
-          {property.formattedPrice}
-          <Box as="span" color="gray.600" fontSize="sm">
-            &nbsp;USD
-          </Box>
-        </Box>
+        <HStack spacing = '0.1rem'>
+          <FaEthereum /> 
+          <Text>{property.price}</Text>
+        </HStack>
 
         {/* <Box display="flex" mt="2" alignItems="center">
           {Array(5)

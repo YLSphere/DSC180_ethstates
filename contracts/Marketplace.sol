@@ -106,7 +106,7 @@ contract MarketplaceContract is PropertyContract {
 
         Listing storage listing = listings[_propertyId];
         listing.propertyId = _propertyId;
-        listing.sellPrice = _sellPrice;
+        listing.sellPrice = properties[_propertyId].price;
 
         emit List(_msgSender(), _propertyId, _sellPrice);
     }
@@ -214,6 +214,25 @@ contract MarketplaceContract is PropertyContract {
         }
     }
 
+
+    //NEEDS CHANGING
+    function changePrice(
+        uint256 _propertyId,
+        uint256 _newPrice
+    ) external
+    propertyExists(_propertyId) {
+        require(
+            listings[_propertyId].buyerApproved == false &&
+                listings[_propertyId].sellerApproved == false,
+            "Property is under transfer, prices cannot be changed"
+        );
+        require(
+            _msgSender() == ownerOf(_propertyId),
+            "Caller is not the owner of this property"
+        );
+        properties[_propertyId].price = _newPrice;
+    }
+
     // Function for buyer or seller to end Bidding process before both parties approve
     function endBiddingProcess(
         uint256 _propertyId
@@ -244,6 +263,7 @@ contract MarketplaceContract is PropertyContract {
         require(ownerOf(_propertyId) == buyer, "Transfer failed");
 
         delete listings[_propertyId]; // remove from sale
+        listingCount--;
 
         emit Transfer(seller, buyer, _propertyId, bidPrice);
     }
