@@ -62,7 +62,7 @@ export default function Profile() {
     <main>
       <Container maxWidth="container.lg">
         <Heading as="h1" size="xl" mt={8}>
-          NFT Collection{" "}
+          Properties Owned{" "}
           <Badge
             borderRadius="full"
             fontSize="x-large"
@@ -83,11 +83,7 @@ export default function Profile() {
                 beds={nft.pinataContent.bedrooms}
                 baths={nft.pinataContent.bathrooms}
                 streetAddress={nft.pinataContent.streetAddress}
-                formattedPrice={new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                  maximumFractionDigits: 0,
-                }).format(nft.property.price)}
+                price={nft.property.price.toString()}
                 imageUrl={
                   nft.pinataContent.images[0]
                     ? `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${

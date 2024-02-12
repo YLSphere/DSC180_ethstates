@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import {VscAccount, VscChromeClose, VscCheck} from "react-icons/vsc";
 
-export default function App(){
+const BuyMenu =  () => {
   const header = ["name", "created", "actions"];
   const data = [
     { name: "Daggy", created: "7 days ago" },
@@ -171,3 +171,4 @@ export default function App(){
   );
 };
 
+export {BuyMenu};

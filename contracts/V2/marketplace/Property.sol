@@ -64,6 +64,8 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
         require(_exists(_propertyId), "Property with this ID does not exist");
         _burn(_propertyId);
         delete properties[_propertyId];
+        propertyCount--;
+
         emit Remove(_msgSender(), _propertyId);
     }
 

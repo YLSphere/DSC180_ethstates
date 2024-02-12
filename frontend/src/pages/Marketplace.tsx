@@ -155,11 +155,7 @@ export default function Marketplace() {
               beds={nft.pinataContent.bedrooms}
               baths={nft.pinataContent.bathrooms}
               streetAddress={nft.pinataContent.streetAddress}
-              formattedPrice={new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-                maximumFractionDigits: 0,
-              }).format(nft.property.price)}
+              price={nft?.property.price.toString()}
               imageUrl={
                 nft.pinataContent.images[0]
                   ? `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${

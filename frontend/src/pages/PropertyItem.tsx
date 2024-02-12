@@ -1,4 +1,4 @@
-import { Box, Container, Spinner, Text, Image } from "@chakra-ui/react";
+import { Box, Container, Spinner, Text } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 
 import { PropertyDetails } from "../components/templates/property/PropertyDetails";
@@ -18,6 +18,7 @@ export default function PropertyItem() {
 
   useEffect(() => {
     if (isConnected && isFetched) {
+      console.log(data);
       setNft(data);
       console.log(data);
     }
@@ -51,8 +52,6 @@ export default function PropertyItem() {
         </Box>
       ) : (
         <Container maxWidth="container.lg">
-          {/* <h1>Hello, Property Item {id.toString()} Page!</h1> */}
-          
           {isConnected ? (
             <PropertyDetails
               id={id}
