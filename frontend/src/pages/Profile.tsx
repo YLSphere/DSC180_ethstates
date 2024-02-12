@@ -5,9 +5,9 @@ import { useAccount } from "wagmi";
 import NftCard from "../components/templates/property/NftCard";
 import NftCollection from "../components/templates/property/NftCollection";
 
-import { useGetAllPropertiesByOwner } from "../hooks/dapp/useProperty";
+import { useGetAllPropertiesByOwner } from "../hooks/marketplace/useProperty";
 
-import { Nft } from "../types/dapp";
+import { Nft } from "../types/listing";
 
 export default function Profile() {
   const [nfts, setNfts] = useState<Nft[] | undefined>([]);
@@ -79,15 +79,15 @@ export default function Profile() {
             return (
               <NftCard
                 key={i}
-                propertyId={nft.propertyId}
-                beds={nft.bedrooms}
-                baths={nft.bathrooms}
-                streetAddress={nft.streetAddress}
-                price={nft.price.toString()}
+                propertyId={nft.property.propertyId}
+                beds={nft.pinataContent.bedrooms}
+                baths={nft.pinataContent.bathrooms}
+                streetAddress={nft.pinataContent.streetAddress}
+                price={nft.property.price.toString()}
                 imageUrl={
-                  nft.images[0]
+                  nft.pinataContent.images[0]
                     ? `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${
-                        nft.images[0]
+                        nft.pinataContent.images[0]
                       }`
                     : ""
                 }

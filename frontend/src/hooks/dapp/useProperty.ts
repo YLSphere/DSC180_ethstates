@@ -1,15 +1,17 @@
 import { useMutation } from "wagmi";
 import { pinataJson, pinataGateway } from "../../queries/pinata";
-import { initializeDapp } from "../../queries/dapp";
+import { getMarketplaceContract } from "../../queries/dapp";
 import { UseQueryResult, useQuery } from "@tanstack/react-query";
 import {
-  AddPropertyProps,
   ListingResult,
   ListingResultIndex,
   Nft,
+} from "../../types/listing";
+import {
+  AddPropertyProps,
   PropertyResult,
   PropertyResultIndex,
-} from "../../types/dapp";
+} from "../../types/property";
 
 export function useAddProperty() {
   return useMutation({
@@ -20,7 +22,7 @@ export function useAddProperty() {
       pinataMetadata,
     }: AddPropertyProps) => {
       try {
-        const dapp = await initializeDapp(address);
+        const dapp = await getMarketplaceContract(address);
         const promise = pinataJson.post("/pinning/pinJSONToIPFS", {
           pinataContent,
           pinataMetadata,
@@ -40,7 +42,7 @@ export function useGetAllPropertiesByOwner(
   return useQuery({
     queryKey: ["dapp", "getAllPropertiesByOwner", address],
     queryFn: async (): Promise<Nft[]> => {
-      const dapp = await initializeDapp(address);
+      const dapp = await getMarketplaceContract(address);
       const results: PropertyResult[] = await dapp.getPropertiesByOwner(
         address
       );
@@ -76,7 +78,7 @@ export function useGetPropertyCount(
     queryKey: ["dapp", "getPropertyCount", address],
     queryFn: async () => {
       try {
-        const dapp = await initializeDapp(address);
+        const dapp = await getMarketplaceContract(address);
         return dapp.getPropertyCount();
       } catch (error) {
         console.error(error);
@@ -96,7 +98,7 @@ export function useParticularProperty(
     queryKey: ["dapp", "particularProperty", address, id?.toString()],
     queryFn: async (): Promise<Nft> => {
       try {
-        const dapp = await initializeDapp(address);
+        const dapp = await getMarketplaceContract(address);
         const propertyResult: PropertyResult = await dapp.properties(
           id as number
         );

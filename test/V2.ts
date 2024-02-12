@@ -4,19 +4,26 @@ import { expect } from "chai";
 
 describe("EthState", function () {
   async function fixture() {
+    // Deploy the financing contract
     const Financing = await ethers.getContractFactory("FinancingContract");
-    const financingAddress = await (await Financing.deploy()).getAddress();
-    const Property = await ethers.getContractFactory("EthState");
+    const financing = await upgrades.deployProxy(Financing);
+    await financing.waitForDeployment();
+    // Deploy the listing contract
+    const Property = await ethers.getContractFactory("ListingContract");
     const [owner, user1, user2] = await ethers.getSigners();
-    const property = await upgrades.deployProxy(Property, [financingAddress]);
+    const property = await upgrades.deployProxy(Property, [
+      await upgrades.erc1967.getImplementationAddress(
+        await financing.getAddress()
+      ),
+    ]);
     await property.waitForDeployment();
 
     const propertyData = {
       uri: "ipfs hash",
+      price: 1_000,
     };
 
     const listingData = {
-      sellPrice: 1_200_000,
       bids: [
         {
           price: 1_000_000,
@@ -29,7 +36,15 @@ describe("EthState", function () {
       ],
     };
 
-    return { property, owner, user1, user2, propertyData, listingData };
+    return {
+      property,
+      financing,
+      owner,
+      user1,
+      user2,
+      propertyData,
+      listingData,
+    };
   }
 
   describe("Deployment", function () {
@@ -42,7 +57,7 @@ describe("EthState", function () {
   describe("Add property", function () {
     it("Should add a new property", async function () {
       const { property, owner, propertyData } = await loadFixture(fixture);
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
       expect(await property.ownerOf(1)).to.equal(owner.address);
@@ -53,7 +68,7 @@ describe("EthState", function () {
   describe("Remove property", function () {
     it("should remove a property", async function () {
       const { property, owner, propertyData } = await loadFixture(fixture);
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
       await expect(property.removeProperty(1))
@@ -67,15 +82,15 @@ describe("EthState", function () {
       const { property, owner, propertyData, listingData } = await loadFixture(
         fixture
       );
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
-      await expect(property.listProperty(1, listingData.sellPrice))
+      await expect(property.listProperty(1))
         .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
+        .withArgs(1);
 
       const listing = await property.listings(1);
-      expect(listing.sellPrice).to.equal(listingData.sellPrice);
+      expect(listing.sellPrice).to.equal(BigInt(propertyData.price));
       expect(listing.buyerApproved).to.equal(false);
       expect(listing.sellerApproved).to.equal(false);
     });
@@ -83,42 +98,40 @@ describe("EthState", function () {
     it("should fail if the property is not owned by the caller", async function () {
       const { property, owner, user1, propertyData, listingData } =
         await loadFixture(fixture);
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
       await expect(
-        property.connect(user1).listProperty(1, listingData.sellPrice)
-      ).to.be.revertedWith("Caller is not the owner of this property");
+        property.connect(user1).listProperty(1)
+      ).to.be.revertedWithCustomError(property, "NotPropertyOwner");
     });
 
     it("should fail if the property is already listed", async function () {
-      const { property, owner, propertyData, listingData } = await loadFixture(
-        fixture
-      );
-      await expect(property.addProperty(propertyData.uri))
+      const { property, owner, propertyData } = await loadFixture(fixture);
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
-      await expect(property.listProperty(1, listingData.sellPrice))
-        .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
-      await expect(
-        property.listProperty(1, listingData.sellPrice)
-      ).to.be.revertedWithCustomError(property, "PropertyAlreadyListed");
+      await expect(property.listProperty(1)).to.emit(property, "List");
+      await expect(property.listProperty(1)).to.be.revertedWithCustomError(
+        property,
+        "PropertyAlreadyListed"
+      );
     });
 
     it("should fail if the property does not exist", async function () {
-      const { property, listingData } = await loadFixture(fixture);
-      await expect(
-        property.listProperty(1, listingData.sellPrice)
-      ).to.be.revertedWith("Property with this ID does not exist");
+      const { property, propertyData } = await loadFixture(fixture);
+      await expect(property.listProperty(1)).to.be.revertedWithCustomError(
+        property,
+        "PropertyNotExists"
+      );
     });
 
     it("should fail if the sell price is 0", async function () {
       const { property, owner, propertyData } = await loadFixture(fixture);
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, 0))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
-      await expect(property.listProperty(1, 0)).to.be.revertedWithCustomError(
+      await expect(property.listProperty(1)).to.be.revertedWithCustomError(
         property,
         "PriceNotMet"
       );
@@ -129,21 +142,19 @@ describe("EthState", function () {
     it("should place a bid", async function () {
       const { property, owner, user1, propertyData, listingData } =
         await loadFixture(fixture);
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
-      await expect(property.listProperty(1, listingData.sellPrice))
-        .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
-      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
-        .to.emit(property, "Offer")
-        .withArgs(user1.address, 1, listingData.bids[0].price);
+      await expect(property.listProperty(1)).to.emit(property, "List");
+      await expect(
+        property.connect(user1).bid(1, listingData.bids[0].price)
+      ).to.emit(property, "Offer");
     });
 
     it("should fail if the property is not for sale", async function () {
       const { property, owner, user1, propertyData, listingData } =
         await loadFixture(fixture);
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
       await expect(
@@ -155,12 +166,10 @@ describe("EthState", function () {
       const { property, owner, propertyData, listingData } = await loadFixture(
         fixture
       );
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
-      await expect(property.listProperty(1, listingData.sellPrice))
-        .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
+      await expect(property.listProperty(1)).to.emit(property, "List");
       await expect(
         property.bid(1, listingData.bids[0].price)
       ).to.be.revertedWith("Owner cannot bid");
@@ -169,15 +178,13 @@ describe("EthState", function () {
     it("should fail if the bidder already bid on the property", async function () {
       const { property, owner, user1, propertyData, listingData } =
         await loadFixture(fixture);
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
-      await expect(property.listProperty(1, listingData.sellPrice))
-        .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
-      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
-        .to.emit(property, "Offer")
-        .withArgs(user1.address, 1, listingData.bids[0].price);
+      await expect(property.listProperty(1)).to.emit(property, "List");
+      await expect(
+        property.connect(user1).bid(1, listingData.bids[0].price)
+      ).to.emit(property, "Offer");
       await expect(
         property.connect(user1).bid(1, listingData.bids[0].price)
       ).to.be.revertedWithCustomError(property, "BuyerAlreadyBid");
@@ -186,21 +193,17 @@ describe("EthState", function () {
     it("should fail if property unlisted while bidding", async function () {
       const { property, owner, user1, propertyData, listingData } =
         await loadFixture(fixture);
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
 
-      await expect(property.listProperty(1, listingData.sellPrice))
-        .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
+      await expect(property.listProperty(1)).to.emit(property, "List");
 
-      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
-        .to.emit(property, "Offer")
-        .withArgs(user1.address, 1, listingData.bids[0].price);
+      await expect(
+        property.connect(user1).bid(1, listingData.bids[0].price)
+      ).to.emit(property, "Offer");
 
-      await expect(property.unlistProperty(1))
-        .to.emit(property, "Unlist")
-        .withArgs(owner.address, 1);
+      await expect(property.unlistProperty(1)).to.emit(property, "Unlist");
 
       await expect(
         property.connect(user1).bid(1, listingData.bids[0].price)
@@ -213,25 +216,24 @@ describe("EthState", function () {
       const { property, owner, user1, user2, propertyData, listingData } =
         await loadFixture(fixture);
 
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
 
-      await expect(property.listProperty(1, listingData.sellPrice))
-        .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
+      await expect(property.listProperty(1)).to.emit(property, "List");
 
-      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
-        .to.emit(property, "Offer")
-        .withArgs(user1.address, 1, listingData.bids[0].price);
+      await expect(
+        property.connect(user1).bid(1, listingData.bids[0].price)
+      ).to.emit(property, "Offer");
 
-      await expect(property.connect(user2).bid(1, listingData.bids[1].price))
-        .to.emit(property, "Offer")
-        .withArgs(user2.address, 1, listingData.bids[1].price);
+      await expect(
+        property.connect(user2).bid(1, listingData.bids[1].price)
+      ).to.emit(property, "Offer");
 
-      await expect(property.acceptOffer(1, user1.address))
-        .to.emit(property, "Accept")
-        .withArgs(owner.address, 1, listingData.bids[0].price);
+      await expect(property.acceptOffer(1, user1.address)).to.emit(
+        property,
+        "Accept"
+      );
 
       const listing = await property.listings(1);
       expect(listing.sellerApproved).to.equal(true);
@@ -242,21 +244,19 @@ describe("EthState", function () {
       const { property, owner, user1, user2, propertyData, listingData } =
         await loadFixture(fixture);
 
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
 
-      await expect(property.listProperty(1, listingData.sellPrice))
-        .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
+      await expect(property.listProperty(1)).to.emit(property, "List");
 
-      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
-        .to.emit(property, "Offer")
-        .withArgs(user1.address, 1, listingData.bids[0].price);
+      await expect(
+        property.connect(user1).bid(1, listingData.bids[0].price)
+      ).to.emit(property, "Offer");
 
       await expect(
         property.connect(user1).acceptOffer(1, user1.address)
-      ).to.be.revertedWith("Caller is not the owner of this property");
+      ).to.be.revertedWithCustomError(property, "NotPropertyOwner");
     });
 
     it("should fail if the property is not listed", async function () {
@@ -264,7 +264,7 @@ describe("EthState", function () {
         fixture
       );
 
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
 
@@ -276,22 +276,20 @@ describe("EthState", function () {
     it("should fail if the property doesn't exist", async function () {
       const { property, user1 } = await loadFixture(fixture);
 
-      await expect(property.acceptOffer(1, user1.address)).to.be.revertedWith(
-        "Property with this ID does not exist"
-      );
+      await expect(
+        property.acceptOffer(1, user1.address)
+      ).to.be.revertedWithCustomError(property, "PropertyNotExists");
     });
 
     it("shoulf fail if the bid doesn't exist", async function () {
       const { property, owner, user1, propertyData, listingData } =
         await loadFixture(fixture);
 
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
 
-      await expect(property.listProperty(1, listingData.sellPrice))
-        .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
+      await expect(property.listProperty(1)).to.emit(property, "List");
 
       await expect(
         property.acceptOffer(1, user1.address)
@@ -304,21 +302,20 @@ describe("EthState", function () {
       const { property, owner, user1, user2, propertyData, listingData } =
         await loadFixture(fixture);
 
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
 
-      await expect(property.listProperty(1, listingData.sellPrice))
-        .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
+      await expect(property.listProperty(1)).to.emit(property, "List");
 
-      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
-        .to.emit(property, "Offer")
-        .withArgs(user1.address, 1, listingData.bids[0].price);
+      await expect(
+        property.connect(user1).bid(1, listingData.bids[0].price)
+      ).to.emit(property, "Offer");
 
-      await expect(property.acceptOffer(1, user1.address))
-        .to.emit(property, "Accept")
-        .withArgs(owner.address, 1, listingData.bids[0].price);
+      await expect(property.acceptOffer(1, user1.address)).to.emit(
+        property,
+        "Accept"
+      );
 
       const ownerBalance = await ethers.provider.getBalance(owner.address);
       const user1Balance = await ethers.provider.getBalance(user1.address);
@@ -329,7 +326,7 @@ describe("EthState", function () {
           .approveTransferAsBuyer(1, { value: listingData.bids[0].price })
       )
         .to.emit(property, "Transfer")
-        .withArgs(owner.address, user1.address, 1, listingData.bids[0].price);
+        .withArgs(owner.address, user1.address, 1);
       expect(await property.ownerOf(1)).to.equal(user1.address);
       expect(await ethers.provider.getBalance(owner.address)).to.equal(
         ownerBalance + BigInt(listingData.bids[0].price)
@@ -343,21 +340,20 @@ describe("EthState", function () {
       const { property, owner, user1, user2, propertyData, listingData } =
         await loadFixture(fixture);
 
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
 
-      await expect(property.listProperty(1, listingData.sellPrice))
-        .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
+      await expect(property.listProperty(1)).to.emit(property, "List");
 
-      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
-        .to.emit(property, "Offer")
-        .withArgs(user1.address, 1, listingData.bids[0].price);
+      await expect(
+        property.connect(user1).bid(1, listingData.bids[0].price)
+      ).to.emit(property, "Offer");
 
-      await expect(property.acceptOffer(1, user1.address))
-        .to.emit(property, "Accept")
-        .withArgs(owner.address, 1, listingData.bids[0].price);
+      await expect(property.acceptOffer(1, user1.address)).to.emit(
+        property,
+        "Accept"
+      );
 
       await expect(
         property.connect(owner).approveTransferAsBuyer(1, {
@@ -369,29 +365,31 @@ describe("EthState", function () {
 
   describe("Buy a property with financing", function () {
     it("should receive fund with financing", async function () {
-      const { property, owner, user1, user2, propertyData, listingData } =
-        await loadFixture(fixture);
+      const {
+        property,
+        financing,
+        owner,
+        user1,
+        user2,
+        propertyData,
+        listingData,
+      } = await loadFixture(fixture);
 
-      await expect(property.addProperty(propertyData.uri))
+      await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
 
-      await expect(property.listProperty(1, listingData.sellPrice))
-        .to.emit(property, "List")
-        .withArgs(owner.address, 1, listingData.sellPrice);
+      await expect(property.listProperty(1)).to.emit(property, "List");
 
-      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
-        .to.emit(property, "Offer")
-        .withArgs(user1.address, 1, listingData.bids[0].price);
+      await expect(
+        property.connect(user1).bid(1, listingData.bids[0].price)
+      ).to.emit(property, "Offer");
 
-      await expect(property.acceptOffer(1, user1.address))
-        .to.emit(property, "Accept")
-        .withArgs(owner.address, 1, listingData.bids[0].price);
-
-      const financing = await ethers.getContractAt(
-        "IFinancing",
-        await property.financingContract()
+      await expect(property.acceptOffer(1, user1.address)).to.emit(
+        property,
+        "Accept"
       );
+
       await expect(
         financing.connect(user2).addLoan(user2.address, 500)
       ).to.emit(financing, "LoanAdded");
@@ -413,24 +411,16 @@ describe("EthState", function () {
     });
 
     it("should add a loan", async function () {
-      const { property, user2 } = await loadFixture(fixture);
+      const { property, financing, user2 } = await loadFixture(fixture);
 
-      const financing = await ethers.getContractAt(
-        "IFinancing",
-        await property.financingContract()
-      );
       await expect(
         financing.connect(user2).addLoan(user2.address, 500)
       ).to.emit(financing, "LoanAdded");
     });
 
     it("should request financing", async function () {
-      const { property, user1, user2 } = await loadFixture(fixture);
+      const { property, financing, user1, user2 } = await loadFixture(fixture);
 
-      const financing = await ethers.getContractAt(
-        "IFinancing",
-        await property.financingContract()
-      );
       await expect(
         financing.connect(user2).addLoan(user2.address, 500)
       ).to.emit(financing, "LoanAdded");

@@ -4,9 +4,9 @@ import { useLocation } from "react-router-dom";
 import { PropertyDetails } from "../components/templates/property/PropertyDetails";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
-import { useParticularProperty } from "../hooks/dapp/useProperty";
-import { Nft } from "../types/dapp";
-import { initializeDapp } from "../queries/dapp";
+import { useParticularProperty } from "../hooks/marketplace/useProperty";
+import { Nft } from "../types/listing";
+import { getMarketplaceContract } from "../queries/dapp";
 
 export default function PropertyItem() {
   const location = useLocation();
@@ -20,11 +20,12 @@ export default function PropertyItem() {
     if (isConnected && isFetched) {
       console.log(data);
       setNft(data);
+      console.log(data);
     }
   }, [isConnected, isFetched]);
 
   async function offerListener() {
-    const dapp = await initializeDapp(address);
+    const dapp = await getMarketplaceContract(address);
     dapp.on("Offer", (bidder, propertyId, bidPrice) => {
       if (id == propertyId) {
         console.log("offer", bidder, propertyId, bidPrice);
