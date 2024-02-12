@@ -297,6 +297,7 @@ contract ListingContract is
         ); // update financing
 
         delete listings[_propertyId]; // remove from sale
+        listingCount--;
         emit Transfer(seller, buyer, _propertyId);
     }
 

@@ -1,11 +1,6 @@
 {
-<<<<<<< HEAD
-  "FinancingContractProxy": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
+  "FinancingContractProxy": "0x18E317A7D70d8fBf8e6E893616b52390EbBdb629",
   "FinancingContractImplementation": "0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44",
-  "ListingContractProxy": "0x5067457698Fd6Fa1C6964e416b3f42713513B3dD",
-  "ListingContractImplementation": "0xe8D2A1E88c91DCd5433208d4152Cc4F399a7e91d"
-=======
-  "Proxy": "0xc5a5C42992dECbae36851359345FE25997F5C42d",
-  "Implementation": "0x09635F643e140090A9A8Dcd712eD6285858ceBef"
->>>>>>> main
+  "ListingContractProxy": "0xCace1b78160AE76398F486c8a18044da0d66d86D",
+  "ListingContractImplementation": "0x4b6aB5F819A515382B0dEB6935D793817bB4af28"
 }

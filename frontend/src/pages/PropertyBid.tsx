@@ -9,7 +9,7 @@ import {
   FormLabel,
   Spinner,
   VStack,
-  HStack, 
+  HStack,
   Input,
   FormHelperText,
   FormErrorMessage,
@@ -21,13 +21,13 @@ import Slideshow from "../Slideshow";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import { useParticularProperty } from "../hooks/dapp/useProperty";
-import { useBid } from "../hooks/dapp/useBidding";
-import { BidResultIndex, Nft } from "../types/dapp";
-import { initializeDapp } from "../queries/dapp";
+import { useBid } from "../hooks/marketplace/useBidding";
+import { BidResultIndex, Nft } from "../types/listing";
+import { getMarketplaceContract } from "../queries/dapp";
 
-import {BidMenu} from "../Modals/BidMenu";
+import { BidMenu } from "../Modals/BidMenu";
 
-ReactModal.setAppElement('body');
+ReactModal.setAppElement("body");
 
 const colors = {
   brand: {
@@ -62,20 +62,19 @@ const theme = extendTheme({ colors, config });
 export default function PropertyItem() {
   const locationHere = useLocation();
   const [alertIsOpen, setIsOpenAlert] = useState(false);
-  
-  const bidSubmit = useBid()
+
+  const bidSubmit = useBid();
 
   const toast = useToast();
   const id = locationHere.state.id;
 
   const [price, setPrice] = useState(0);
-  const isError = price <= 0
+  const isError = price <= 0;
 
   const { address, isConnected } = useAccount();
   const { isFetched, data } = useParticularProperty(address, id);
 
   const [nft, setNft] = useState<Nft | undefined>();
-  
 
   useEffect(() => {
     if (isConnected && isFetched) {
@@ -84,7 +83,7 @@ export default function PropertyItem() {
   }, [isConnected, isFetched]);
 
   async function offerListener() {
-    const dapp = await initializeDapp(address);
+    const dapp = await getMarketplaceContract(address);
     dapp.on("Offer", (bidder, propertyId, bidPrice) => {
       if (id == propertyId) {
         console.log("offer", bidder, propertyId, bidPrice);
@@ -96,7 +95,7 @@ export default function PropertyItem() {
   };
   const handleSubmit = () => {
     // Submit bid to bid menu
-    bidSubmit.mutate({address, id, bidPrice: BigInt(price)});
+    bidSubmit.mutate({ address, id, bidPrice: price });
   };
 
   useEffect(() => {
@@ -127,7 +126,9 @@ export default function PropertyItem() {
         description: "Looks great",
         duration: 5000,
       });
-      window.setTimeout(function(){location.reload()},7000);
+      window.setTimeout(function () {
+        location.reload();
+      }, 7000);
     }
   }, [bidSubmit]);
   useEffect(() => {
@@ -137,7 +138,7 @@ export default function PropertyItem() {
   }, [isConnected]);
 
   // TERMS AND CONDITIONS MODAL
-  
+
   function closeModalAlert() {
     setIsOpenAlert(false);
   }
@@ -146,11 +147,11 @@ export default function PropertyItem() {
     setIsOpenAlert(!alertIsOpen);
     handleSubmit();
   };
-  function openModalAlert(e : React.FormEvent<HTMLFormElement>) {
+  function openModalAlert(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsOpenAlert(true);
   }
-  
+
   return (
     <main>
       {!isFetched ? (
@@ -164,87 +165,97 @@ export default function PropertyItem() {
         </Box>
       ) : (
         <Center>
-        {nft ? (
-          <VStack maxW="100%" flex="1" > 
+          {nft ? (
+            <VStack maxW="100%" flex="1">
+              <ReactModal
+                shouldCloseOnOverlayClick={true}
+                style={customStyles}
+                isOpen={alertIsOpen}
+                onRequestClose={closeModalAlert}
+                closeTimeoutMS={500}
+                contentLabel="tas"
+              >
+                <Text>
+                  I agree that I do not have inside information and stuff
+                </Text>
+                <Switch
+                  colorScheme="teal"
+                  isRequired
+                  isChecked={!alertIsOpen}
+                  onChange={handleSwitchChange}
+                ></Switch>
+              </ReactModal>
 
-            <ReactModal
-              shouldCloseOnOverlayClick={true}
-              style={customStyles}
-              isOpen={alertIsOpen}
-              onRequestClose={closeModalAlert}
-              closeTimeoutMS={500}
-              contentLabel="tas">
-                <Text>I agree that I do not have inside information and stuff</Text>
-                <Switch 
-                colorScheme='teal' 
-                isRequired
-                isChecked={!alertIsOpen}
-                onChange={handleSwitchChange}>
-                </Switch>
-            </ReactModal>
-
-            <HStack>
-              <Box flex="1" maxW="100%" mt={4} mb = {10} mr = {4} >
+              <HStack>
+                <Box flex="1" maxW="100%" mt={4} mb={10} mr={4}>
                   <ChakraProvider theme={theme}>
-                    <Slideshow images={nft.images} />
+                    <Slideshow images={nft.pinataContent.images} />
                   </ChakraProvider>
                 </Box>
 
-              <VStack>
-                <Box>
-                  <Text fontSize="2xl" mb={2}>
-                    {" "}
-                    Property Details
-                  </Text>
-                  <Text>{`Price: ${nft?.price}`}</Text>
-                  <Text>{`Property ID: ${nft?.propertyId}`}</Text>
-                  <Text>{`URI: ${nft?.uri}`}</Text>
-                  <Text>{`Buyer: ${nft?.acceptedBid?.[BidResultIndex.BIDDER]}`}</Text>
+                <VStack>
+                  <Box>
+                    <Text fontSize="2xl" mb={2}>
+                      {" "}
+                      Property Details
+                    </Text>
+                    <Text>{`Price: ${nft?.property.price}`}</Text>
+                    <Text>{`Property ID: ${nft?.property.propertyId}`}</Text>
+                    <Text>{`URI: ${nft?.property.uri}`}</Text>
+                    <Text>{`Buyer: ${
+                      nft?.listing?.acceptedBid?.bidder
+                    }`}</Text>
 
-                  {(nft?.owner != address && nft?.sellerApproved == false) ? (
-                  <form onSubmit={openModalAlert}>
-                    <FormControl  isRequired={true} isInvalid={isError} id="price">
-                      <FormLabel>
-                        Bid Price:
-                      </FormLabel>
-                      <Input
-                        placeholder={"Example Bid: 999"}
-                        onChange={handlePriceChange}
-                        type="number"
-                        value={price}
-                      />
-                      {!isError ? (
-                        <FormHelperText>
-                          Enter your bid value.
-                        </FormHelperText>
-                      ) : (
-                        <FormErrorMessage>A valid price is required.</FormErrorMessage>
-                      )}
-                      <Button type="submit" colorScheme="teal">Place Bid</Button>
-                    </FormControl>
-                  </form>) : (nft?.sellerApproved == true) 
-                  ? (<Text mt = {4}>The property is in the process of transaction or is sold.</Text>) 
-                  : (<Text></Text>)} 
-                </Box>
-              </VStack>
-              
-            </HStack>
-              
-            <Box w = '100%'>
-              <ChakraProvider theme={theme}>
-                <BidMenu 
-                id = {id} 
-                address = {address}
-                nft = {nft}/>
-              </ChakraProvider>
-            </Box>
-          </VStack>
-        ) : (
-          <Text>Nothin for now</Text>
-        )}
-        
-      </Center>
+                    {nft?.owner != address && nft?.listing?.sellerApproved == false ? (
+                      <form onSubmit={openModalAlert}>
+                        <FormControl
+                          isRequired={true}
+                          isInvalid={isError}
+                          id="price"
+                        >
+                          <FormLabel>Bid Price:</FormLabel>
+                          <Input
+                            placeholder={"Example Bid: 999"}
+                            onChange={handlePriceChange}
+                            type="number"
+                            value={price}
+                          />
+                          {!isError ? (
+                            <FormHelperText>
+                              Enter your bid value.
+                            </FormHelperText>
+                          ) : (
+                            <FormErrorMessage>
+                              A valid price is required.
+                            </FormErrorMessage>
+                          )}
+                          <Button type="submit" colorScheme="teal">
+                            Place Bid
+                          </Button>
+                        </FormControl>
+                      </form>
+                    ) : nft?.listing?.sellerApproved == true ? (
+                      <Text mt={4}>
+                        The property is in the process of transaction or is
+                        sold.
+                      </Text>
+                    ) : (
+                      <Text></Text>
+                    )}
+                  </Box>
+                </VStack>
+              </HStack>
 
+              <Box w="100%">
+                <ChakraProvider theme={theme}>
+                  <BidMenu id={id} address={address} nft={nft} />
+                </ChakraProvider>
+              </Box>
+            </VStack>
+          ) : (
+            <Text>Nothin for now</Text>
+          )}
+        </Center>
       )}
     </main>
   );

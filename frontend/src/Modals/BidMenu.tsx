@@ -1,7 +1,7 @@
 import React from "react";
 
-import { BidResult, Nft } from "../types/dapp";
-import { useEffect, useState } from "react";
+import { Bid, BidResult, Nft } from "../types/listing";
+import { useEffect } from "react";
 import {
   ButtonGroup,
   Flex,
@@ -17,9 +17,15 @@ import {
   useToast,
   Tooltip,
 } from "@chakra-ui/react";
-import {VscAccount, VscChromeClose, VscCheck, VscArrowRight, VscArrowLeft} from "react-icons/vsc";
-import { useAcceptOffer, useRemoveBid } from "../hooks/dapp/useBidding";
-import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  VscAccount,
+  VscChromeClose,
+  VscCheck,
+  VscArrowRight,
+  VscArrowLeft,
+} from "react-icons/vsc";
+import { useAcceptOffer } from "../hooks/marketplace/useBidding";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface Props {
   id: number;
@@ -28,8 +34,8 @@ interface Props {
 }
 
 const BidMenu = (props: Props) => {
-  const acceptOffer = useAcceptOffer()
-  const removeBid = useRemoveBid()
+  const acceptOffer = useAcceptOffer();
+  // const removeBid = useRemoveBid()
   const toast = useToast();
   const navigate = useNavigate();
   const locationHere = useLocation();
@@ -40,41 +46,45 @@ const BidMenu = (props: Props) => {
   const { id, address, nft } = props;
 
   // FOR LATER WHEN MORE NEEDS TO BE HANDLED AFTER BID IS ACCEPTED BY USER
-  function handleAcceptBid(address: `0x${string}` | undefined, id: number, bidder: `0x${string}` | undefined) {
-    acceptOffer.mutate({ address, id, bidder})
+  function handleAcceptBid(
+    address: `0x${string}` | undefined,
+    id: number,
+    bidder: `0x${string}` | undefined
+  ) {
+    acceptOffer.mutate({ address, id, bidder });
   }
-  
-  useEffect(() => {
-    // When the mutation is loading, show a toast
-    if (removeBid.isPending) {
-      toast({
-        status: "loading",
-        title: "Removing Bid...",
-        description: "Please confirm on Metamask.",
-      });
-    }
 
-    // When the mutation fails, show a toast
-    if (removeBid.isError) {
-      toast({
-        status: "error",
-        title: "An error occured",
-        description: "Something wrong",
-        duration: 5000,
-      });
-    }
+  // useEffect(() => {
+  //   // When the mutation is loading, show a toast
+  //   if (removeBid.isPending) {
+  //     toast({
+  //       status: "loading",
+  //       title: "Removing Bid...",
+  //       description: "Please confirm on Metamask.",
+  //     });
+  //   }
 
-    // When the mutation is successful, show a toast
-    if (removeBid.isSuccess) {
-      toast({
-        status: "success",
-        title: "Bid Removed",
-        description: "Looks great!",
-        duration: 5000,
-      });
-      window.setTimeout(function(){location.reload()},10000);
-    }
-  }, [removeBid]);
+  //   // When the mutation fails, show a toast
+  //   if (removeBid.isError) {
+  //     toast({
+  //       status: "error",
+  //       title: "An error occured",
+  //       description: "Something wrong",
+  //       duration: 5000,
+  //     });
+  //   }
+
+  //   // When the mutation is successful, show a toast
+  //   if (removeBid.isSuccess) {
+  //     toast({
+  //       status: "success",
+  //       title: "Bid Removed",
+  //       description: "Looks great!",
+  //       duration: 5000,
+  //     });
+  //     window.setTimeout(function(){location.reload()},10000);
+  //   }
+  // }, [removeBid]);
 
   useEffect(() => {
     // When the mutation is loading, show a toast
@@ -104,14 +114,13 @@ const BidMenu = (props: Props) => {
         description: "Looks great! Waiting on Buyer to approve.",
         duration: 5000,
       });
-      window.setTimeout(function(){location.reload()},10000);
+      window.setTimeout(function () {
+        location.reload();
+      }, 10000);
     }
   }, [acceptOffer]);
 
-
-
   return (
-    
     <Flex
       w="full"
       bg="#edf3f8"
@@ -120,32 +129,40 @@ const BidMenu = (props: Props) => {
       alignItems="center"
       justifyContent="center"
     >
-      {(locationHere.pathname =='/property') ? (
-        <Button 
-        rightIcon={<VscArrowRight />} 
-        colorScheme = 'blue'
-        onClick={() => navigate('/property/bids', { state: { id: nft?.propertyId }})}
-        aria-label="More"
-        size = 'sm'
-        position="absolute"
-        right={5}
-        bottom = {5}>
+      {locationHere.pathname == "/property" ? (
+        <Button
+          rightIcon={<VscArrowRight />}
+          colorScheme="blue"
+          onClick={() =>
+            navigate("/property/bids", {
+              state: { id: nft?.property.propertyId },
+            })
+          }
+          aria-label="More"
+          size="sm"
+          position="absolute"
+          right={5}
+          bottom={5}
+        >
           View More
-      </Button>
+        </Button>
       ) : (
-        <Button 
-        leftIcon={<VscArrowLeft />} 
-        colorScheme = 'blue'
-        onClick={() => navigate('/property', { state: { id: nft?.propertyId }})}
-        aria-label="More"
-        size = 'sm'
-        position="absolute"
-        right={5}
-        bottom = {0}>
+        <Button
+          leftIcon={<VscArrowLeft />}
+          colorScheme="blue"
+          onClick={() =>
+            navigate("/property", { state: { id: nft?.property.propertyId } })
+          }
+          aria-label="More"
+          size="sm"
+          position="absolute"
+          right={5}
+          bottom={0}
+        >
           View Less
-      </Button>
+        </Button>
       )}
-      
+
       <Table
         w="full"
         bg="white"
@@ -188,7 +205,7 @@ const BidMenu = (props: Props) => {
             },
           }}
         >
-          {nft?.bids?.map((bid: BidResult, tid: number) => {
+          {nft?.listing?.bids?.map((bid: Bid, tid: number) => {
             return (
               <Tr
                 key={tid}
@@ -257,21 +274,34 @@ const BidMenu = (props: Props) => {
                 </Td>
                 <Td>
                   <ButtonGroup variant="solid" size="sm" spacing={3}>
-                  {nft?.owner == address && (
-                    <Tooltip label="Accept Offer" fontSize="sm">
-                      <IconButton
-                      colorScheme="teal"
-                      icon={<VscCheck />}
-                      aria-label="Accept"
-                      onClick={() => {acceptOffer.mutate({ address, id, bidder: bid[0] as `0x${string}`})}}
-                      />
-                    </Tooltip>)}
+                    {nft?.owner == address && (
+                      <Tooltip label="Accept Offer" fontSize="sm">
+                        <IconButton
+                          colorScheme="teal"
+                          icon={<VscCheck />}
+                          aria-label="Accept"
+                          onClick={() => {
+                            acceptOffer.mutate({
+                              address,
+                              id,
+                              bidder: bid.bidder,
+                            });
+                          }}
+                        />
+                      </Tooltip>
+                    )}
                     <Tooltip label="Remove Offer" fontSize="sm">
                       <IconButton
                         colorScheme="red"
                         icon={<VscChromeClose />}
                         aria-label="Reject"
-                        onClick={() => {removeBid.mutate({ address, id, bidder: bid[0] as `0x${string}`})}}
+                        onClick={() => {
+                          removeBid.mutate({
+                            address,
+                            id,
+                            bidder: bid[0] as `0x${string}`,
+                          });
+                        }}
                       />
                     </Tooltip>
                     <Tooltip label="View Profile" fontSize="sm">
@@ -293,4 +323,4 @@ const BidMenu = (props: Props) => {
   );
 };
 
-export {BidMenu};
+export { BidMenu };

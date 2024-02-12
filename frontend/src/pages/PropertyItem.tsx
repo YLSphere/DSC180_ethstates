@@ -5,7 +5,7 @@ import { PropertyDetails } from "../components/templates/property/PropertyDetail
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import { useParticularProperty } from "../hooks/marketplace/useProperty";
-import { Nft } from "../types/dapp";
+import { Nft } from "../types/listing";
 import { getMarketplaceContract } from "../queries/dapp";
 
 export default function PropertyItem() {

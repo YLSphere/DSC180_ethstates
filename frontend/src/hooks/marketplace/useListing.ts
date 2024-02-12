@@ -99,8 +99,13 @@ export function useList() {
   return useMutation({
     mutationKey: ["dapp", "list"],
     mutationFn: async ({ address, id }: ListingProps) => {
-      const dapp = await getMarketplaceContract(address);
-      return dapp.listProperty(id as number);
+      try {
+        const dapp = await getMarketplaceContract(address);
+        return dapp.listProperty(id as number);
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
     },
   });
 }
