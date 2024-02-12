@@ -13,9 +13,10 @@ import { useAccount } from "wagmi";
 import Dropzone from "../components/templates/form/Dropzone";
 
 import { pinataImage } from "../queries/pinata";
-import { useAddProperty } from "../hooks/dapp/useProperty";
+import { useAddProperty } from "../hooks/marketplace/useProperty";
+
+import { PinataContent } from "../types/property";
 import { useNavigate } from 'react-router-dom';
-import { PinataContent } from "../types/dapp";
 
 const formFields = [
   {

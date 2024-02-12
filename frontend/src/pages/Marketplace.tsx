@@ -11,10 +11,10 @@ import {
 } from "@chakra-ui/react";
 import NftCard from "../components/templates/property/NftCard";
 import NftCollection from "../components/templates/property/NftCollection";
-import { useGetAllListings } from "../hooks/dapp/useListing";
+import { useGetAllListings } from "../hooks/marketplace/useListing";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
-import { Nft } from "../types/dapp";
+import { Nft } from "../types/listing";
 
 export default function Marketplace() {
   const { address, isConnected } = useAccount();
@@ -44,14 +44,19 @@ export default function Marketplace() {
   const filteredNfts = nfts?.filter(
     (nft) =>
       (filters.bedrooms === "" ||
-        nft.bedrooms === parseInt(filters.bedrooms)) &&
+        nft.pinataContent.bedrooms === parseInt(filters.bedrooms)) &&
       (filters.bathrooms === "" ||
-        nft.bathrooms === parseInt(filters.bathrooms)) &&
+        nft.pinataContent.bathrooms === parseInt(filters.bathrooms)) &&
       (filters.city === "" ||
-        nft.city.toLowerCase().includes(filters.city.toLowerCase())) &&
+        nft.pinataContent.city
+          .toLowerCase()
+          .includes(filters.city.toLowerCase())) &&
       (filters.state === "" ||
-        nft.state.toLowerCase().includes(filters.state.toLowerCase())) &&
-      (filters.zipCode === "" || nft.zipCode.includes(filters.zipCode))
+        nft.pinataContent.state
+          .toLowerCase()
+          .includes(filters.state.toLowerCase())) &&
+      (filters.zipCode === "" ||
+        nft.pinataContent.zipCode.includes(filters.zipCode))
   );
 
   // Wallet not connected
@@ -146,15 +151,15 @@ export default function Marketplace() {
           {filteredNfts?.map((nft, i) => (
             <NftCard
               key={i}
-              propertyId={nft.propertyId}
-              beds={nft.bedrooms}
-              baths={nft.bathrooms}
-              streetAddress={nft.streetAddress}
-              price={nft?.price.toString()}
+              propertyId={nft.property.propertyId}
+              beds={nft.pinataContent.bedrooms}
+              baths={nft.pinataContent.bathrooms}
+              streetAddress={nft.pinataContent.streetAddress}
+              price={nft?.property.price.toString()}
               imageUrl={
-                nft.images[0]
+                nft.pinataContent.images[0]
                   ? `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${
-                      nft.images[0]
+                      nft.pinataContent.images[0]
                     }`
                   : ""
               }

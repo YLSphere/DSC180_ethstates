@@ -4,10 +4,12 @@ import {
   ListingResult,
   ListingResultIndex,
   Nft,
+} from "../../types/listing";
+import {
   PropertyResult,
   PropertyResultIndex,
-} from "../../types/dapp";
-import { initializeDapp } from "../../queries/dapp";
+} from "../../types/property";
+import { getMarketplaceContract } from "../../queries/dapp";
 import { pinataGateway } from "../../queries/pinata";
 
 export function useGetAllListings(address: `0x${string}` | undefined) {
@@ -15,7 +17,7 @@ export function useGetAllListings(address: `0x${string}` | undefined) {
     queryKey: ["dapp", "getAllPropertiesForSale", address],
     queryFn: async (): Promise<Nft[]> => {
       try {
-        const dapp = await initializeDapp(address);
+        const dapp = await getMarketplaceContract(address);
         const listingResults: ListingResult[] = await dapp.getActiveListings();
         return Promise.all(
           listingResults.map(async (result) => {
@@ -59,7 +61,7 @@ export function useList() {
   return useMutation({
     mutationKey: ["dapp", "list"],
     mutationFn: async ({ address, id, sellPrice }: ListingProps) => {
-      const dapp = await initializeDapp(address);
+      const dapp = await getMarketplaceContract(address);
       return dapp.listProperty(id as number, sellPrice);
     },
   });
@@ -69,7 +71,7 @@ export function useUnlist() {
   return useMutation({
     mutationKey: ["dapp", "unlist"],
     mutationFn: async ({ address, id }: ListingProps) => {
-      const dapp = await initializeDapp(address);
+      const dapp = await getMarketplaceContract(address);
       return dapp.unlistProperty(id as number);
     },
   });
@@ -81,7 +83,7 @@ export function useChangePrice() {
   return useMutation({
     mutationKey: ["dapp", "changePrice"],
     mutationFn: async ({ address, id, sellPrice}: ListingProps) => {
-      const dapp = await initializeDapp(address);
+      const dapp = await getMarketplaceContract(address);
       return dapp.changePrice(id as number, sellPrice);
     },
   });

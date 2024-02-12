@@ -1,16 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Box, Flex, Image, Text } from "@chakra-ui/react";
-import { Nft } from "../../../types/dapp";
 
 interface Props {
   images: string[];
 }
-export default function Slideshow(images: Props){
-
-
-
-
-
+export default function Slideshow(images: Props) {
   const arrowStyles = {
     cursor: "pointer",
     pos: "absolute",
@@ -88,4 +82,4 @@ export default function Slideshow(images: Props){
       </Flex>
     </Flex>
   );
-};
+}
