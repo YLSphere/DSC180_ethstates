@@ -12,9 +12,9 @@ import { useAccount } from "wagmi";
 import Dropzone from "../components/templates/form/Dropzone";
 
 import { pinataImage } from "../queries/pinata";
-import { useAddProperty } from "../hooks/dapp/useProperty";
+import { useAddProperty } from "../hooks/marketplace/useProperty";
 
-import { PinataContent } from "../types/dapp";
+import { PinataContent } from "../types/property";
 
 const formFields = [
   {
@@ -99,7 +99,6 @@ export default function ListProperty() {
   const addProperty = useAddProperty();
   const { address, isConnected } = useAccount();
   const [pinataContent, setPinataContent] = useState<PinataContent>({
-    owner: address,
     streetAddress: "",
     city: "",
     state: "",
@@ -110,7 +109,6 @@ export default function ListProperty() {
     parkingSpots: 0,
     addititonalFeatures: "",
     price: 0,
-    forSale: false,
     images: [],
   });
   const date = new Date().getTime();

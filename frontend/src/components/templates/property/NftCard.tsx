@@ -71,7 +71,7 @@ export default function NftCard(props: Props) {
         <Box>
           {property.formattedPrice}
           <Box as="span" color="gray.600" fontSize="sm">
-            &nbsp;USD
+            &nbsp;ETH
           </Box>
         </Box>
 
