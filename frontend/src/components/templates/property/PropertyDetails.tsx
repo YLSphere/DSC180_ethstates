@@ -27,13 +27,8 @@ import ReactModal from "react-modal";
 import { FaEthereum } from "react-icons/fa";
 import "../../../style.css";
 
-import {
-  useChangePrice,
-} from "../../../hooks/dapp/useListing";
-import {
-  useUnlist,
-  useList,
-} from "../../../hooks/marketplace/useListing";
+import { useSetPrice } from "../../../hooks/marketplace/useProperty";
+import { useUnlist, useList } from "../../../hooks/marketplace/useListing";
 import { useApproveTransferAsBuyer } from "../../../hooks/marketplace/useBidding";
 import { Nft } from "../../../types/listing";
 
@@ -88,7 +83,6 @@ const theme = extendTheme({ colors, config });
 const rootElement = document.getElementById("root");
 
 const PropertyDetails = (props: Props) => {
-  // const ethers = require('hardhat');
   const toast = useToast();
   const navigate = useNavigate();
   const { id, address, nft } = props;
@@ -98,7 +92,7 @@ const PropertyDetails = (props: Props) => {
 
   const list = useList();
   const unlist = useUnlist();
-  const changePrice = useChangePrice();
+  const setPrice = useSetPrice();
 
   const [modalIsOpenBuyMenu, setIsOpenBuyMenu] = useState(false);
   const [modalIsOpenBidMenu, setIsOpenBidMenu] = useState(false);
@@ -249,7 +243,7 @@ const PropertyDetails = (props: Props) => {
 
   useEffect(() => {
     // When the mutation is loading, show a toast
-    if (changePrice.isPending) {
+    if (setPrice.isLoading) {
       toast({
         status: "loading",
         title: "Changing Price of property",
@@ -258,7 +252,7 @@ const PropertyDetails = (props: Props) => {
     }
 
     // When the mutation fails, show a toast
-    if (changePrice.isError) {
+    if (setPrice.isError) {
       toast({
         status: "error",
         title: "Price not changed",
@@ -268,7 +262,7 @@ const PropertyDetails = (props: Props) => {
     }
 
     // When the mutation is successful, show a toast
-    if (changePrice.isSuccess) {
+    if (setPrice.isSuccess) {
       toast({
         status: "success",
         title: "Price changed successfully",
@@ -279,7 +273,7 @@ const PropertyDetails = (props: Props) => {
         location.reload();
       }, 5000);
     }
-  }, [changePrice.isPending, changePrice.isError, changePrice.isSuccess]);
+  }, [setPrice.isLoading, setPrice.isError, setPrice.isSuccess]);
 
   // ============ Buying ============
 
@@ -303,7 +297,7 @@ const PropertyDetails = (props: Props) => {
   const updateSlider = (value: number) => {
     setSliderValue(value);
   };
-  const debouncedUpdateSlider = debounce(updateSlider, 300);
+  const debouncedUpdateSlider = debounce(updateSlider, 3000);
 
   function priceChangeInput(event) {
     if (event.target.value == "") {
@@ -421,10 +415,10 @@ const PropertyDetails = (props: Props) => {
                   <Button
                     colorScheme="blue"
                     onClick={() => {
-                      changePrice.mutate({
+                      setPrice.mutate({
                         address,
                         id,
-                        sellPrice: sliderValue,
+                        price: sliderValue,
                       });
                       onClose;
                     }}
@@ -449,11 +443,7 @@ const PropertyDetails = (props: Props) => {
                     Remove From Sale
                   </Button>
                 ) : (
-                  <Button
-                    onClick={() =>
-                      list.mutate({ address, id })
-                    }
-                  >
+                  <Button onClick={() => list.mutate({ address, id })}>
                     List For Sale
                   </Button>
                 )}
@@ -480,16 +470,17 @@ const PropertyDetails = (props: Props) => {
               </Button>
             </Container>
           )}
-        {nft?.owner == props.address && nft?.listing?.sellerApproved == false && (
-          <Container>
-            <Button colorScheme="teal" onClick={openModalBuyMenu}>
-              Buy Offers
-            </Button>
-            <Button colorScheme="red" onClick={openModalBidMenu}>
-              Bid Offers
-            </Button>
-          </Container>
-        )}
+        {nft?.owner == props.address &&
+          nft?.listing?.sellerApproved == false && (
+            <Container>
+              <Button colorScheme="teal" onClick={openModalBuyMenu}>
+                Buy Offers
+              </Button>
+              <Button colorScheme="red" onClick={openModalBidMenu}>
+                Bid Offers
+              </Button>
+            </Container>
+          )}
         <VStack>
           {nft?.listing?.sellerApproved == true &&
             props.address == nft?.listing?.acceptedBid?.bidder && (

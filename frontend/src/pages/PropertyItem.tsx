@@ -20,7 +20,6 @@ export default function PropertyItem() {
     if (isConnected && isFetched) {
       console.log(data);
       setNft(data);
-      console.log(data);
     }
   }, [isConnected, isFetched]);
 

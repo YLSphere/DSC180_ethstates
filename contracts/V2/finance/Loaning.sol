@@ -35,6 +35,7 @@ contract LoaningContract {
             revert LoanNotFound();
         }
         delete loans[_loanId];
+        loanCount--;
         emit LoanRemoved(_loanId);
     }
 

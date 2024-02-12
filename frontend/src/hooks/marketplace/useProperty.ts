@@ -218,7 +218,7 @@ export function useSetPrice() {
     }: {
       address: `0x{string}`;
       id: number;
-      price: bigint;
+      price: number;
     }) => {
       const dapp = await getMarketplaceContract(address);
       return dapp.setPrice(id, price);

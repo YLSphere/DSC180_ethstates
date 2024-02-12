@@ -75,7 +75,6 @@ export default function Profile() {
 
         <NftCollection>
           {nfts?.map((nft, i) => {
-            // console.log(nft);
             return (
               <NftCard
                 key={i}
