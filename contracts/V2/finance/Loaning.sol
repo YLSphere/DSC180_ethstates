@@ -6,6 +6,7 @@ contract LoaningContract {
     struct Loan {
         address lender;
         uint256 annualInterestRate; // in percentage (e.g 4.56% = 456)
+        uint256 maxDurationInMonths; // in months
     }
 
     uint256 public loanCount; // total number of lenders
@@ -19,12 +20,14 @@ contract LoaningContract {
     // Add loan to lenders array
     function addLoan(
         address _lender,
-        uint256 _annualInterestRate
+        uint256 _annualInterestRate,
+        uint256 _maxDurationInMonths
     ) external {
         loanCount++;
         loans[loanCount] = Loan({
             lender: _lender,
-            annualInterestRate: _annualInterestRate
+            annualInterestRate: _annualInterestRate,
+            maxDurationInMonths: _maxDurationInMonths
         });
         emit LoanAdded(loanCount);
     }

@@ -121,6 +121,7 @@ contract ListingContract is
     error NotAcceptedBuyer();
     error BuyerDidNotBid();
     error BuyerAlreadyBid();
+    error BuyerAlreadyApproved();
     error BidNotSet();
     error BidAlreadySet();
     error PriceNotMet();
@@ -149,7 +150,6 @@ contract ListingContract is
         listing.propertyId = _propertyId;
         listing.sellPrice = properties[_propertyId].price;
         listing.financingId = financingContract.getFinancingId(_propertyId);
-
         emit List(_propertyId);
     }
 
@@ -329,14 +329,12 @@ contract ListingContract is
         listedOrNot(_propertyId, true)
         isAcceptedBuyer(_propertyId, _msgSender())
     {
-        require(
-            msg.value >= listings[_propertyId].acceptedBid.bidPrice,
-            "Insufficient payment"
-        );
-        require(
-            listings[_propertyId].buyerApproved == false,
-            "Transfer already approved by the buyer"
-        );
+        if (msg.value < listings[_propertyId].acceptedBid.bidPrice) {
+            revert PriceNotMet();
+        }
+        if (listings[_propertyId].buyerApproved) {
+            revert BuyerAlreadyApproved();
+        }
 
         listings[_propertyId].buyerApproved = true;
         payable(_msgSender()).transfer(
