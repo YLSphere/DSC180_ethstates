@@ -1,18 +1,18 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Container } from '@chakra-ui/react'
+import { Routes, Route } from "react-router-dom";
+import { Container } from "@chakra-ui/react";
 import Home from "./pages/Home";
 import Marketplace from "./pages/Marketplace";
 import ListProperty from "./pages/ListProperty";
 import PropertyItem from "./pages/PropertyItem";
 // import PropertyBid from "./pages/PropertyBid";
 import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
+// import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <Container maxW="unset" style={{ margin: 0, padding: 0 }}>
         <NavBar />
@@ -23,10 +23,10 @@ function App() {
           <Route path="/property" element={<PropertyItem />} />
           {/* <Route path="/property/bids" element={<PropertyBid />} /> */}
           <Route path="/profile" element={<Profile />} />
-          <Route path="*" element={<NotFound />}/>
+          {/* <Route path="*" element={<NotFound />}/> */}
         </Routes>
       </Container>
-    </BrowserRouter>
+    </>
   );
 }
 

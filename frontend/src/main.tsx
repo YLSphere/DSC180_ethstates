@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import App from "./App.tsx";
 
 // import `rainbowkit` styles and configs
@@ -73,7 +74,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       >
         <QueryClientProvider client={queryClient}>
           <ChakraProvider>
-            <App />
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
           </ChakraProvider>
         </QueryClientProvider>
       </RainbowKitProvider>
