@@ -100,7 +100,6 @@ export function useGetAllListings(address: `0x${string}` | undefined) {
       }
     },
     retry: 2,
-    refetchInterval: 10000,
   });
 }
 

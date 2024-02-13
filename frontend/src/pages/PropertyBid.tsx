@@ -17,12 +17,12 @@ import {
   Switch,
 } from "@chakra-ui/react";
 import ReactModal from "react-modal";
-import Slideshow from "../Slideshow";
+import Slideshow from "../components/property/Slideshow";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
-import { useParticularProperty } from "../hooks/dapp/useProperty";
+import { useParticularProperty } from "../hooks/marketplace/useProperty";
 import { useBid } from "../hooks/marketplace/useBidding";
-import { BidResultIndex, Nft } from "../types/listing";
+import { Nft } from "../types/listing";
 import { getMarketplaceContract } from "../queries/dapp";
 
 import { BidMenu } from "../Modals/BidMenu";
@@ -95,7 +95,11 @@ export default function PropertyItem() {
   };
   const handleSubmit = () => {
     // Submit bid to bid menu
-    bidSubmit.mutate({ address, id, bidPrice: price });
+    bidSubmit.mutate({
+      address,
+      id,
+      bidPrice: price,
+    });
   };
 
   useEffect(() => {
@@ -202,11 +206,10 @@ export default function PropertyItem() {
                     <Text>{`Price: ${nft?.property.price}`}</Text>
                     <Text>{`Property ID: ${nft?.property.propertyId}`}</Text>
                     <Text>{`URI: ${nft?.property.uri}`}</Text>
-                    <Text>{`Buyer: ${
-                      nft?.listing?.acceptedBid?.bidder
-                    }`}</Text>
+                    <Text>{`Buyer: ${nft?.listing?.acceptedBid?.bidder}`}</Text>
 
-                    {nft?.owner != address && nft?.listing?.sellerApproved == false ? (
+                    {nft?.owner != address &&
+                    nft?.listing?.sellerApproved == false ? (
                       <form onSubmit={openModalAlert}>
                         <FormControl
                           isRequired={true}

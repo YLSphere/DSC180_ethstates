@@ -25,16 +25,16 @@ import { useState, useEffect, useRef } from "react";
 import { debounce } from "lodash";
 import ReactModal from "react-modal";
 import { FaEthereum } from "react-icons/fa";
-import "../../../style.css";
+import "../../style.css";
 
-import { useSetPrice } from "../../../hooks/marketplace/useProperty";
-import { useUnlist, useList } from "../../../hooks/marketplace/useListing";
-import { useApproveTransferAsBuyer } from "../../../hooks/marketplace/useBidding";
-import { Nft } from "../../../types/listing";
+import { useSetPrice } from "../../hooks/marketplace/useProperty";
+import { useUnlist, useList } from "../../hooks/marketplace/useListing";
+import { useApproveTransferAsBuyer } from "../../hooks/marketplace/useBidding";
+import { Nft } from "../../types/listing";
 
-import Slideshow from "../../../Slideshow";
-import { BuyMenu } from "../../../Modals/BuyMenu";
-import { BidMenu } from "../../../Modals/BidMenu";
+import Slideshow from "./Slideshow";
+import { BuyMenu } from "../../Modals/BuyMenu";
+import { BidMenu } from "../../Modals/BidMenu";
 
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 // import { useParticularProperty } from "../../../hooks/dapp/useProperty";
@@ -209,38 +209,6 @@ const PropertyDetails = (props: Props) => {
     approveTransferAsBuyer.isSuccess,
   ]);
 
-  // useEffect(() => {
-  //   // When the mutation is loading, show a toast
-  //   if (endBiddingProcess.isPending) {
-  //     toast({
-  //       status: "loading",
-  //       title: "Ending the transaction process",
-  //       description: "Please confirm on Metamask.",
-  //     });
-  //   }
-
-  //   // When the mutation fails, show a toast
-  //   if (endBiddingProcess.isError) {
-  //     toast({
-  //       status: "error",
-  //       title: "An error occured",
-  //       description: "Something went wrong",
-  //       duration: 5000,
-  //     });
-  //   }
-
-  //   // When the mutation is successful, show a toast
-  //   if (endBiddingProcess.isSuccess) {
-  //     toast({
-  //       status: "success",
-  //       title: "Ended transaction process",
-  //       description: "Looks great!",
-  //       duration: 10000,
-  //     });
-  //     window.setTimeout(function(){location.reload()},10000);
-  //   }
-  // }, [endBiddingProcess.isPending, endBiddingProcess.isError, endBiddingProcess.isSuccess]);
-
   useEffect(() => {
     // When the mutation is loading, show a toast
     if (setPrice.isLoading) {
@@ -297,15 +265,15 @@ const PropertyDetails = (props: Props) => {
   const updateSlider = (value: number) => {
     setSliderValue(value);
   };
-  const debouncedUpdateSlider = debounce(updateSlider, 3000);
+  const debouncedUpdateSlider = debounce(updateSlider, 1000);
 
-  function priceChangeInput(event) {
-    if (event.target.value == "") {
+  function priceChangeInput(event: React.ChangeEvent<HTMLInputElement>) {
+    if (event.target.value === "") {
       setCustomPrice("");
       setSliderValue(0);
     } else {
       setCustomPrice(event.target.value);
-      debouncedUpdateSlider(event.target.value);
+      debouncedUpdateSlider(parseInt(event.target.value));
     }
   }
 
@@ -327,9 +295,7 @@ const PropertyDetails = (props: Props) => {
         contentLabel="buyMenu"
       >
         <div>
-          <ChakraProvider theme={theme}>
-            <BuyMenu />
-          </ChakraProvider>
+          <BuyMenu />
         </div>
       </ReactModal>
 
@@ -342,18 +308,14 @@ const PropertyDetails = (props: Props) => {
         contentLabel="bidMenu"
       >
         <div>
-          <ChakraProvider theme={theme}>
-            <BidMenu id={id} address={address} nft={nft} />
-          </ChakraProvider>
+          <BidMenu id={id} address={address} nft={nft} />
         </div>
       </ReactModal>
 
       <Center>
         {nft ? (
           <Box maxW="800px" mt={4}>
-            <ChakraProvider theme={theme}>
-              <Slideshow images={nft.pinataContent.images} />
-            </ChakraProvider>
+            <Slideshow images={nft.pinataContent.images} />
 
             <HStack spacing="0.1rem" mt={5}>
               <FaEthereum size={30} />
@@ -484,32 +446,19 @@ const PropertyDetails = (props: Props) => {
         <VStack>
           {nft?.listing?.sellerApproved == true &&
             props.address == nft?.listing?.acceptedBid?.bidder && (
-              // ethers.parseEther(.toString())
               <Button
                 colorScheme="green"
                 onClick={() =>
                   approveTransferAsBuyer.mutate({
                     address,
                     id,
-                    bidPrice:
-                      BigInt(nft!.listing!.acceptedBid!.bidPrice) *
-                      BigInt(1e18),
+                    bidPrice: nft!.listing!.acceptedBid!.bidPrice,
                   })
                 }
               >
                 Confirm transaction and initiate transfer
               </Button>
             )}
-          {/* {nft?.listing?.sellerApproved == true &&
-            (nft?.owner == props.address ||
-              nft?.listing?.acceptedBid?.bidder == props.address) && (
-              <Button
-                colorScheme="red"
-                onClick={() => endBiddingProcess.mutate({ address, id })}
-              >
-                End transaction process
-              </Button>
-            )} */}
         </VStack>
       </Center>
     </Container>

@@ -1,4 +1,3 @@
-
 import {
   Button,
   Container,
@@ -10,13 +9,13 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import Dropzone from "../components/templates/form/Dropzone";
+import Dropzone from "../components/form/Dropzone";
 
 import { pinataImage } from "../queries/pinata";
 import { useAddProperty } from "../hooks/marketplace/useProperty";
 
 import { PinataContent } from "../types/property";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 const formFields = [
   {
@@ -145,8 +144,8 @@ export default function ListProperty() {
         duration: 10000,
       });
       setTimeout(() => {
-        navigate('/profile')
-      }, 10000)
+        navigate("/profile");
+      }, 10000);
     }
   }, [addProperty]);
 
@@ -232,14 +231,15 @@ export default function ListProperty() {
                   setPinataContent({
                     ...pinataContent,
                     [field.propName]: field.isNumber
-                      ? parseInt(e.target.value)
+                      ? field.propName === "price"
+                        ? parseFloat(e.target.value)
+                        : parseInt(e.target.value)
                       : e.target.value,
                   })
                 }
               />
             </FormControl>
-            
-          ))}    
+          ))}
           <Dropzone onUpload={handleUpload} />
 
           <Button my={4} colorScheme="teal" type="submit">

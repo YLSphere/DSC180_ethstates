@@ -2,8 +2,8 @@ import { Badge, Container, Heading, Spinner, Text } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 
-import NftCard from "../components/templates/property/NftCard";
-import NftCollection from "../components/templates/property/NftCollection";
+import NftCard from "../components/property/NftCard";
+import NftCollection from "../components/property/NftCollection";
 
 import { useGetAllPropertiesByOwner } from "../hooks/marketplace/useProperty";
 

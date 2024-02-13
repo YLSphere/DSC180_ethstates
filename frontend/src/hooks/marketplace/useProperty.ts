@@ -95,7 +95,6 @@ export function useGetAllPropertiesByOwner(
       }
     },
     retry: 2,
-    refetchInterval: 10000,
   });
 }
 
@@ -114,7 +113,6 @@ export function useGetPropertyCount(
       }
     },
     retry: 2,
-    refetchInterval: 10000,
   });
 }
 
@@ -236,13 +234,18 @@ export function useSetPrice() {
       id,
       price,
     }: {
-      address: `0x{string}`;
+      address: `0x${string}`;
       id: number;
       price: number;
     }) => {
-      const dapp = await getMarketplaceContract(address);
-      const parsedBidPrice = ethers.parseEther(price.toString());
-      return dapp.setPrice(BigInt(id), parsedBidPrice);
+      try {
+        const dapp = await getMarketplaceContract(address);
+        const parsedBidPrice = ethers.parseEther(price.toString());
+        return dapp.setPrice(BigInt(id), parsedBidPrice);
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
     },
   });
 }

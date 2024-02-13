@@ -4,7 +4,8 @@ import { Box, Flex, Image, Text } from "@chakra-ui/react";
 interface Props {
   images: string[];
 }
-export default function Slideshow(images: Props) {
+
+export default function Slideshow(props: Props) {
   const arrowStyles = {
     cursor: "pointer",
     pos: "absolute",
@@ -24,7 +25,7 @@ export default function Slideshow(images: Props) {
     },
   } as const;
 
-  const slides = images.images;
+  const { images: slides } = props;
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -44,15 +45,15 @@ export default function Slideshow(images: Props) {
 
   return (
     <Flex
-      w="full"
+      w="container.lg"
       bg="#edf3f8"
       _dark={{ bg: "#3e3e3e" }}
-      p={10}
+      p={3}
       alignItems="center"
       justifyContent="center"
     >
       <Flex w="full" overflow="hidden" pos="relative">
-        <Flex h="400px" w="full" {...carouselStyle}>
+        <Flex h="full" w="full" {...carouselStyle}>
           {slides.map((slide, sid) => (
             <Box key={`slide-${sid}`} boxSize="full" shadow="md" flex="none">
               <Text

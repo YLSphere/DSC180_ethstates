@@ -16,6 +16,14 @@ contract LoaningContract {
     event LoanRemoved(uint256 loanId);
 
     error LoanNotFound();
+    error NotLender();
+
+    modifier onlyLender(uint256 _loanId) {
+        if (loans[_loanId].lender != msg.sender) {
+            revert NotLender();
+        }
+        _;
+    }
 
     // Add loan to lenders array
     function addLoan(
@@ -40,6 +48,22 @@ contract LoaningContract {
         delete loans[_loanId];
         loanCount--;
         emit LoanRemoved(_loanId);
+    }
+
+    // Update annual interest rate
+    function setAnnualInterestRate(
+        uint256 _loanId,
+        uint256 _annualInterestRate
+    ) external onlyLender(_loanId) {
+        loans[_loanId].annualInterestRate = _annualInterestRate;
+    }
+
+    // Set max duration in months
+    function setMaxDurationInMonths(
+        uint256 _loanId,
+        uint256 _maxDurationInMonths
+    ) external onlyLender(_loanId) {
+        loans[_loanId].maxDurationInMonths = _maxDurationInMonths;
     }
 
     // =========== Utility functions ===========
