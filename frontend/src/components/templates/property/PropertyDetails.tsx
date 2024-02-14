@@ -491,9 +491,7 @@ const PropertyDetails = (props: Props) => {
                   approveTransferAsBuyer.mutate({
                     address,
                     id,
-                    bidPrice:
-                      BigInt(nft!.listing!.acceptedBid!.bidPrice) *
-                      BigInt(1e18),
+                    bidPrice: BigInt(nft!.listing!.acceptedBid!.bidPrice *1e18),
                   })
                 }
               >

@@ -20,7 +20,7 @@ import ReactModal from "react-modal";
 import Slideshow from "../Slideshow";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
-import { useParticularProperty } from "../hooks/dapp/useProperty";
+import { useParticularProperty } from "../hooks/marketplace/useProperty";
 import { useBid } from "../hooks/marketplace/useBidding";
 import { BidResultIndex, Nft } from "../types/listing";
 import { getMarketplaceContract } from "../queries/dapp";

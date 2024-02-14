@@ -339,9 +339,9 @@ contract ListingContract is
         );
 
         listings[_propertyId].buyerApproved = true;
-        payable(_msgSender()).transfer(
-            msg.value - listings[_propertyId].acceptedBid.bidPrice
-        ); // refund excess payment
+        // payable(_msgSender()).transfer(
+        //     msg.value - listings[_propertyId].acceptedBid.bidPrice
+        // ); // refund excess payment
         transfer(_propertyId);
     }
 
