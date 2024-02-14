@@ -9,8 +9,8 @@ import {
   Input,
   Text,
 } from "@chakra-ui/react";
-import NftCard from "../components/templates/property/NftCard";
-import NftCollection from "../components/templates/property/NftCollection";
+import NftCard from "../components/property/NftCard";
+import NftCollection from "../components/property/NftCollection";
 import { useGetAllListings } from "../hooks/marketplace/useListing";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";

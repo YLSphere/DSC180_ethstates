@@ -1,6 +1,9 @@
 import { useMutation } from "wagmi";
 import { pinataJson, pinataGateway } from "../../queries/pinata";
-import { getFinancingContract, getMarketplaceContract } from "../../queries/dapp";
+import {
+  getFinancingContract,
+  getMarketplaceContract,
+} from "../../queries/dapp";
 import { UseQueryResult, useQuery } from "@tanstack/react-query";
 import {
   ListingResult,
@@ -17,7 +20,12 @@ import {
   PropertyResult,
   PropertyResultIndex,
 } from "../../types/property";
-import { Financing, FinancingResult, FinancingResultIndex } from "../../types/financing";
+import {
+  Financing,
+  FinancingResult,
+  FinancingResultIndex,
+} from "../../types/financing";
+import { ethers } from "ethers";
 
 export function useAddProperty() {
   return useMutation({
@@ -29,7 +37,7 @@ export function useAddProperty() {
     }: AddPropertyProps) => {
       try {
         const dapp = await getMarketplaceContract(address);
-        const price = pinataContent.price;
+        const price = ethers.parseEther(pinataContent.price!.toString());
         delete pinataContent.price;
         const promise = pinataJson.post("/pinning/pinJSONToIPFS", {
           pinataContent,
@@ -64,7 +72,9 @@ export function useGetAllPropertiesByOwner(
             );
             const property: Property = {
               propertyId: Number(result[PropertyResultIndex.PROPERTY_ID]),
-              price: Number(result[PropertyResultIndex.PRICE]),
+              price: parseFloat(
+                ethers.formatEther(result[PropertyResultIndex.PRICE])
+              ),
               uri: result[PropertyResultIndex.URI],
             };
             const response = await pinataGateway.get(
@@ -85,7 +95,6 @@ export function useGetAllPropertiesByOwner(
       }
     },
     retry: 2,
-    refetchInterval: 10000,
   });
 }
 
@@ -104,7 +113,6 @@ export function useGetPropertyCount(
       }
     },
     retry: 2,
-    refetchInterval: 10000,
   });
 }
 
@@ -113,7 +121,7 @@ export function useParticularProperty(
   id: number | undefined
 ): UseQueryResult<Nft, Error> {
   return useQuery({
-    queryKey: ["dapp", "particularProperty", address, id?.toString()],
+    queryKey: ["dapp", "particularProperty", address, id],
     queryFn: async (): Promise<Nft> => {
       try {
         const dapp = await getMarketplaceContract(address);
@@ -124,7 +132,9 @@ export function useParticularProperty(
         );
         const property: Property = {
           propertyId: Number(propertyResult[PropertyResultIndex.PROPERTY_ID]),
-          price: Number(propertyResult[PropertyResultIndex.PRICE]),
+          price: parseFloat(
+            ethers.formatEther(propertyResult[PropertyResultIndex.PRICE])
+          ),
           uri: propertyResult[PropertyResultIndex.URI],
         };
         // Get the listing data
@@ -133,14 +143,18 @@ export function useParticularProperty(
         );
         const listing: Listing = {
           propertyId: Number(listingResult[ListingResultIndex.PROPERTY_ID]),
-          sellPrice: Number(listingResult[ListingResultIndex.SELL_PRICE]),
+          sellPrice: parseFloat(
+            ethers.formatEther(listingResult[PropertyResultIndex.PRICE])
+          ),
           buyerApproved: listingResult[ListingResultIndex.BUYER_APPROVED],
           sellerApproved: listingResult[ListingResultIndex.SELLER_APPROVED],
           financingId: Number(listingResult[ListingResultIndex.FINANCING_ID]),
           bids: listingResult[ListingResultIndex.BIDS].map(
             (bid): Bid => ({
               bidder: bid[BidResultIndex.BIDDER],
-              bidPrice: Number(bid[BidResultIndex.BID_PRICE]),
+              bidPrice: parseFloat(
+                ethers.formatEther(bid[BidResultIndex.BID_PRICE])
+              ),
             })
           ),
           acceptedBid: {
@@ -148,10 +162,12 @@ export function useParticularProperty(
               listingResult[ListingResultIndex.ACCEPTED_BID][
                 AcceptedBidResultIndex.BIDDER
               ],
-            bidPrice: Number(
-              listingResult[ListingResultIndex.ACCEPTED_BID][
-                AcceptedBidResultIndex.BID_PRICE
-              ]
+            bidPrice: parseFloat(
+              ethers.formatEther(
+                listingResult[ListingResultIndex.ACCEPTED_BID][
+                  AcceptedBidResultIndex.BID_PRICE
+                ]
+              )
             ),
             financingId: Number(
               listingResult[ListingResultIndex.ACCEPTED_BID][
@@ -165,13 +181,15 @@ export function useParticularProperty(
         const currentFinancing: FinancingResult = await financing.getFinancing(
           id
         );
-        const financingData: Financing ={
+        const financingData: Financing = {
           loanId: Number(currentFinancing[FinancingResultIndex.LOAN_ID]),
           propertyId: Number(
             currentFinancing[FinancingResultIndex.PROPERTY_ID]
           ),
-          loanAmount: Number(
-            currentFinancing[FinancingResultIndex.LOAN_AMOUNT]
+          loanAmount: parseFloat(
+            ethers.formatEther(
+              currentFinancing[FinancingResultIndex.LOAN_AMOUNT]
+            )
           ),
           durationInMonths: Number(
             currentFinancing[FinancingResultIndex.DURATION_IN_MONTHS]
@@ -216,12 +234,18 @@ export function useSetPrice() {
       id,
       price,
     }: {
-      address: `0x{string}`;
+      address: `0x${string}`;
       id: number;
       price: number;
     }) => {
-      const dapp = await getMarketplaceContract(address);
-      return dapp.setPrice(id, price);
+      try {
+        const dapp = await getMarketplaceContract(address);
+        const parsedBidPrice = ethers.parseEther(price.toString());
+        return dapp.setPrice(BigInt(id), parsedBidPrice);
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
     },
   });
 }

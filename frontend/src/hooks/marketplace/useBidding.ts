@@ -1,13 +1,23 @@
 import { useMutation } from "@tanstack/react-query";
 import { getMarketplaceContract } from "../../queries/dapp";
 import { BidProps } from "../../types/listing";
+import { ethers } from "ethers";
 
 export function useBid() {
   return useMutation({
     mutationKey: ["dapp", "bid"],
-    mutationFn: async ({ address, id, bidPrice }: BidProps) => {
+    mutationFn: async ({
+      address,
+      id,
+      bidPrice,
+    }: {
+      address: `0x${string}` | undefined;
+      id: number;
+      bidPrice: number;
+    }) => {
       const dapp = await getMarketplaceContract(address);
-      return dapp.bid(id as number, bidPrice);
+      const parsedBidPrice = ethers.parseEther(bidPrice.toString());
+      return dapp.bid(BigInt(id), parsedBidPrice);
     },
   });
 }
@@ -17,7 +27,7 @@ export function useAcceptOffer() {
     mutationKey: ["dapp", "acceptOffer"],
     mutationFn: async ({ address, id, bidder }: BidProps) => {
       const dapp = await getMarketplaceContract(address);
-      return dapp.acceptOffer(id as number, bidder);
+      return dapp.acceptOffer(BigInt(id!), bidder);
     },
   });
 }
@@ -49,9 +59,20 @@ export function useAcceptOffer() {
 export function useApproveTransferAsBuyer() {
   return useMutation({
     mutationKey: ["dapp", "approveTransferAsBuyer"],
-    mutationFn: async ({ address, id, bidPrice }: BidProps) => {
+    mutationFn: async ({
+      address,
+      id,
+      bidPrice,
+    }: {
+      address: `0x${string}`;
+      id: number;
+      bidPrice: number;
+    }) => {
       const dapp = await getMarketplaceContract(address);
-      return dapp.approveTransferAsBuyer(id as number, { value: bidPrice });
+      const parsedBidPrice = ethers.parseEther(bidPrice.toString());
+      return dapp.approveTransferAsBuyer(BigInt(id!), {
+        value: parsedBidPrice,
+      });
     },
   });
 }

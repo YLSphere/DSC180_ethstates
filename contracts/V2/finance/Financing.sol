@@ -57,7 +57,6 @@ contract FinancingContract is
         uint256 _propertyId
     );
 
-    error NotLender();
     error FinancingNotPending();
     error FinancingNotFound();
     error AlreadyFinanced();

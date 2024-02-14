@@ -1,12 +1,27 @@
-import { Box, Container, Spinner, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Center,
+  Container,
+  HStack,
+  Heading,
+  Spinner,
+  Text,
+} from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 
-import { PropertyDetails } from "../components/templates/property/PropertyDetails";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import { useParticularProperty } from "../hooks/marketplace/useProperty";
 import { Nft } from "../types/listing";
-import { getMarketplaceContract } from "../queries/dapp";
+
+import Slideshow from "../components/property/Slideshow";
+import PropertyPrice from "../components/property/PropertyPrice";
+import PropertyListing from "../components/property/PropertyListing";
+import PropertyBidding from "../components/property/PropertyBidding";
+import PropertyApproval from "../components/property/PropertyApproval";
+import PropertyDetail from "../components/property/PropertyDetail";
+import BiddingPool from "../components/property/BiddingPool";
+import FinancingStatus from "../components/property/FinancingStatus";
 
 export default function PropertyItem() {
   const location = useLocation();
@@ -23,21 +38,6 @@ export default function PropertyItem() {
     }
   }, [isConnected, isFetched]);
 
-  async function offerListener() {
-    const dapp = await getMarketplaceContract(address);
-    dapp.on("Offer", (bidder, propertyId, bidPrice) => {
-      if (id == propertyId) {
-        console.log("offer", bidder, propertyId, bidPrice);
-      }
-    });
-  }
-
-  useEffect(() => {
-    if (isConnected) {
-      offerListener();
-    }
-  }, [isConnected]);
-
   return (
     <main>
       {!isFetched ? (
@@ -49,19 +49,29 @@ export default function PropertyItem() {
         >
           <Spinner size="xl" color="green" />
         </Box>
-      ) : (
-        <Container maxWidth="container.lg">
-          {isConnected ? (
-            <PropertyDetails
-              id={id}
-              address={address}
-              nft={nft}
-              isOwner={address == nft?.owner}
-            />
-          ) : (
-            <Text>Connect to your wallet first!</Text>
-          )}
+      ) : nft && address ? (
+        <Container maxW={"max-content"} my={3}>
+          <Heading as="h1" size="xl" noOfLines={1} mb={3}>
+            {nft.pinataContent.streetAddress}
+          </Heading>
+
+          <Center>
+            <Slideshow images={nft.pinataContent.images} />
+          </Center>
+
+          <HStack mt={5}>
+            <PropertyPrice address={address} nft={nft} />
+            <PropertyListing address={address} nft={nft} />
+            <PropertyBidding address={address} nft={nft} />
+            <PropertyApproval address={address} nft={nft} />
+          </HStack>
+
+          <PropertyDetail nft={nft} />
+          <BiddingPool address={address} nft={nft} />
+          <FinancingStatus nft={nft} />
         </Container>
+      ) : (
+        <Text>Connect to your wallet first!</Text>
       )}
     </main>
   );

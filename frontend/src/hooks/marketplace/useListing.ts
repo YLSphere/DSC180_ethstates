@@ -16,6 +16,7 @@ import {
 } from "../../types/property";
 import { getMarketplaceContract } from "../../queries/dapp";
 import { pinataGateway } from "../../queries/pinata";
+import { ethers } from "ethers";
 
 export function useGetAllListings(address: `0x${string}` | undefined) {
   return useQuery({
@@ -37,20 +38,26 @@ export function useGetAllListings(address: `0x${string}` | undefined) {
               propertyId: Number(
                 propertyResult[PropertyResultIndex.PROPERTY_ID]
               ),
-              price: Number(propertyResult[PropertyResultIndex.PRICE]),
+              price: parseFloat(
+                ethers.formatEther(propertyResult[PropertyResultIndex.PRICE])
+              ),
               uri: propertyResult[PropertyResultIndex.URI],
             };
             // Get the listing data
             const listing: Listing = {
               propertyId: Number(result[ListingResultIndex.PROPERTY_ID]),
-              sellPrice: Number(result[ListingResultIndex.SELL_PRICE]),
+              sellPrice: parseFloat(
+                ethers.formatEther(result[ListingResultIndex.SELL_PRICE])
+              ),
               buyerApproved: result[ListingResultIndex.BUYER_APPROVED],
               sellerApproved: result[ListingResultIndex.SELLER_APPROVED],
               financingId: Number(result[ListingResultIndex.FINANCING_ID]),
               bids: result[ListingResultIndex.BIDS].map(
                 (bid): Bid => ({
                   bidder: bid[BidResultIndex.BIDDER],
-                  bidPrice: Number(bid[BidResultIndex.BID_PRICE]),
+                  bidPrice: parseFloat(
+                    ethers.formatEther(bid[BidResultIndex.BID_PRICE])
+                  ),
                 })
               ),
               acceptedBid: {
@@ -58,10 +65,12 @@ export function useGetAllListings(address: `0x${string}` | undefined) {
                   result[ListingResultIndex.ACCEPTED_BID][
                     AcceptedBidResultIndex.BIDDER
                   ],
-                bidPrice: Number(
-                  result[ListingResultIndex.ACCEPTED_BID][
-                    AcceptedBidResultIndex.BID_PRICE
-                  ]
+                bidPrice: parseFloat(
+                  ethers.formatEther(
+                    result[ListingResultIndex.ACCEPTED_BID][
+                      AcceptedBidResultIndex.BID_PRICE
+                    ]
+                  )
                 ),
                 financingId: Number(
                   result[ListingResultIndex.ACCEPTED_BID][
@@ -91,7 +100,6 @@ export function useGetAllListings(address: `0x${string}` | undefined) {
       }
     },
     retry: 2,
-    refetchInterval: 10000,
   });
 }
 
