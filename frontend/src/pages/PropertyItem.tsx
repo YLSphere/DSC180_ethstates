@@ -31,6 +31,12 @@ export default function PropertyItem() {
   const { isFetched, data } = useParticularProperty(address, id);
   const [nft, setNft] = useState<Nft | undefined>();
 
+  const shouldDisplay =
+    nft &&
+    address &&
+    (nft.owner === address || // current address is the owner
+      nft.listing?.propertyId === nft.property.propertyId); // or the property is listed
+
   useEffect(() => {
     if (isConnected && isFetched) {
       console.log(data);
@@ -49,7 +55,7 @@ export default function PropertyItem() {
         >
           <Spinner size="xl" color="green" />
         </Box>
-      ) : nft && address ? (
+      ) : shouldDisplay ? (
         <Container maxW={"max-content"} my={3}>
           <Heading as="h1" size="xl" noOfLines={1} mb={3}>
             {nft.pinataContent.streetAddress}
@@ -71,7 +77,7 @@ export default function PropertyItem() {
           <FinancingStatus nft={nft} />
         </Container>
       ) : (
-        <Text>Connect to your wallet first!</Text>
+        <Text>Connect to your wallet first! Oops!</Text>
       )}
     </main>
   );

@@ -17,7 +17,7 @@ export default function Slideshow(props: Props) {
     fontWeight: "bold",
     fontSize: "18px",
     transition: "0.6s ease",
-    borderRadius: "0 3px 3px 0",
+    borderRadius: "3px",
     userSelect: "none",
     _hover: {
       opacity: 0.8,
@@ -53,7 +53,11 @@ export default function Slideshow(props: Props) {
       justifyContent="center"
     >
       <Flex w="full" overflow="hidden" pos="relative">
-        <Flex h="full" w="full" {...carouselStyle}>
+        <Flex
+          maxH={{ base: "250px", md: "400px", lg: "500px" }}
+          w="full"
+          {...carouselStyle}
+        >
           {slides.map((slide, sid) => (
             <Box key={`slide-${sid}`} boxSize="full" shadow="md" flex="none">
               <Text
@@ -67,6 +71,7 @@ export default function Slideshow(props: Props) {
               </Text>
               <Image
                 src={`${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${slide}`}
+                objectFit={"contain"}
                 alt="carousel image"
                 boxSize="full"
                 backgroundSize="cover"

@@ -4,12 +4,13 @@ import { Nft } from "../../types/listing";
 import {
   Button,
   FormControl,
+  Image,
   InputGroup,
   InputRightElement,
   NumberInput,
   NumberInputField,
 } from "@chakra-ui/react";
-import { FaEthereum } from "react-icons/fa";
+import Polygon from "./assets/polygon.svg";
 
 interface Props {
   address: `0x${string}`;
@@ -57,7 +58,7 @@ export default function PropertyBidding({ nft, address }: Props) {
         >
           <InputGroup>
             <InputRightElement pointerEvents="none">
-              <FaEthereum color="gray" />
+              <Image src={Polygon} alt="logo" h={5} w={5} color="gray"/>
             </InputRightElement>
             <NumberInput precision={2}>
               <NumberInputField

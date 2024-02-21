@@ -2,11 +2,12 @@ import {
   Editable,
   EditableInput,
   EditablePreview,
+  Image,
   Stat,
   StatLabel,
   StatNumber,
 } from "@chakra-ui/react";
-import { FaEthereum } from "react-icons/fa";
+import Polygon from "./assets/polygon.svg";
 import { Nft } from "../../types/listing";
 import { useSetPrice } from "../../hooks/marketplace/useProperty";
 import { useEffect, useState } from "react";
@@ -34,7 +35,7 @@ export default function PropertyPrice({
     <Stat>
       <StatLabel>Property Price</StatLabel>
       <StatNumber display={"flex"} flexDirection={"row"} alignItems={"center"}>
-        <FaEthereum size={20} />
+        <Image src={Polygon} alt="logo" height={5} width={5} mr={2}/>
         {isOwner ? (
           <Editable
             defaultValue={nft.property.price.toString()}
