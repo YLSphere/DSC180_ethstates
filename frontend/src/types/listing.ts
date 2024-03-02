@@ -81,12 +81,12 @@ export interface Nft {
 }
 
 export interface ListingProps {
-  address: `0x${string}` | undefined;
+  address: `0x${string}`;
   id: number | undefined;
 }
 
 export interface BidProps {
-  address: `0x${string}` | undefined;
+  address: `0x${string}`;
   id: number | undefined;
   bidder?: `0x${string}`;
   bidPrice?: number;

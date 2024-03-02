@@ -1,4 +1,4 @@
-import { useMutation } from "wagmi";
+import { useMutation } from "@tanstack/react-query";
 import { pinataJson, pinataGateway } from "../../queries/pinata";
 import {
   getFinancingContract,
@@ -34,17 +34,17 @@ export function useAddProperty() {
       address,
       pinataContent,
       pinataMetadata,
+      price,
     }: AddPropertyProps) => {
       try {
         const dapp = await getMarketplaceContract(address);
-        const price = ethers.parseEther(pinataContent.price!.toString());
-        delete pinataContent.price;
+        const convertedPrice = ethers.parseEther(price.toString());
         const promise = pinataJson.post("/pinning/pinJSONToIPFS", {
           pinataContent,
           pinataMetadata,
         });
         return promise.then(({ data }) =>
-          dapp.addProperty(data.IpfsHash, price)
+          dapp.addProperty(data.IpfsHash, convertedPrice)
         );
       } catch (error) {
         console.error(error);
@@ -60,6 +60,7 @@ export function useGetAllPropertiesByOwner(
   return useQuery({
     queryKey: ["dapp", "getAllPropertiesByOwner", address],
     queryFn: async (): Promise<Nft[]> => {
+      if (!address) return [];
       try {
         const dapp = await getMarketplaceContract(address);
         const results: PropertyResult[] = await dapp.getPropertiesByOwner(
@@ -99,7 +100,7 @@ export function useGetAllPropertiesByOwner(
 }
 
 export function useGetPropertyCount(
-  address: `0x${string}` | undefined
+  address: `0x${string}`
 ): UseQueryResult<number, Error> {
   return useQuery({
     queryKey: ["dapp", "getPropertyCount", address],
@@ -124,7 +125,7 @@ export function useParticularProperty(
     queryKey: ["dapp", "particularProperty", address, id],
     queryFn: async (): Promise<Nft> => {
       try {
-        const dapp = await getMarketplaceContract(address);
+        const dapp = await getMarketplaceContract(address || import.meta.env.VITE_MARKETPLACE_DEFAULT_ADDRESS);
         // Get the property data
         const owner = await dapp.ownerOf(id as number);
         const propertyResult: PropertyResult = await dapp.getPropertyById(
@@ -177,7 +178,7 @@ export function useParticularProperty(
           },
         };
         // Get the financing data
-        const financing = await getFinancingContract(address);
+        const financing = await getFinancingContract(address || import.meta.env.VITE_MARKETPLACE_DEFAULT_ADDRESS);
         const currentFinancing: FinancingResult = await financing.getFinancing(
           id
         );

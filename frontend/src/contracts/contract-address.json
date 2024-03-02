@@ -1,6 +1,6 @@
 {
-  "FinancingContractProxy": "0x10e848BaC750150b375E1E69754dE7831f9614C8",
+  "FinancingContractProxy": "0xd1974253c0680a442E373Bd4dc62778c9bf4B36a",
   "FinancingContractImplementation": "0x2246A9471a9D7fDCEb1881da5262c74C6A907fF7",
-  "ListingContractProxy": "0x593dA1273e845C147cD0DbF8dbd9Bf739d8d5BB2",
-  "ListingContractImplementation": "0xfd31Ad3ce89C2D051BA451E84d0F8abB2f505F11"
+  "ListingContractProxy": "0xeC2fca0F884A63eA4cF68d60b4141ab9c7B2cfE8",
+  "ListingContractImplementation": "0x2194E65735E3667Fe345B84f98a89F7287b2E7d2"
 }

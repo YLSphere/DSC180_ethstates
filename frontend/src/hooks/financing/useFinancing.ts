@@ -53,7 +53,7 @@ export function useRejectFinancing() {
 }
 
 export function useGetFinancingByPropertyId(
-  address: `0x${string}` | undefined,
+  address: `0x${string}`,
   propertyId: number
 ) {
   return useQuery({
@@ -79,7 +79,7 @@ export function useGetFinancingByPropertyId(
 }
 
 export function useGetFinancingByFinancingId(
-  address: `0x${string}` | undefined,
+  address: `0x${string}`,
   financingId: number
 ) {
   return useQuery({

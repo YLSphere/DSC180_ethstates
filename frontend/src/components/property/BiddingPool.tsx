@@ -1,4 +1,3 @@
-import { useAcceptOffer } from "../../hooks/marketplace/useBidding";
 import { Nft } from "../../types/listing";
 import {
   Box,
@@ -11,16 +10,17 @@ import {
   Th,
   Thead,
   Tr,
-  Button,
 } from "@chakra-ui/react";
 
+import { AcceptButton } from "./buttons/AcceptButton";
+import { UnbidButton } from "./buttons/UnbidButton";
+
 interface Props {
-  address: `0x${string}`;
+  address: `0x${string}` | undefined;
   nft: Nft;
 }
 
 export default function BiddingPool({ nft, address }: Props) {
-  const acceptOffer = useAcceptOffer();
   const isOwner = nft.owner === address;
   const isAccepted = nft.listing?.acceptedBid?.bidPrice !== 0;
 
@@ -54,20 +54,11 @@ export default function BiddingPool({ nft, address }: Props) {
                   </Td>
                   <Td isNumeric>{bid.bidPrice}</Td>
                   <Td>
-                    <Button
-                      colorScheme="green"
-                      size="xs"
-                      isDisabled={isAccepted}
-                      onClick={() =>
-                        acceptOffer.mutate({
-                          address,
-                          id: nft.property.propertyId,
-                          bidder: bid.bidder,
-                        })
-                      }
-                    >
-                      Accept
-                    </Button>
+                    <AcceptButton
+                      isAccepted={isAccepted}
+                      propertyId={nft.property.propertyId}
+                      bidder={bid.bidder}
+                    />
                   </Td>
                 </Tr>
               ))}
@@ -111,6 +102,12 @@ export default function BiddingPool({ nft, address }: Props) {
                     )}
                   </Td>
                   <Td isNumeric>{bid.bidPrice}</Td>
+                  <Td>
+                    {address === bid.bidder &&
+                    nft.listing?.acceptedBid?.bidder !== bid.bidder ? (
+                      <UnbidButton propertyId={nft.property.propertyId} />
+                    ) : null}
+                  </Td>
                 </Tr>
               ))}
             </Tbody>

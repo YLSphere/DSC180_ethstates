@@ -8,11 +8,12 @@ import NftCollection from "../components/property/NftCollection";
 import { useGetAllPropertiesByOwner } from "../hooks/marketplace/useProperty";
 
 import { Nft } from "../types/listing";
+import { CHAIN_ID } from "../types/constant";
 
 export default function Profile() {
   const [nfts, setNfts] = useState<Nft[] | undefined>([]);
 
-  const { address, isConnected } = useAccount();
+  const { address, chain, isConnected } = useAccount();
   const { isFetched, data } = useGetAllPropertiesByOwner(address);
 
   useEffect(() => {
@@ -33,7 +34,26 @@ export default function Profile() {
           maxWidth="container.lg"
         >
           <Text fontSize={"3xl"} color={"gray.500"}>
-            Connect to your wallet first!
+            Connect to your web3 wallet
+          </Text>
+        </Container>
+      </main>
+    );
+  }
+
+  // Wrong network
+  if (chain?.id !== CHAIN_ID) {
+    return (
+      <main>
+        <Container
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="90vh"
+          maxWidth="container.lg"
+        >
+          <Text fontSize={"3xl"} color={"gray.500"}>
+            Connect to Polygon Mumbai Testnet
           </Text>
         </Container>
       </main>

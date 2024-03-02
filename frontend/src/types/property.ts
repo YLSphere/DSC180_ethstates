@@ -26,7 +26,6 @@ export interface PinataContent {
   bathrooms: number;
   parkingSpots: number;
   addititonalFeatures: string;
-  price?: number;
   images: string[];
 }
 
@@ -35,7 +34,8 @@ interface PinataMetadata {
 }
 
 export interface AddPropertyProps {
-  address: `0x${string}` | undefined;
+  address: `0x${string}`;
   pinataContent: PinataContent;
   pinataMetadata: PinataMetadata;
+  price: number;
 }

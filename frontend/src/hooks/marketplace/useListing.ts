@@ -23,7 +23,7 @@ export function useGetAllListings(address: `0x${string}` | undefined) {
     queryKey: ["dapp", "getAllPropertiesForSale", address],
     queryFn: async (): Promise<Nft[]> => {
       try {
-        const dapp = await getMarketplaceContract(address);
+        const dapp = await getMarketplaceContract(address || import.meta.env.VITE_MARKETPLACE_DEFAULT_ADDRESS);
         const listingResults: ListingResult[] = await dapp.getActiveListings();
         return Promise.all(
           listingResults.map(async (result) => {

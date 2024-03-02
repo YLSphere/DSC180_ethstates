@@ -56,7 +56,7 @@ export interface Financing {
 }
 
 export interface FinancingProps {
-  address: `0x${string}` | undefined;
+  address: `0x${string}`;
   financingId: number;
   propertyId: number;
   loaner?: string;
