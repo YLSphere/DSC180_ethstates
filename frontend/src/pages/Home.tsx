@@ -26,7 +26,7 @@ export default function Home() {
               EthStates
             </Text>
           </Heading>
-          <Text color={"gray.500"}>
+          <Text fontSize={"larger"} color={"gray.500"}>
             Real Estate for real people.
           </Text>
         </Stack>

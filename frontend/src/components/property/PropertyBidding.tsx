@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useBid } from "../../hooks/marketplace/useBidding";
 import { Nft } from "../../types/listing";
 import {
   Button,
@@ -9,27 +8,87 @@ import {
   InputRightElement,
   NumberInput,
   NumberInputField,
+  useToast,
 } from "@chakra-ui/react";
 import Polygon from "./assets/polygon.svg";
 
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import contractAddress from "../../contracts/contract-address.json";
+import marketplaceArtifact from "../../contracts/ListingContract.json";
+import { ethers } from "ethers";
+
 interface Props {
-  address: `0x${string}`;
+  address: `0x${string}` | undefined;
   nft: Nft;
 }
 
 export default function PropertyBidding({ nft, address }: Props) {
-  const bid = useBid();
-  const [isBidded, setIsBidded] = useState<boolean>(false);
+  const toast = useToast();
+  const { data: hash, writeContract, status } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    });
+  const [isDisabled, setIsDisabled] = useState<boolean>(false);
   const [bidPrice, setBidPrice] = useState<number>(0);
 
   useEffect(() => {
+    if (!address) {
+      setIsDisabled(true);
+      return;
+    }
     nft.listing?.bids?.forEach((bid) => {
       if (bid.bidder === address) {
-        setIsBidded(true);
+        setIsDisabled(true);
         return;
       }
     });
   }, [nft.listing?.bids, address]);
+
+  useEffect(() => {
+    if (isConfirmed) {
+      toast({
+        title: "Bid placed",
+        description: "Your bid has been placed",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 5000);
+    }
+
+    if (isConfirming) {
+      toast({
+        title: "Placing bid",
+        description: "Your bid is being placed",
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+
+    if (status === "pending") {
+      toast({
+        title: "Placing bid",
+        description: "Please confirm on wallet",
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+
+    if (status === "error") {
+      toast({
+        title: "Rejected",
+        description: "Action rejected",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }, [isConfirmed, isConfirming, status]);
 
   if (
     nft.owner !== address && // not the owner
@@ -40,16 +99,27 @@ export default function PropertyBidding({ nft, address }: Props) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (Math.abs(bidPrice - 0) < 0.0001) {
+            toast({
+              title: "Invalid bid",
+              description: "Please enter a valid bid price",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+            return;
+          }
 
-          bid.mutate({
-            address,
-            id: nft.property.propertyId,
-            bidPrice: bidPrice,
+          writeContract({
+            address: contractAddress.ListingContractProxy as `0x${string}`,
+            abi: marketplaceArtifact.abi,
+            functionName: "bid",
+            args: [BigInt(nft.property.propertyId), ethers.parseEther(bidPrice.toString())],
           });
         }}
       >
         <FormControl
-          isDisabled={isBidded}
+          isDisabled={isDisabled}
           maxW={"3xs"}
           display={"flex"}
           flexDirection={"row"}
@@ -67,7 +137,7 @@ export default function PropertyBidding({ nft, address }: Props) {
               />
             </NumberInput>
           </InputGroup>
-          <Button type="submit" colorScheme="blue" isDisabled={isBidded}>
+          <Button type="submit" colorScheme="blue" isDisabled={isDisabled}>
             Bid
           </Button>
         </FormControl>

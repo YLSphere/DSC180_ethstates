@@ -200,6 +200,30 @@ contract ListingContract is
         emit Offer(_propertyId);
     }
 
+    // Functon to unbid on a listing property
+    function unbid(
+        uint256 _propertyId
+    )
+        external
+        propertyExists(_propertyId)
+        listedOrNot(_propertyId, true)
+        bidsIncludeBuyerOrNot(_propertyId, _msgSender(), true)
+        bidSetOrNot(_propertyId, false)
+    {
+        uint256 bidIndex;
+        for (uint256 i = 0; i < listings[_propertyId].bids.length; i++) {
+            if (listings[_propertyId].bids[i].buyer == _msgSender()) {
+                bidIndex = i;
+                break;
+            }
+        }
+
+        for (uint256 i = bidIndex; i < listings[_propertyId].bids.length - 1; i++) {
+            listings[_propertyId].bids[i] = listings[_propertyId].bids[i + 1];
+        }
+        listings[_propertyId].bids.pop();
+    }
+
     // Function to accept a bid on a listing property
     function acceptOffer(
         uint256 _propertyId,
@@ -337,9 +361,9 @@ contract ListingContract is
         }
 
         listings[_propertyId].buyerApproved = true;
-        // payable(_msgSender()).transfer(
-        //     msg.value - listings[_propertyId].acceptedBid.bidPrice
-        // ); // refund excess payment
+        payable(_msgSender()).transfer(
+            msg.value - listings[_propertyId].acceptedBid.bidPrice
+        ); // refund excess payment
         transfer(_propertyId);
     }
 

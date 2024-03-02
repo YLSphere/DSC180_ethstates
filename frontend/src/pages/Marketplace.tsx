@@ -15,9 +15,11 @@ import { useGetAllListings } from "../hooks/marketplace/useListing";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import { Nft } from "../types/listing";
+import { CHAIN_ID } from "../types/constant";
+
 
 export default function Marketplace() {
-  const { address, isConnected } = useAccount();
+  const { address, chain, isConnected } = useAccount();
   const [nfts, setNfts] = useState<Nft[] | undefined>([]);
   const { isLoading, data } = useGetAllListings(address);
   const [filters, setFilters] = useState({
@@ -29,11 +31,10 @@ export default function Marketplace() {
   });
 
   useEffect(() => {
-    if (isConnected && !isLoading) {
-      console.log(data);
+    if (!isLoading) {
       setNfts(data);
     }
-  }, [isConnected, isLoading, data]);
+  }, [isLoading, data]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -59,8 +60,8 @@ export default function Marketplace() {
         nft.pinataContent.zipCode.includes(filters.zipCode))
   );
 
-  // Wallet not connected
-  if (!isConnected) {
+  // Wrong network
+  if (isConnected && chain?.id !== CHAIN_ID) {
     return (
       <main>
         <Container
@@ -71,7 +72,7 @@ export default function Marketplace() {
           maxWidth="container.lg"
         >
           <Text fontSize={"3xl"} color={"gray.500"}>
-            Connect to your wallet first!
+            Connect to polygon mumbai testnet!
           </Text>
         </Container>
       </main>

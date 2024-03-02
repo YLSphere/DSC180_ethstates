@@ -1,6 +1,6 @@
 import { Box, Badge, Image, HStack, Text } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
-import { FaEthereum } from "react-icons/fa";
+import Polygon from "./assets/polygon.svg";
 
 interface Props {
   isLoading?: boolean;
@@ -70,7 +70,7 @@ export default function NftCard(props: Props) {
         </Box>
 
         <HStack spacing = '0.1rem'>
-          <FaEthereum /> 
+          <Image src={Polygon} alt="logo" height={5} width={5} mr={2}/>
           <Text>{property.price}</Text>
         </HStack>
       </Box>

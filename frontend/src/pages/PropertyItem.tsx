@@ -22,31 +22,49 @@ import PropertyApproval from "../components/property/PropertyApproval";
 import PropertyDetail from "../components/property/PropertyDetail";
 import BiddingPool from "../components/property/BiddingPool";
 import FinancingStatus from "../components/property/FinancingStatus";
+import { CHAIN_ID } from "../types/constant";
 
 export default function PropertyItem() {
   const location = useLocation();
   const id = location.state.id;
 
-  const { address, isConnected } = useAccount();
+  const { address, chain, isConnected } = useAccount();
   const { isFetched, data } = useParticularProperty(address, id);
   const [nft, setNft] = useState<Nft | undefined>();
 
   const shouldDisplay =
     nft &&
-    address &&
     (nft.owner === address || // current address is the owner
       nft.listing?.propertyId === nft.property.propertyId); // or the property is listed
 
   useEffect(() => {
-    if (isConnected && isFetched) {
-      console.log(data);
+    if (isFetched) {
       setNft(data);
     }
-  }, [isConnected, isFetched]);
+  }, [isFetched]);
 
-  return (
-    <main>
-      {!isFetched ? (
+  // Wrong network
+  if (isConnected && chain?.id !== CHAIN_ID) {
+    return (
+      <main>
+        <Container
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="90vh"
+          maxWidth="container.lg"
+        >
+          <Text fontSize={"3xl"} color={"gray.500"}>
+            Connect to polygon mumbai testnet!
+          </Text>
+        </Container>
+      </main>
+    );
+  }
+
+  if (!nft) {
+    return (
+      <main>
         <Box
           display="flex"
           justifyContent="center"
@@ -55,7 +73,11 @@ export default function PropertyItem() {
         >
           <Spinner size="xl" color="green" />
         </Box>
-      ) : shouldDisplay ? (
+      </main>
+    );
+  } else if (shouldDisplay) {
+    return (
+      <main>
         <Container maxW={"max-content"} my={3}>
           <Heading as="h1" size="xl" noOfLines={1} mb={3}>
             {nft.pinataContent.streetAddress}
@@ -76,9 +98,23 @@ export default function PropertyItem() {
           <BiddingPool address={address} nft={nft} />
           <FinancingStatus nft={nft} />
         </Container>
-      ) : (
-        <Text>Connect to your wallet first! Oops!</Text>
-      )}
-    </main>
-  );
+      </main>
+    );
+  } else {
+    return (
+      <main>
+        <Container
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="90vh"
+          maxWidth="container.lg"
+        >
+          <Text fontSize={"3xl"} color={"gray.500"}>
+            You are not allowed to view this property
+          </Text>
+        </Container>
+      </main>
+    );
+  }
 }
