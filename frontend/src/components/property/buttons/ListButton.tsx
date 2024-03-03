@@ -61,6 +61,7 @@ export function ListButton({ propertyId, refetch }: Props) {
   }, [isConfirmed, isConfirming, status]);
 
   return <Button
+        size="sm"
         colorScheme="yellow"
         onClick={() => (
           writeContract({

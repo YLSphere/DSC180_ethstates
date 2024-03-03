@@ -10,6 +10,7 @@ import {
   Th,
   Thead,
   Tr,
+  Avatar,
 } from "@chakra-ui/react";
 
 import { AcceptButton } from "./buttons/AcceptButton";
@@ -45,7 +46,8 @@ export default function BiddingPool({ nft, address, refetch }: Props) {
               {nft.listing?.bids?.map((bid, index) => (
                 <Tr key={index}>
                   <Td display="flex" alignItems="center">
-                    {bid.bidder}
+                    <Avatar size="xs" src='https://bit.ly/broken-link' mr={2} />
+                    {`${bid.bidder.slice(0, 6)}...${bid.bidder.slice(-4)}`}
                     {nft.listing?.acceptedBid?.bidder === bid.bidder ? (
                       <Badge variant="solid" colorScheme="green" ml={2}>
                         Accepted Bid
@@ -95,7 +97,8 @@ export default function BiddingPool({ nft, address, refetch }: Props) {
               {nft.listing?.bids?.map((bid, index) => (
                 <Tr key={index}>
                   <Td display="flex" alignItems="center">
-                    {bid.bidder}
+                    <Avatar size="xs" src='https://bit.ly/broken-link' mr={2} />
+                    {`${bid.bidder.slice(0, 4)}...${bid.bidder.slice(-4)}`}
                     {nft.listing?.acceptedBid?.bidder === bid.bidder ? (
                       <Badge variant="solid" colorScheme="green" ml={2}>
                         Accepted Bid

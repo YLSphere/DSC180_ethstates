@@ -24,6 +24,7 @@ import BiddingPool from "../components/property/BiddingPool";
 import FinancingStatus from "../components/property/FinancingStatus";
 import { CHAIN_ID } from "../types/constant";
 import { PropertyRemoval } from "../components/property/PropertyRemoval";
+import { EditButton } from "../components/property/buttons/EditButton";
 
 export default function PropertyItem() {
   const location = useLocation();
@@ -93,6 +94,7 @@ export default function PropertyItem() {
             <PropertyListing address={address} nft={nft} refetch={refetch} />
             <PropertyBidding address={address} nft={nft} refetch={refetch} />
             <PropertyApproval address={address} nft={nft} refetch={refetch} />
+            <EditButton nft={nft} address={address} refetch={refetch} />
             <PropertyRemoval address={address} nft={nft} />
           </HStack>
 

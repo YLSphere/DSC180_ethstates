@@ -62,6 +62,7 @@ export function UnlistButton({ isDisabled, propertyId, refetch }: Props) {
   }, [isConfirmed, isConfirming, status]);
 
   return <Button
+        size="sm"
         isDisabled={isDisabled}
         colorScheme="red"
         onClick={() => (

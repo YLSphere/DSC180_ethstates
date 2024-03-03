@@ -27,6 +27,7 @@ export interface PinataContent {
   parkingSpots: number;
   addititonalFeatures: string;
   images: string[];
+  [key: string]: string | number | undefined | string[];
 }
 
 interface PinataMetadata {

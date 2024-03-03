@@ -25,6 +25,7 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
     }
 
     event Add(address indexed _owner, uint256 _propertyId);
+    event Update(uint256 _propertyId);
     event Remove(address indexed _owner, uint256 _propertyId);
 
     error PropertyNotExists();
@@ -55,6 +56,17 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
         _safeMint(_msgSender(), propertyCount);
         _setTokenURI(propertyCount, _uri);
         emit Add(_msgSender(), propertyCount);
+    }
+
+    // Owner shall update lands via this function
+    function updateProperty(
+        uint256 _propertyId,
+        string memory _uri
+    ) external propertyExists(_propertyId) isPropertyOwner(_propertyId) {
+        require(bytes(_uri).length > 0, "URI cannot be empty");
+        _setTokenURI(_propertyId, _uri);
+
+        emit Update(_propertyId);
     }
 
     // Owner shall remove lands via this function

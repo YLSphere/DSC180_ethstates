@@ -87,6 +87,7 @@ export function RemoveButton({ isDisabled, propertyId }: Props) {
     >
       <PopoverTrigger>
         <Button
+          size="sm"
           colorScheme="gray"
           onClick={onToggle}
           isDisabled={isConfirming || isDisabled}

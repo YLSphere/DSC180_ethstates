@@ -155,7 +155,7 @@ export default function Marketplace() {
               beds={nft.pinataContent.bedrooms}
               baths={nft.pinataContent.bathrooms}
               streetAddress={nft.pinataContent.streetAddress}
-              price={nft?.property.price.toString()}
+              price={nft?.property.price.toFixed(2).toString()}
               imageUrl={
                 nft.pinataContent.images[0]
                   ? `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${
@@ -163,6 +163,7 @@ export default function Marketplace() {
                     }`
                   : ""
               }
+              bidders={nft.listing?.bids?.length}
             />
           ))}
         </NftCollection>

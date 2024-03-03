@@ -8,7 +8,7 @@ import {
   StatNumber,
   useToast,
 } from "@chakra-ui/react";
-import Polygon from "./assets/polygon.svg";
+import Polygon from "../../assets/polygon.svg"
 import { Nft } from "../../types/listing";
 import { useEffect, useState } from "react";
 

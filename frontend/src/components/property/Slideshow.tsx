@@ -27,7 +27,7 @@ export default function Slideshow(props: Props) {
 
   const { images: slides } = props;
   if (slides.length === 0) {
-    slides.push("QmcVzrouddFt5hgqW8qcrTcAd2pdrbZ2YyidMvp8bKC4o6");
+    slides.push("QmZ6w6DEPXBMtZrzujcNK3AyCSTACc933AW2cbSAk5RD16");
   }
 
   const [currentSlide, setCurrentSlide] = useState(0);

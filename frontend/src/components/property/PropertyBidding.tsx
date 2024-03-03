@@ -10,7 +10,7 @@ import {
   NumberInputField,
   useToast,
 } from "@chakra-ui/react";
-import Polygon from "./assets/polygon.svg";
+import Polygon from "../../assets/polygon.svg";
 
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import contractAddress from "../../contracts/contract-address.json";

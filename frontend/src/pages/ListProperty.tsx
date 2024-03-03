@@ -5,12 +5,19 @@ import {
   FormLabel,
   Input,
   useToast,
-  Text,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import contractAddress from "../contracts/contract-address.json";
 import marketplaceArtifact from "../contracts/ListingContract.json";
-import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 import Dropzone from "../components/form/Dropzone";
 
 import { pinataImage, pinataJson } from "../queries/pinata";
@@ -94,9 +101,10 @@ export default function ListProperty() {
   const toast = useToast();
   const navigate = useNavigate();
   const { data: hash, writeContract, status } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    });
   const { address, chainId, isConnected } = useAccount();
   const [pinataContent, setPinataContent] = useState<PinataContent>({
     streetAddress: "",
@@ -169,17 +177,19 @@ export default function ListProperty() {
       };
 
       // addProperty.mutate({ address, pinataContent, pinataMetadata, price });
-      pinataJson.post("/pinning/pinJSONToIPFS", {
-        pinataContent,
-        pinataMetadata,
-      }).then(({ data }) =>
-        writeContract({
-          address: contractAddress.ListingContractProxy as `0x${string}`,
-          abi: marketplaceArtifact.abi,
-          functionName: "addProperty",
-          args: [data.IpfsHash, ethers.parseEther(price.toString())],
+      pinataJson
+        .post("/pinning/pinJSONToIPFS", {
+          pinataContent,
+          pinataMetadata,
         })
-      );
+        .then(({ data }) =>
+          writeContract({
+            address: contractAddress.ListingContractProxy as `0x${string}`,
+            abi: marketplaceArtifact.abi,
+            functionName: "addProperty",
+            args: [data.IpfsHash, ethers.parseEther(price.toString())],
+          })
+        );
     }
   }
 
@@ -220,12 +230,24 @@ export default function ListProperty() {
           display="flex"
           justifyContent="center"
           alignItems="center"
-          height="90vh"
-          maxWidth="container.lg"
+          height="80vh"
+          maxWidth="container.sm"
         >
-          <Text fontSize={"3xl"} color={"gray.500"}>
-            Connect to your web3 wallet
-          </Text>
+          <Alert
+            status="error"
+            variant="subtle"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            textAlign="center"
+            height="200px"
+          >
+            <AlertIcon boxSize={10}/>
+            <AlertTitle mt={4} mb={1} fontSize='lg'>Wallet not found</AlertTitle>
+            <AlertDescription maxWidth='sm'>
+              Please connect to your web3 wallet to continue.
+            </AlertDescription>
+          </Alert>
         </Container>
       </main>
     );
@@ -239,12 +261,24 @@ export default function ListProperty() {
           display="flex"
           justifyContent="center"
           alignItems="center"
-          height="90vh"
-          maxWidth="container.lg"
+          height="80vh"
+          maxWidth="container.sm"
         >
-          <Text fontSize={"3xl"} color={"gray.500"}>
-            Connect to Polygon Mumbai Testnet
-          </Text>
+          <Alert
+            status="error"
+            variant="subtle"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            textAlign="center"
+            height="200px"
+          >
+            <AlertIcon boxSize={10}/>
+            <AlertTitle mt={4} mb={1} fontSize='lg'>Wrong network</AlertTitle>
+            <AlertDescription maxWidth='sm'>
+              Please connect to Polygon Mumbai Testnet to continue.
+            </AlertDescription>
+          </Alert>
         </Container>
       </main>
     );
@@ -275,7 +309,7 @@ export default function ListProperty() {
               />
             </FormControl>
           ))}
-          
+
           <FormControl id="price" isRequired mt={3}>
             <FormLabel>Price</FormLabel>
             <Input
