@@ -5,10 +5,12 @@ import marketplaceArtifact from "../../../contracts/ListingContract.json";
 import { useEffect } from "react";
 
 interface Props {
+  isDisabled: boolean;
   propertyId: number;
+  refetch: () => void;
 }
 
-export function UnlistButton({ propertyId }: Props) {
+export function UnlistButton({ isDisabled, propertyId, refetch }: Props) {
   const toast = useToast();
   const { data: hash, writeContract, status } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
@@ -25,9 +27,7 @@ export function UnlistButton({ propertyId }: Props) {
         duration: 5000,
         isClosable: true,
       });
-      setTimeout(() => {
-        window.location.reload();
-      }, 5000);
+      setTimeout(refetch, 3000);
     }
 
     if (isConfirming) {
@@ -62,6 +62,7 @@ export function UnlistButton({ propertyId }: Props) {
   }, [isConfirmed, isConfirming, status]);
 
   return <Button
+        isDisabled={isDisabled}
         colorScheme="red"
         onClick={() => (
           writeContract({

@@ -262,6 +262,28 @@ contract ListingContract is
         revert BuyerDidNotBid();
     }
 
+    // Function to undo accept of a bid on a listing property
+    function undoAcceptOffer(
+        uint256 _propertyId
+    )
+        external
+        propertyExists(_propertyId)
+        isPropertyOwner(_propertyId)
+        listedOrNot(_propertyId, true)
+        bidSetOrNot(_propertyId, true)
+    {
+        if (listings[_propertyId].buyerApproved) {
+            revert BuyerAlreadyApproved();
+        }
+
+        listings[_propertyId].acceptedBid = AcceptedBid({
+            buyer: address(0),
+            bidPrice: 0,
+            financingId: 0
+        });
+        listings[_propertyId].sellerApproved = false;
+    }
+
     // =========== Accepted bid financing functions ===========
 
     // Function to start financing for the accepted bid

@@ -6,9 +6,10 @@ import { useEffect } from "react";
 
 interface Props {
   propertyId: number;
+  refetch: () => void;
 }
 
-export function ListButton({ propertyId }: Props) {
+export function ListButton({ propertyId, refetch }: Props) {
   const toast = useToast();
   const { data: hash, writeContract, status } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
@@ -25,9 +26,7 @@ export function ListButton({ propertyId }: Props) {
         duration: 5000,
         isClosable: true,
       });
-      setTimeout(() => {
-        window.location.reload();
-      }, 5000);
+      setTimeout(refetch, 3000);
     }
 
     if (isConfirming) {

@@ -14,13 +14,15 @@ import {
 
 import { AcceptButton } from "./buttons/AcceptButton";
 import { UnbidButton } from "./buttons/UnbidButton";
+import { UnacceptButton } from "./buttons/UnacceptButton";
 
 interface Props {
   address: `0x${string}` | undefined;
   nft: Nft;
+  refetch: () => void;
 }
 
-export default function BiddingPool({ nft, address }: Props) {
+export default function BiddingPool({ nft, address, refetch }: Props) {
   const isOwner = nft.owner === address;
   const isAccepted = nft.listing?.acceptedBid?.bidPrice !== 0;
 
@@ -54,11 +56,19 @@ export default function BiddingPool({ nft, address }: Props) {
                   </Td>
                   <Td isNumeric>{bid.bidPrice}</Td>
                   <Td>
-                    <AcceptButton
-                      isAccepted={isAccepted}
-                      propertyId={nft.property.propertyId}
-                      bidder={bid.bidder}
-                    />
+                    {nft.listing?.acceptedBid?.bidder === bid.bidder ? (
+                      <UnacceptButton
+                        propertyId={nft.property.propertyId}
+                        refetch={refetch}
+                      />
+                    ) : (
+                      <AcceptButton
+                        isAccepted={isAccepted}
+                        propertyId={nft.property.propertyId}
+                        bidder={bid.bidder}
+                        refetch={refetch}
+                      />
+                    )}
                   </Td>
                 </Tr>
               ))}
@@ -105,7 +115,10 @@ export default function BiddingPool({ nft, address }: Props) {
                   <Td>
                     {address === bid.bidder &&
                     nft.listing?.acceptedBid?.bidder !== bid.bidder ? (
-                      <UnbidButton propertyId={nft.property.propertyId} />
+                      <UnbidButton
+                        propertyId={nft.property.propertyId}
+                        refetch={refetch}
+                      />
                     ) : null}
                   </Td>
                 </Tr>

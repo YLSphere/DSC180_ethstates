@@ -62,9 +62,7 @@ contract PropertyContract is ERC721URIStorageUpgradeable {
         uint256 _propertyId
     ) external propertyExists(_propertyId) isPropertyOwner(_propertyId) {
         require(_exists(_propertyId), "Property with this ID does not exist");
-        _burn(_propertyId);
-        delete properties[_propertyId];
-        propertyCount--;
+        _transfer(_msgSender(), address(this), _propertyId);
 
         emit Remove(_msgSender(), _propertyId);
     }
