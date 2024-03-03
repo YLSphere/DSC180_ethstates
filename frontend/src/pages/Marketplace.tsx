@@ -3,11 +3,11 @@ import {
   Container,
   Heading,
   Spinner,
-  Flex,
   FormControl,
   FormLabel,
   Input,
   Text,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import NftCard from "../components/property/NftCard";
 import NftCollection from "../components/property/NftCollection";
@@ -16,7 +16,6 @@ import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import { Nft } from "../types/listing";
 import { CHAIN_ID } from "../types/constant";
-
 
 export default function Marketplace() {
   const { address, chain, isConnected } = useAccount();
@@ -111,8 +110,8 @@ export default function Marketplace() {
             {nfts?.length}
           </Badge>
         </Heading>
-        <Flex wrap="wrap" justifyContent="space-between" my={5}>
-          <FormControl w="200px" mr={2}>
+        <SimpleGrid columns={{ base: 1, sm: 4 }} spacing={3} my={5}>
+          <FormControl>
             <FormLabel>Bedrooms</FormLabel>
             <Input
               name="bedrooms"
@@ -120,7 +119,7 @@ export default function Marketplace() {
               placeholder="Filter by Bedrooms"
             />
           </FormControl>
-          <FormControl w="200px" mr={2}>
+          <FormControl>
             <FormLabel>City</FormLabel>
             <Input
               name="city"
@@ -129,7 +128,7 @@ export default function Marketplace() {
             />
           </FormControl>
 
-          <FormControl w="200px" mr={2}>
+          <FormControl>
             <FormLabel>State</FormLabel>
             <Input
               name="state"
@@ -138,7 +137,7 @@ export default function Marketplace() {
             />
           </FormControl>
 
-          <FormControl w="200px" mr={2}>
+          <FormControl>
             <FormLabel>Zip Code</FormLabel>
             <Input
               name="zipCode"
@@ -146,7 +145,7 @@ export default function Marketplace() {
               placeholder="Filter by Zip Code"
             />
           </FormControl>
-        </Flex>
+        </SimpleGrid>
 
         <NftCollection>
           {filteredNfts?.map((nft, i) => (

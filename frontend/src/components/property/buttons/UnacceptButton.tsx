@@ -1,17 +1,15 @@
+import { Button, useToast } from "@chakra-ui/react";
+import { useEffect } from "react";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import contractAddress from "../../../contracts/contract-address.json";
 import marketplaceArtifact from "../../../contracts/ListingContract.json";
-import { useEffect } from "react";
-import { Button, useToast } from "@chakra-ui/react";
 
 interface Props {
-  isAccepted: boolean;
   propertyId: number;
-  bidder: `0x${string}`;
   refetch: () => void;
 }
 
-export function AcceptButton({ isAccepted, propertyId, bidder, refetch }: Props) {
+export function UnacceptButton({ propertyId, refetch }: Props) {
   const toast = useToast();
   const { data: hash, writeContract, status } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
@@ -22,19 +20,19 @@ export function AcceptButton({ isAccepted, propertyId, bidder, refetch }: Props)
   useEffect(() => {
     if (isConfirmed) {
       toast({
-        title: "Offer Accepted",
-        description: "Offer has been accepted",
+        title: "Offer Unaccepted",
+        description: "Offer has been unaccepted",
         status: "success",
         duration: 5000,
         isClosable: true,
       });
-      setTimeout(refetch, 5000);
+      setTimeout(refetch, 3000);
     }
 
     if (isConfirming) {
       toast({
-        title: "Accepting Offer",
-        description: "Offer is being accepted",
+        title: "Unaccepting Offer",
+        description: "Offer is being unaccepted",
         status: "info",
         duration: 5000,
         isClosable: true,
@@ -43,7 +41,7 @@ export function AcceptButton({ isAccepted, propertyId, bidder, refetch }: Props)
 
     if (status === "pending") {
       toast({
-        title: "Accepting Offer",
+        title: "Unaccepting Offer",
         description: "Please confirm on wallet",
         status: "info",
         duration: 5000,
@@ -64,19 +62,19 @@ export function AcceptButton({ isAccepted, propertyId, bidder, refetch }: Props)
 
   return (
     <Button
-      colorScheme="green"
+      colorScheme="gray"
       size="xs"
-      isDisabled={isAccepted}
+      isDisabled={isConfirming}
       onClick={() =>
         writeContract({
           address: contractAddress.ListingContractProxy as `0x${string}`,
           abi: marketplaceArtifact.abi,
-          functionName: "acceptOffer",
-          args: [BigInt(propertyId), bidder],
+          functionName: "undoAcceptOffer",
+          args: [BigInt(propertyId)],
         })
       }
     >
-      Accept
+      Undo
     </Button>
   );
 }

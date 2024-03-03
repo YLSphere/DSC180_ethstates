@@ -10,9 +10,10 @@ import { ethers } from "ethers";
 interface Props {
   address: `0x${string}` | undefined;
   nft: Nft;
+  refetch: () => void;
 }
 
-export default function PropertyApproval({ nft, address }: Props) {
+export default function PropertyApproval({ nft, address, refetch }: Props) {
   const toast = useToast();
   const { data: hash, writeContract, status } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
@@ -29,9 +30,7 @@ export default function PropertyApproval({ nft, address }: Props) {
         duration: 5000,
         isClosable: true,
       });
-      setTimeout(() => {
-        window.location.reload();
-      }, 5000);
+      setTimeout(refetch, 5000);
     }
 
     if (isConfirming) {

@@ -5,9 +5,12 @@ import { UnlistButton } from "./buttons/UnlistButton";
 interface Props {
   address: `0x${string}` | undefined;
   nft: Nft;
+  refetch: () => void;
 }
 
-export default function PropertyListing({ nft, address }: Props) {
+export default function PropertyListing({ nft, address, refetch }: Props) {
+  const disableUnlist = nft.listing?.acceptedBid?.bidPrice !== 0;
+
   if (nft.owner !== address) {
     return <></>;
   }
@@ -17,11 +20,15 @@ export default function PropertyListing({ nft, address }: Props) {
     nft.listing?.propertyId === nft.property.propertyId // is listed
   ) {
     return (
-      <UnlistButton propertyId={nft.property.propertyId} />
+      <UnlistButton
+        isDisabled={disableUnlist}
+        propertyId={nft.property.propertyId}
+        refetch={refetch}
+      />
     );
   } else {
     return (
-      <ListButton propertyId={nft.property.propertyId} />
+      <ListButton propertyId={nft.property.propertyId} refetch={refetch} />
     );
   }
 }

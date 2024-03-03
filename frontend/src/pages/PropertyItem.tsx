@@ -23,13 +23,14 @@ import PropertyDetail from "../components/property/PropertyDetail";
 import BiddingPool from "../components/property/BiddingPool";
 import FinancingStatus from "../components/property/FinancingStatus";
 import { CHAIN_ID } from "../types/constant";
+import { PropertyRemoval } from "../components/property/PropertyRemoval";
 
 export default function PropertyItem() {
   const location = useLocation();
   const id = location.state.id;
 
   const { address, chain, isConnected } = useAccount();
-  const { isFetched, data } = useParticularProperty(address, id);
+  const { isFetched, data, refetch } = useParticularProperty(address, id);
   const [nft, setNft] = useState<Nft | undefined>();
 
   const shouldDisplay =
@@ -38,10 +39,10 @@ export default function PropertyItem() {
       nft.listing?.propertyId === nft.property.propertyId); // or the property is listed
 
   useEffect(() => {
-    if (isFetched) {
+    if (data && isFetched) {
       setNft(data);
     }
-  }, [isFetched]);
+  }, [isFetched, data]);
 
   // Wrong network
   if (isConnected && chain?.id !== CHAIN_ID) {
@@ -88,14 +89,15 @@ export default function PropertyItem() {
           </Center>
 
           <HStack mt={5}>
-            <PropertyPrice address={address} nft={nft} />
-            <PropertyListing address={address} nft={nft} />
-            <PropertyBidding address={address} nft={nft} />
-            <PropertyApproval address={address} nft={nft} />
+            <PropertyPrice address={address} nft={nft} refetch={refetch} />
+            <PropertyListing address={address} nft={nft} refetch={refetch} />
+            <PropertyBidding address={address} nft={nft} refetch={refetch} />
+            <PropertyApproval address={address} nft={nft} refetch={refetch} />
+            <PropertyRemoval address={address} nft={nft} />
           </HStack>
 
           <PropertyDetail nft={nft} />
-          <BiddingPool address={address} nft={nft} />
+          <BiddingPool address={address} nft={nft} refetch={refetch} />
           <FinancingStatus nft={nft} />
         </Container>
       </main>

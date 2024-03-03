@@ -20,9 +20,10 @@ import { ethers } from "ethers";
 interface Props {
   nft: Nft;
   address: `0x${string}` | undefined;
+  refetch: () => void;
 }
 
-export default function PropertyPrice({ nft, address }: Props) {
+export default function PropertyPrice({ nft, address, refetch }: Props) {
   const toast = useToast();
   const { data: hash, writeContract, status } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
@@ -41,6 +42,7 @@ export default function PropertyPrice({ nft, address }: Props) {
         duration: 5000,
         isClosable: true,
       });
+      setTimeout(refetch, 3000);
     }
 
     if (isConfirming) {

@@ -18,7 +18,7 @@ export default function Home() {
         >
           <Heading
             fontWeight={600}
-            fontSize={{ base: "2xl", sm: "4xl", md: "6xl" }}
+            fontSize={{ base: "4xl", sm: "4xl", md: "6xl" }}
             lineHeight={"110%"}
           >
             List your property on <br />
