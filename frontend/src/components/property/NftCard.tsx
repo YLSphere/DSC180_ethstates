@@ -13,17 +13,14 @@ interface Props {
 }
 
 export default function NftCard(props: Props) {
-  const { propertyId, beds, baths, streetAddress, price, imageUrl } =
-    props;
+  const { propertyId, beds, baths, streetAddress, price, imageUrl } = props;
   const property = {
     imageUrl: imageUrl || "https://bit.ly/2Z4KKcF",
     imageAlt: "Rear view of modern home with pool",
-    beds: beds || 3,
-    baths: baths || 2,
-    title:
-      streetAddress ||
-      "Modern home in city center in the heart of historic Los Angeles",
-    price: price || "$1,900.00",
+    beds,
+    baths,
+    title: streetAddress,
+    price: price,
     reviewCount: 34,
     rating: 4,
   };
@@ -69,8 +66,8 @@ export default function NftCard(props: Props) {
           </Link>
         </Box>
 
-        <HStack spacing = '0.1rem'>
-          <Image src={Polygon} alt="logo" height={5} width={5} mr={2}/>
+        <HStack spacing="0.1rem">
+          <Image src={Polygon} alt="logo" height={5} width={5} mr={2} />
           <Text>{property.price}</Text>
         </HStack>
       </Box>
