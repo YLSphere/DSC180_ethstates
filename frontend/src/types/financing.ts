@@ -58,3 +58,29 @@ export interface FinancingProps {
   durationInMonths: number;
   paidMonths?: number;
 }
+
+export interface Loaner {
+  address: `0x${string}` | undefined;
+  loanerName: string;
+  loanerId: number;
+  annualInterestRate: number;
+  maxMonths: number;
+  additionalInformation: string;
+  images: string[];
+}
+
+export interface LoanerPinataContent {
+  loanerName: string;
+  annualInterestRate: number;
+  maxMonths: number;
+  additionalInformation: string;
+  images: string[];
+}
+interface LoanerPinataMetadata {
+  name: string;
+}
+export interface AddLoanerProps {
+  address: `0x${string}` | undefined;
+  loanerPinataContent: LoanerPinataContent;
+  loanerPinataMetadata: LoanerPinataMetadata;
+}

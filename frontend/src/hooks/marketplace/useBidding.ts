@@ -32,19 +32,19 @@ export function useAcceptOffer() {
   });
 }
 
-// export function useRemoveBid() {
-//   return useMutation({
-//     mutationKey: ["dapp", "removeBid"],
-//     mutationFn: async ({ address, id, bidder }: BidProps) => {
-//       const dapp = await getMarketplaceContract(address);
-//       try{
-//       return dapp.removeBid(id as number, bidder);
-//       } catch (error){
-//         console.error('Error removing bid:', error);
-//       }
-//     },
-//   });
-// }
+export function useRemoveBid() {
+  return useMutation({
+    mutationKey: ["dapp", "removeBid"],
+    mutationFn: async ({ address, id, bidder }: BidProps) => {
+      const dapp = await getMarketplaceContract(address);
+      try{
+      return dapp.removeBid(id as number, bidder);
+      } catch (error){
+        console.error('Error removing bid:', error);
+      }
+    },
+  });
+}
 
 // export function useEndBiddingProcess() {
 //   return useMutation({

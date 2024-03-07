@@ -11,8 +11,20 @@ import {
   Th,
   Thead,
   Tr,
-  Button,
+  Tooltip,
+  IconButton,
+  HStack
 } from "@chakra-ui/react";
+
+import { useRemoveBid } from "../../hooks/marketplace/useBidding";
+
+import {
+  VscAccount,
+  VscChromeClose,
+  VscCheck,
+  VscArrowRight,
+  VscArrowLeft,
+} from "react-icons/vsc";
 
 interface Props {
   address: `0x${string}`;
@@ -23,6 +35,8 @@ export default function BiddingPool({ nft, address }: Props) {
   const acceptOffer = useAcceptOffer();
   const isOwner = nft.owner === address;
   const isAccepted = nft.listing?.acceptedBid?.bidPrice !== 0;
+  const removeBid = useRemoveBid()
+  
 
   if (isOwner) {
     return (
@@ -36,7 +50,7 @@ export default function BiddingPool({ nft, address }: Props) {
               <Tr>
                 <Th>Bidder</Th>
                 <Th isNumeric>Price</Th>
-                <Th>Action</Th>
+                <Th>Actions</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -53,21 +67,42 @@ export default function BiddingPool({ nft, address }: Props) {
                     )}
                   </Td>
                   <Td isNumeric>{bid.bidPrice}</Td>
-                  <Td>
-                    <Button
-                      colorScheme="green"
-                      size="xs"
-                      isDisabled={isAccepted}
-                      onClick={() =>
-                        acceptOffer.mutate({
-                          address,
-                          id: nft.property.propertyId,
-                          bidder: bid.bidder,
-                        })
-                      }
-                    >
-                      Accept
-                    </Button>
+                  <Td >
+                    <HStack>
+                      <Tooltip label="Accept" fontSize="sm">
+                        <IconButton
+                          colorScheme="green"
+                          size="xs"
+                          aria-label="Accept"
+                          icon={<VscCheck />}
+                          isDisabled={isAccepted}
+                          onClick={() =>
+                            acceptOffer.mutate({
+                              address,
+                              id: nft.property.propertyId,
+                              bidder: bid.bidder,
+                            })
+                          }
+                        />
+                      </Tooltip>
+
+                      <Tooltip label="Remove" fontSize="sm">
+                        <IconButton
+                          colorScheme="red"
+                          icon={<VscChromeClose />}
+                          aria-label="Reject"
+                          size = 'xs'
+                          isDisabled={isAccepted}
+                          onClick={() => {
+                            removeBid.mutate({
+                              address,
+                              id: nft.property.propertyId,
+                              bidder: bid.bidder,
+                            });
+                          }}
+                        />
+                      </Tooltip>
+                    </HStack>
                   </Td>
                 </Tr>
               ))}
@@ -88,6 +123,7 @@ export default function BiddingPool({ nft, address }: Props) {
               <Tr>
                 <Th>Bidder</Th>
                 <Th isNumeric>Price</Th>
+                <Th>Actions</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -111,6 +147,24 @@ export default function BiddingPool({ nft, address }: Props) {
                     )}
                   </Td>
                   <Td isNumeric>{bid.bidPrice}</Td>
+                  <Td>
+                  <Tooltip label="Remove" fontSize="sm">
+                        <IconButton
+                          colorScheme="red"
+                          icon={<VscChromeClose />}
+                          aria-label="Reject"
+                          size = 'xs'
+                          isDisabled={isAccepted}
+                          onClick={() => {
+                            removeBid.mutate({
+                              address,
+                              id: nft.property.propertyId,
+                              bidder: bid.bidder,
+                            });
+                          }}
+                        />
+                      </Tooltip>
+                  </Td>
                 </Tr>
               ))}
             </Tbody>

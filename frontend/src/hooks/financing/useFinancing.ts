@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { pinataJson, pinataGateway } from "../../queries/pinata";
 import {
   getMarketplaceContract,
   getFinancingContract,
@@ -8,6 +9,7 @@ import {
   FinancingProps,
   FinancingResult,
   FinancingResultIndex,
+  AddLoanerProps,
 } from "../../types/financing";
 
 export function useRequestFinancing() {
@@ -100,6 +102,31 @@ export function useGetFinancingByFinancingId(
         loaner: currentFinancing[FinancingResultIndex.LOANER],
         status: currentFinancing[FinancingResultIndex.STATUS],
       };
+    },
+  });
+}
+
+export function useAddLoaner() {
+  return useMutation({
+    mutationKey: ["dapp", "addLoaner"],
+    mutationFn: async ({
+      address,
+      loanerPinataContent,
+      loanerPinataMetadata
+    }: AddLoanerProps) => {
+      try {
+        const dapp = await getMarketplaceContract(address);
+        const promise = pinataJson.post("/pinning/pinJSONToIPFS", {
+          loanerPinataContent,
+          loanerPinataMetadata,
+        });
+        return promise.then(({ data }) =>
+          dapp.addLoaner(data.IpfsHash)
+        );
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
     },
   });
 }

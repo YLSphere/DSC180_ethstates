@@ -8,6 +8,7 @@ import {
   FormLabel,
   Input,
   Text,
+  Box,
 } from "@chakra-ui/react";
 import NftCard from "../components/property/NftCard";
 import NftCollection from "../components/property/NftCollection";
@@ -15,6 +16,11 @@ import { useGetAllListings } from "../hooks/marketplace/useListing";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import { Nft } from "../types/listing";
+
+import "../../../fonts/IBMPlexSansCondensed-Regular.ttf";
+import "../../../fonts/IBMPlexSans-Regular.ttf";
+import "../../../fonts/JosefinSans-Regular.ttf";
+import "../App.css";
 
 export default function Marketplace() {
   const { address, isConnected } = useAccount();
@@ -97,8 +103,8 @@ export default function Marketplace() {
 
   // NFTs are loaded
   return (
-    <main>
-      <Container maxWidth="container.lg" my={5}>
+    <Box className = 'font-body'>
+      <Container maxWidth="container.lg" my={5} >
         <Heading as="h1" size="xl" mt={8}>
           Marketplace{" "}
           <Badge
@@ -117,6 +123,8 @@ export default function Marketplace() {
               name="bedrooms"
               onChange={handleFilterChange}
               placeholder="Filter by Bedrooms"
+              borderWidth={'2px'}
+              borderColor={'gray.700'}
             />
           </FormControl>
           <FormControl w="200px" mr={2}>
@@ -125,15 +133,19 @@ export default function Marketplace() {
               name="city"
               onChange={handleFilterChange}
               placeholder="Filter by City"
+              borderWidth={'2px'}
+              borderColor={'gray.700'}
             />
           </FormControl>
 
-          <FormControl w="200px" mr={2}>
-            <FormLabel>State</FormLabel>
+          <FormControl w="200px" mr={2} >
+            <FormLabel >State</FormLabel>
             <Input
               name="state"
               onChange={handleFilterChange}
               placeholder="Filter by State"
+              borderWidth={'2px'}
+              borderColor={'gray.700'}
             />
           </FormControl>
 
@@ -143,6 +155,8 @@ export default function Marketplace() {
               name="zipCode"
               onChange={handleFilterChange}
               placeholder="Filter by Zip Code"
+              borderWidth={'2px'}
+              borderColor={'gray.700'}
             />
           </FormControl>
         </Flex>
@@ -167,6 +181,6 @@ export default function Marketplace() {
           ))}
         </NftCollection>
       </Container>
-    </main>
+    </Box>
   );
 }

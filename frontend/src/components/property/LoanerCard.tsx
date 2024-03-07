@@ -1,36 +1,22 @@
 import { Box, Badge, Image, HStack, Text } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
 import { FaEthereum } from "react-icons/fa";
+import {Loaner} from "../../types/financing";
 
-interface Props {
-  isLoading?: boolean;
-  propertyId?: number;
-  beds?: number;
-  baths?: number;
-  streetAddress?: string;
-  price?: string;
-  imageUrl?: string;
-}
-
-export default function NftCard(props: Props) {
-  const { propertyId, beds, baths, streetAddress, price, imageUrl } =
+export default function LoanerCard(props: Loaner) {
+  const { address, loanerName, loanerId, annualInterestRate, maxMonths } =
     props;
-  const property = {
-    imageUrl: imageUrl || "https://bit.ly/2Z4KKcF",
-    imageAlt: "Rear view of modern home with pool",
-    beds: beds || 3,
-    baths: baths || 2,
-    title:
-      streetAddress ||
-      "Modern home in city center in the heart of historic Los Angeles",
-    price: price || "$1,900.00",
-    reviewCount: 34,
-    rating: 4,
+  const loaner = {
+    loanerId: loanerId || 0,
+    address: address || "0x0000000",
+    loanerName: loanerName || "Papa smurf",
+    annualInterestRate: annualInterestRate || 4,
+    maxMonths: maxMonths || 12
   };
 
   return (
-    <Box maxW="sm" borderWidth="1px" borderRadius="lg" overflow="hidden" bgColor={"gray.200"} borderColor={'gray.700'} borderWidth = '2px'>
-      <Box overflow="hidden" height="200px">
+    <Box maxW="sm" borderWidth="1px" borderRadius="lg" overflow="hidden">
+      {/* <Box overflow="hidden" height="200px">
         <Link to="/property" state={{ id: propertyId }}>
           <Image
             src={property.imageUrl}
@@ -38,7 +24,7 @@ export default function NftCard(props: Props) {
             draggable={false}
           />
         </Link>
-      </Box>
+      </Box> */}
 
       <Box p="6">
         <Box display="flex" alignItems="baseline">
@@ -53,7 +39,7 @@ export default function NftCard(props: Props) {
             textTransform="uppercase"
             ml="2"
           >
-            {property.beds} beds &bull; {property.baths} baths
+            {loaner.maxMonths} Max Months
           </Box>
         </Box>
 
@@ -64,14 +50,14 @@ export default function NftCard(props: Props) {
           lineHeight="tight"
           noOfLines={1}
         >
-          <Link to="/property" state={{ id: propertyId }}>
-            {property.title}
+          <Link to="/property" state={{ id: loanerId }}>
+            {loaner.loanerName}
           </Link>
         </Box>
 
         <HStack spacing = '0.1rem'>
           <FaEthereum /> 
-          <Text>{property.price}</Text>
+          <Text>{loaner.annualInterestRate.toString()}</Text>
         </HStack>
       </Box>
     </Box>

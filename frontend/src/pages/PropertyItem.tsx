@@ -8,9 +8,9 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
-
+import { CSSObject } from "@emotion/react";
 import { useAccount } from "wagmi";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef} from "react";
 import { useParticularProperty } from "../hooks/marketplace/useProperty";
 import { Nft } from "../types/listing";
 
@@ -31,45 +31,66 @@ export default function PropertyItem() {
   const { isFetched, data } = useParticularProperty(address, id);
   const [nft, setNft] = useState<Nft | undefined>();
 
+  const [containerHeight, setContainerHeight] = useState("100vh");
   useEffect(() => {
-    if (isConnected && isFetched) {
-      console.log(data);
-      setNft(data);
+    function handleResize() {
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const newHeight = documentHeight > windowHeight ? '100%' : '100vh';
+      setContainerHeight(newHeight);
     }
+
+    // Add event listener for window resize
+    window.addEventListener('resize', handleResize);
+    if (isConnected && isFetched) {
+      setNft(data);
+      setTimeout(function(){
+        handleResize();
+      }, 1000);
+    
+    }
+    // Clean up event listener
+    return () => window.removeEventListener('resize', handleResize);
   }, [isConnected, isFetched]);
 
+  
+
+  const importantStyle: CSSObject = {
+    maxW: 'max-content !important' ,
+    my: 3,
+  }
+
   return (
-    <main>
+    <main style ={{height: containerHeight}}>
       {!isFetched ? (
         <Box
           display="flex"
           justifyContent="center"
           alignItems="center"
-          height="90vh"
         >
           <Spinner size="xl" color="green" />
         </Box>
       ) : nft && address ? (
-        <Container maxW={"max-content"} my={3}>
-          <Heading as="h1" size="xl" noOfLines={1} mb={3}>
-            {nft.pinataContent.streetAddress}
-          </Heading>
+          <Container sx = {importantStyle}>
+            <Heading as="h1" size="xl" noOfLines={1} mb={3}>
+              {nft.pinataContent.streetAddress}
+            </Heading>
 
-          <Center>
-            <Slideshow images={nft.pinataContent.images} />
-          </Center>
+            <Center>
+              <Slideshow images={nft.pinataContent.images} />
+            </Center>
 
-          <HStack mt={5}>
-            <PropertyPrice address={address} nft={nft} />
-            <PropertyListing address={address} nft={nft} />
-            <PropertyBidding address={address} nft={nft} />
-            <PropertyApproval address={address} nft={nft} />
-          </HStack>
+            <HStack mt={5}>
+              <PropertyPrice address={address} nft={nft} />
+              <PropertyListing address={address} nft={nft} />
+              <PropertyBidding address={address} nft={nft} />
+              <PropertyApproval address={address} nft={nft} />
+            </HStack>
 
-          <PropertyDetail nft={nft} />
-          <BiddingPool address={address} nft={nft} />
-          <FinancingStatus nft={nft} />
-        </Container>
+            <PropertyDetail nft={nft} />
+            <BiddingPool address={address} nft={nft} />
+            <FinancingStatus nft={nft} />
+          </Container>
       ) : (
         <Text>Connect to your wallet first!</Text>
       )}

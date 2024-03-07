@@ -11,6 +11,7 @@ import { CheckCircleIcon } from "@chakra-ui/icons";
 import { useDropzone } from "react-dropzone";
 import { Dispatch, SetStateAction, CSSProperties, useState } from "react";
 
+
 interface Props {
   onUpload: (
     acceptedFiles: File[],
@@ -38,7 +39,7 @@ const Dropzone = ({ onUpload }: Props) => {
     <Box mt={4}>
       <div {...getRootProps()} style={dropzoneStyle}>
         <input {...getInputProps()} />
-        <Button colorScheme="teal" variant="outline" size="md">
+        <Button colorScheme="teal" variant="outline" size="md" backgroundColor="teal" color = 'gray.800'>
           Upload Images
         </Button>
         <Text mt={2} fontSize="sm" color="gray.500">
@@ -82,7 +83,7 @@ const dropzoneStyle: CSSProperties = {
   borderRadius: 4,
   borderColor: "#eeeeee",
   borderStyle: "dashed",
-  backgroundColor: "#fafafa",
+  backgroundColor: "rgba(10,10,10, 0.8)",
   color: "#bdbdbd",
   outline: "none",
   transition: "border .24s ease-in-out",

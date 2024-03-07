@@ -1,0 +1,12 @@
+@font-face {
+    font-family: 'fontBody';
+    src: url('../../fonts/IBMPlexSansCondensed-Regular.ttf') format('truetype');
+  }
+@font-face {
+  font-family: 'fontHeader';
+  src: url('../../fonts/IBMPlexSans-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Josefin Sans';
+  src: url('../../fonts/JosefinSans-Regular.ttf') format('truetype');
+}

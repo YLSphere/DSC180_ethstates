@@ -2336,6 +2336,11 @@
   resolved "https://registry.npmjs.org/@fastify/busboy/-/busboy-2.1.0.tgz"
   integrity sha512-+KpH+QxZU7O4675t3mnkQKcZZg56u+K/Ct2K+N2AZYNVK8kyeo/bI18tI8aPm3tvNNRyTWfj6s5tnGNlcbQRsA==
 
+"@fontsource/josefin-sans@^5.0.18":
+  version "5.0.18"
+  resolved "https://registry.npmjs.org/@fontsource/josefin-sans/-/josefin-sans-5.0.18.tgz"
+  integrity sha512-+Jynrzvi+RpUwRO9tWdZxGPNToJD8WrrjWsN+me7VUzXi0F3o95W+3BqVnLMN3Gx/TaHPeGDdWNAcVF6No+nHw==
+
 "@gar/promisify@^1.0.1":
   version "1.1.3"
   resolved "https://registry.npmjs.org/@gar/promisify/-/promisify-1.1.3.tgz"

@@ -34,7 +34,8 @@
     "@choc-ui/logo":"latest",
     "pill-pity":"latest",
     "react-modal": "^3.14.3",
-    "lodash": "latest"
+    "lodash": "latest",
+    "@fontsource/josefin-sans": "latest"
   },
   "devDependencies": {
 

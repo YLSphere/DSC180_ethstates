@@ -16,6 +16,10 @@ import { useAddProperty } from "../hooks/marketplace/useProperty";
 
 import { PinataContent } from "../types/property";
 import { useNavigate } from "react-router-dom";
+import "../../../fonts/IBMPlexSansCondensed-Regular.ttf";
+import "../../../fonts/IBMPlexSans-Regular.ttf";
+import "../../../fonts/JosefinSans-Regular.ttf";
+import "../App.css";
 
 const formFields = [
   {
@@ -205,7 +209,7 @@ export default function ListProperty() {
           height="90vh"
           maxWidth="container.lg"
         >
-          <Text fontSize={"3xl"} color={"gray.500"}>
+          <Text fontSize={"3xl"} color={"gray.500"} fontFamily="Josefin Sans">
             Connect to your wallet first!
           </Text>
         </Container>
@@ -215,7 +219,7 @@ export default function ListProperty() {
 
   return (
     <main>
-      <Container maxWidth={"container.md"}>
+      <Container maxWidth={"container.md"} fontFamily="Josefin Sans">
         <form onSubmit={handleSubmit}>
           {formFields.map((field, i) => (
             <FormControl
@@ -227,6 +231,8 @@ export default function ListProperty() {
               <FormLabel>{field.label}</FormLabel>
               <Input
                 placeholder={field.placeholder}
+                borderWidth={'2px'}
+                borderColor={'gray.700'}
                 onChange={(e) =>
                   setPinataContent({
                     ...pinataContent,
@@ -242,7 +248,7 @@ export default function ListProperty() {
           ))}
           <Dropzone onUpload={handleUpload} />
 
-          <Button my={4} colorScheme="teal" type="submit">
+          <Button my={4} colorScheme="teal" type="submit" alignItems={'center'} justifyContent={'center'} position = 'relative'>
             Submit
           </Button>
         </form>

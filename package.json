@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@fontsource/josefin-sans": "^5.0.18",
     "@openzeppelin/contracts": "4.9.3",
     "dotenv": "^16.3.1",
     "hardhat": "^2.18.3",

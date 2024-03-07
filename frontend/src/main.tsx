@@ -20,6 +20,8 @@ import { configureChains, createConfig, WagmiConfig } from "wagmi";
 import { polygon, polygonMumbai, hardhat } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 
+import "./height.css"
+
 // import `ChakraProvider` component
 import { ChakraProvider } from "@chakra-ui/react";
 
