@@ -16,6 +16,7 @@ import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import contractAddress from "../../contracts/contract-address.json";
 import marketplaceArtifact from "../../contracts/ListingContract.json";
 import { ethers } from "ethers";
+import { set } from "lodash";
 
 interface Props {
   address: `0x${string}` | undefined;
@@ -38,13 +39,20 @@ export default function PropertyBidding({ nft, address, refetch }: Props) {
       setIsDisabled(true);
       return;
     }
+
+    let found = false;
     nft.listing?.bids?.forEach((bid) => {
       if (bid.bidder === address) {
         setIsDisabled(true);
+        found = true;
         return;
       }
     });
-  }, [nft.listing?.bids, address]);
+
+    if (!found) {
+      setIsDisabled(false);
+    }
+  }, [nft, address]);
 
   useEffect(() => {
     if (isConfirmed) {
