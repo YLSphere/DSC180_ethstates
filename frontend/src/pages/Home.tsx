@@ -26,9 +26,18 @@ export default function Home() {
           lineHeight={"110%"}
           
         >
-          List your property on <br />
-          <Text as={"span"} color={"green.400"}>
-            EthStates
+          <Heading
+            fontWeight={600}
+            fontSize={{ base: "4xl", sm: "4xl", md: "6xl" }}
+            lineHeight={"110%"}
+          >
+            List your property on <br />
+            <Text as={"span"} color={"green.400"}>
+              EthStates
+            </Text>
+          </Heading>
+          <Text fontSize={"larger"} color={"gray.500"}>
+            Real Estate for real people.
           </Text>
         </Heading>
         <Text color={"gray.800"} fontFamily = "Josefin Sans" fontSize = "md" fontWeight={400}>

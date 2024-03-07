@@ -200,6 +200,30 @@ contract ListingContract is
         emit Offer(_propertyId);
     }
 
+    // Functon to unbid on a listing property
+    function unbid(
+        uint256 _propertyId
+    )
+        external
+        propertyExists(_propertyId)
+        listedOrNot(_propertyId, true)
+        bidsIncludeBuyerOrNot(_propertyId, _msgSender(), true)
+        bidSetOrNot(_propertyId, false)
+    {
+        uint256 bidIndex;
+        for (uint256 i = 0; i < listings[_propertyId].bids.length; i++) {
+            if (listings[_propertyId].bids[i].buyer == _msgSender()) {
+                bidIndex = i;
+                break;
+            }
+        }
+
+        for (uint256 i = bidIndex; i < listings[_propertyId].bids.length - 1; i++) {
+            listings[_propertyId].bids[i] = listings[_propertyId].bids[i + 1];
+        }
+        listings[_propertyId].bids.pop();
+    }
+
     // Function to accept a bid on a listing property
     function acceptOffer(
         uint256 _propertyId,
@@ -238,18 +262,26 @@ contract ListingContract is
         revert BuyerDidNotBid();
     }
 
-    function removeBid(
-        uint256 _propertyId,
-        address _buyer
-        ) public {
-        for (uint256 i = 0; i < listings[_propertyId].bids.length; i++) {
-            if (listings[_propertyId].bids[i].buyer == _buyer) {
-                // Swap with the last element and then pop
-                listings[_propertyId].bids[i] = listings[_propertyId].bids[listings[_propertyId].bids.length - 1];
-                listings[_propertyId].bids.pop();
-                break;
-            }
+    // Function to undo accept of a bid on a listing property
+    function undoAcceptOffer(
+        uint256 _propertyId
+    )
+        external
+        propertyExists(_propertyId)
+        isPropertyOwner(_propertyId)
+        listedOrNot(_propertyId, true)
+        bidSetOrNot(_propertyId, true)
+    {
+        if (listings[_propertyId].buyerApproved) {
+            revert BuyerAlreadyApproved();
         }
+
+        listings[_propertyId].acceptedBid = AcceptedBid({
+            buyer: address(0),
+            bidPrice: 0,
+            financingId: 0
+        });
+        listings[_propertyId].sellerApproved = false;
     }
 
     // =========== Accepted bid financing functions ===========
@@ -351,9 +383,9 @@ contract ListingContract is
         }
 
         listings[_propertyId].buyerApproved = true;
-        // payable(_msgSender()).transfer(
-        //     msg.value - listings[_propertyId].acceptedBid.bidPrice
-        // ); // refund excess payment
+        payable(_msgSender()).transfer(
+            msg.value - listings[_propertyId].acceptedBid.bidPrice
+        ); // refund excess payment
         transfer(_propertyId);
     }
 

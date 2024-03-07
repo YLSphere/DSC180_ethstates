@@ -1,41 +1,34 @@
-import { Button } from "@chakra-ui/react";
 import { Nft } from "../../types/listing";
-import { useList, useUnlist } from "../../hooks/marketplace/useListing";
+import { ListButton } from "./buttons/ListButton";
+import { UnlistButton } from "./buttons/UnlistButton";
 
 interface Props {
-  address: `0x${string}`;
+  address: `0x${string}` | undefined;
   nft: Nft;
+  refetch: () => void;
 }
 
-export default function PropertyListing({ nft, address }: Props) {
-  const list = useList();
-  const unlist = useUnlist();
+export default function PropertyListing({ nft, address, refetch }: Props) {
+  const disableUnlist = nft.listing?.acceptedBid?.bidPrice !== 0;
 
   if (nft.owner !== address) {
     return <></>;
   }
 
   if (
+    address &&
     nft.listing?.propertyId === nft.property.propertyId // is listed
   ) {
     return (
-      <Button
-        colorScheme="red"
-        onClick={() =>
-          unlist.mutate({ address, id: nft.property.propertyId })
-        }
-      >
-        Unlist
-      </Button>
+      <UnlistButton
+        isDisabled={disableUnlist}
+        propertyId={nft.property.propertyId}
+        refetch={refetch}
+      />
     );
   } else {
     return (
-      <Button
-        colorScheme="yellow"
-        onClick={() => list.mutate({ address, id: nft.property.propertyId })}
-      >
-        List
-      </Button>
+      <ListButton propertyId={nft.property.propertyId} refetch={refetch} />
     );
   }
 }

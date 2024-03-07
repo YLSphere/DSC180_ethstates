@@ -1,4 +1,3 @@
-import { useAcceptOffer } from "../../hooks/marketplace/useBidding";
 import { Nft } from "../../types/listing";
 import {
   Box,
@@ -11,28 +10,20 @@ import {
   Th,
   Thead,
   Tr,
-  Tooltip,
-  IconButton,
-  HStack
+  Avatar,
 } from "@chakra-ui/react";
 
-import { useRemoveBid } from "../../hooks/marketplace/useBidding";
-
-import {
-  VscAccount,
-  VscChromeClose,
-  VscCheck,
-  VscArrowRight,
-  VscArrowLeft,
-} from "react-icons/vsc";
+import { AcceptButton } from "./buttons/AcceptButton";
+import { UnbidButton } from "./buttons/UnbidButton";
+import { UnacceptButton } from "./buttons/UnacceptButton";
 
 interface Props {
-  address: `0x${string}`;
+  address: `0x${string}` | undefined;
   nft: Nft;
+  refetch: () => void;
 }
 
-export default function BiddingPool({ nft, address }: Props) {
-  const acceptOffer = useAcceptOffer();
+export default function BiddingPool({ nft, address, refetch }: Props) {
   const isOwner = nft.owner === address;
   const isAccepted = nft.listing?.acceptedBid?.bidPrice !== 0;
   const removeBid = useRemoveBid()
@@ -57,7 +48,8 @@ export default function BiddingPool({ nft, address }: Props) {
               {nft.listing?.bids?.map((bid, index) => (
                 <Tr key={index}>
                   <Td display="flex" alignItems="center">
-                    {bid.bidder}
+                    <Avatar size="xs" src='https://bit.ly/broken-link' mr={2} />
+                    {`${bid.bidder.slice(0, 6)}...${bid.bidder.slice(-4)}`}
                     {nft.listing?.acceptedBid?.bidder === bid.bidder ? (
                       <Badge variant="solid" colorScheme="green" ml={2}>
                         Accepted Bid
@@ -67,42 +59,20 @@ export default function BiddingPool({ nft, address }: Props) {
                     )}
                   </Td>
                   <Td isNumeric>{bid.bidPrice}</Td>
-                  <Td >
-                    <HStack>
-                      <Tooltip label="Accept" fontSize="sm">
-                        <IconButton
-                          colorScheme="green"
-                          size="xs"
-                          aria-label="Accept"
-                          icon={<VscCheck />}
-                          isDisabled={isAccepted}
-                          onClick={() =>
-                            acceptOffer.mutate({
-                              address,
-                              id: nft.property.propertyId,
-                              bidder: bid.bidder,
-                            })
-                          }
-                        />
-                      </Tooltip>
-
-                      <Tooltip label="Remove" fontSize="sm">
-                        <IconButton
-                          colorScheme="red"
-                          icon={<VscChromeClose />}
-                          aria-label="Reject"
-                          size = 'xs'
-                          isDisabled={isAccepted}
-                          onClick={() => {
-                            removeBid.mutate({
-                              address,
-                              id: nft.property.propertyId,
-                              bidder: bid.bidder,
-                            });
-                          }}
-                        />
-                      </Tooltip>
-                    </HStack>
+                  <Td>
+                    {nft.listing?.acceptedBid?.bidder === bid.bidder ? (
+                      <UnacceptButton
+                        propertyId={nft.property.propertyId}
+                        refetch={refetch}
+                      />
+                    ) : (
+                      <AcceptButton
+                        isAccepted={isAccepted}
+                        propertyId={nft.property.propertyId}
+                        bidder={bid.bidder}
+                        refetch={refetch}
+                      />
+                    )}
                   </Td>
                 </Tr>
               ))}
@@ -130,7 +100,8 @@ export default function BiddingPool({ nft, address }: Props) {
               {nft.listing?.bids?.map((bid, index) => (
                 <Tr key={index}>
                   <Td display="flex" alignItems="center">
-                    {bid.bidder}
+                    <Avatar size="xs" src='https://bit.ly/broken-link' mr={2} />
+                    {`${bid.bidder.slice(0, 4)}...${bid.bidder.slice(-4)}`}
                     {nft.listing?.acceptedBid?.bidder === bid.bidder ? (
                       <Badge variant="solid" colorScheme="green" ml={2}>
                         Accepted Bid
@@ -148,22 +119,13 @@ export default function BiddingPool({ nft, address }: Props) {
                   </Td>
                   <Td isNumeric>{bid.bidPrice}</Td>
                   <Td>
-                  <Tooltip label="Remove" fontSize="sm">
-                        <IconButton
-                          colorScheme="red"
-                          icon={<VscChromeClose />}
-                          aria-label="Reject"
-                          size = 'xs'
-                          isDisabled={isAccepted}
-                          onClick={() => {
-                            removeBid.mutate({
-                              address,
-                              id: nft.property.propertyId,
-                              bidder: bid.bidder,
-                            });
-                          }}
-                        />
-                      </Tooltip>
+                    {address === bid.bidder &&
+                    nft.listing?.acceptedBid?.bidder !== bid.bidder ? (
+                      <UnbidButton
+                        propertyId={nft.property.propertyId}
+                        refetch={refetch}
+                      />
+                    ) : null}
                   </Td>
                 </Tr>
               ))}

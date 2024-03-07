@@ -1,19 +1,16 @@
 import { Button, useToast } from "@chakra-ui/react";
-import { Nft } from "../../types/listing";
-
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import contractAddress from "../../contracts/contract-address.json";
-import marketplaceArtifact from "../../contracts/ListingContract.json";
+import contractAddress from "../../../contracts/contract-address.json";
+import marketplaceArtifact from "../../../contracts/ListingContract.json";
 import { useEffect } from "react";
-import { ethers } from "ethers";
 
 interface Props {
-  address: `0x${string}` | undefined;
-  nft: Nft;
+  isDisabled: boolean;
+  propertyId: number;
   refetch: () => void;
 }
 
-export default function PropertyApproval({ nft, address, refetch }: Props) {
+export function UnlistButton({ isDisabled, propertyId, refetch }: Props) {
   const toast = useToast();
   const { data: hash, writeContract, status } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
@@ -24,19 +21,19 @@ export default function PropertyApproval({ nft, address, refetch }: Props) {
   useEffect(() => {
     if (isConfirmed) {
       toast({
-        title: "Approved",
-        description: "Transfer has been approved",
+        title: "Property Unlisted",
+        description: "Property has been unlisted",
         status: "success",
         duration: 5000,
         isClosable: true,
       });
-      setTimeout(refetch, 5000);
+      setTimeout(refetch, 3000);
     }
 
     if (isConfirming) {
       toast({
-        title: "Approving Transfer",
-        description: "Transfer is being approved",
+        title: "Unlisting Property",
+        description: "Property is being unlisted",
         status: "info",
         duration: 5000,
         isClosable: true,
@@ -45,7 +42,7 @@ export default function PropertyApproval({ nft, address, refetch }: Props) {
 
     if (status === "pending") {
       toast({
-        title: "Approving Transfer",
+        title: "Unlisting Property",
         description: "Please confirm on wallet",
         status: "info",
         duration: 5000,
@@ -64,29 +61,19 @@ export default function PropertyApproval({ nft, address, refetch }: Props) {
     }
   }, [isConfirmed, isConfirming, status]);
 
-  if (
-    address &&
-    nft.listing?.propertyId === nft.property.propertyId && // is listed
-    nft.listing?.acceptedBid?.bidder === address && // is the accepted bidder
-    nft.listing?.sellerApproved === true && // seller approved
-    nft.listing?.buyerApproved === false // buyer not approved
-  ) {
-    return (
-      <Button
-        colorScheme="green"
-        onClick={() =>
+  return <Button
+        size="sm"
+        isDisabled={isDisabled}
+        colorScheme="red"
+        onClick={() => (
           writeContract({
             address: contractAddress.ListingContractProxy as `0x${string}`,
             abi: marketplaceArtifact.abi,
-            functionName: "approveTransferAsBuyer",
-            args: [BigInt(nft.property.propertyId)],
-            value: ethers.parseEther(nft.listing!.acceptedBid!.bidPrice.toString()),
+            functionName: "unlistProperty",
+            args: [BigInt(propertyId)],
           })
-        }
+    )}
       >
-        Approve
+        Unlist
       </Button>
-    );
-  }
-  return <></>;
 }

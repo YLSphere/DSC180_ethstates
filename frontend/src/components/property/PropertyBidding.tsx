@@ -1,18 +1,24 @@
 import { useEffect, useState } from "react";
-import { useBid } from "../../hooks/marketplace/useBidding";
 import { Nft } from "../../types/listing";
 import {
   Button,
   Container,
   FormControl,
+  Image,
   InputGroup,
   InputRightElement,
   NumberInput,
   NumberInputField,
   Text,
   Switch,
+  useToast,
 } from "@chakra-ui/react";
-import { FaEthereum } from "react-icons/fa";
+import Polygon from "../../assets/polygon.svg";
+
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import contractAddress from "../../contracts/contract-address.json";
+import marketplaceArtifact from "../../contracts/ListingContract.json";
+import { ethers } from "ethers";
 import ReactModal from "react-modal";
 
 const customStyles = {
@@ -26,13 +32,19 @@ const customStyles = {
   },
 };
 interface Props {
-  address: `0x${string}`;
+  address: `0x${string}` | undefined;
   nft: Nft;
+  refetch: () => void;
 }
 
-export default function PropertyBidding({ nft, address }: Props) {
-  const bid = useBid();
-  const [isBidded, setIsBidded] = useState<boolean>(false);
+export default function PropertyBidding({ nft, address, refetch }: Props) {
+  const toast = useToast();
+  const { data: hash, writeContract, status } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    });
+  const [isDisabled, setIsDisabled] = useState<boolean>(false);
   const [bidPrice, setBidPrice] = useState<number>(0);
   const [alertIsOpen, setIsOpenAlert] = useState(false);
 
@@ -56,13 +68,60 @@ export default function PropertyBidding({ nft, address }: Props) {
   };
 
   useEffect(() => {
+    if (!address) {
+      setIsDisabled(true);
+      return;
+    }
     nft.listing?.bids?.forEach((bid) => {
       if (bid.bidder === address) {
-        setIsBidded(true);
+        setIsDisabled(true);
         return;
       }
     });
   }, [nft.listing?.bids, address]);
+
+  useEffect(() => {
+    if (isConfirmed) {
+      toast({
+        title: "Bid placed",
+        description: "Your bid has been placed",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+      setTimeout(refetch, 5000);
+    }
+
+    if (isConfirming) {
+      toast({
+        title: "Placing bid",
+        description: "Your bid is being placed",
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+
+    if (status === "pending") {
+      toast({
+        title: "Placing bid",
+        description: "Please confirm on wallet",
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+
+    if (status === "error") {
+      toast({
+        title: "Rejected",
+        description: "Action rejected",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }, [isConfirmed, isConfirming, status]);
 
   if (
     nft.owner !== address && // not the owner
@@ -70,53 +129,41 @@ export default function PropertyBidding({ nft, address }: Props) {
     nft.listing?.acceptedBid?.bidPrice === 0 // not accepted
   ) {
     return (
-      <Container>
-        <ReactModal
-          shouldCloseOnOverlayClick={true}
-          style={customStyles}
-          isOpen={alertIsOpen}
-          onRequestClose={closeModalAlert}
-          closeTimeoutMS={500}
-          contentLabel="tas"
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+
+          bid.mutate({
+            address,
+            id: nft.property.propertyId,
+            bidPrice: bidPrice,
+          });
+        }}
+      >
+        <FormControl
+          isDisabled={isBidded}
+          maxW={"3xs"}
+          display={"flex"}
+          flexDirection={"row"}
+          alignItems={"center"}
+          gap={3}
         >
-          <Text>
-            I agree that I do not have inside information and stuff
-          </Text>
-          <Switch
-            colorScheme="teal"
-            isRequired
-            isChecked={!alertIsOpen}
-            onChange={handleSwitchChange}
-          ></Switch>
-        </ReactModal>
-        <form
-          onSubmit={openModalAlert}
-        >
-          <FormControl
-            isDisabled={isBidded}
-            maxW={"3xs"}
-            display={"flex"}
-            flexDirection={"row"}
-            alignItems={"center"}
-            gap={3}
-          >
-            <InputGroup>
-              <InputRightElement pointerEvents="none">
-                <FaEthereum color="gray" />
-              </InputRightElement>
-              <NumberInput precision={2}>
-                <NumberInputField
-                  placeholder="Bid price"
-                  onChange={(e) => setBidPrice(parseFloat(e.target.value))}
-                />
-              </NumberInput>
-            </InputGroup>
-            <Button type="submit" colorScheme="blue" isDisabled={isBidded}>
-              Bid
-            </Button>
-          </FormControl>
-        </form>
-      </Container>
+          <InputGroup>
+            <InputRightElement pointerEvents="none">
+              <FaEthereum color="gray" />
+            </InputRightElement>
+            <NumberInput precision={2}>
+              <NumberInputField
+                placeholder="Bid price"
+                onChange={(e) => setBidPrice(parseFloat(e.target.value))}
+              />
+            </NumberInput>
+          </InputGroup>
+          <Button type="submit" colorScheme="blue" isDisabled={isBidded}>
+            Bid
+          </Button>
+        </FormControl>
+      </form>
     );
   }
 

@@ -2,64 +2,115 @@ import {
   Editable,
   EditableInput,
   EditablePreview,
+  Image,
   Stat,
   StatLabel,
   StatNumber,
-  Tooltip,
-  HStack,
+  useToast,
 } from "@chakra-ui/react";
-import { FaEthereum } from "react-icons/fa";
-import { VscInfo } from "react-icons/vsc";
+import Polygon from "../../assets/polygon.svg"
 import { Nft } from "../../types/listing";
-import { useSetPrice } from "../../hooks/marketplace/useProperty";
 import { useEffect, useState } from "react";
+
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import contractAddress from "../../contracts/contract-address.json";
+import marketplaceArtifact from "../../contracts/ListingContract.json";
+import { ethers } from "ethers";
 
 interface Props {
   nft: Nft;
-  address: `0x${string}`;
+  address: `0x${string}` | undefined;
+  refetch: () => void;
 }
 
-export default function PropertyPrice({
-  nft,
-  address,
-}: Props) {
-  const updatePrice = useSetPrice();
+export default function PropertyPrice({ nft, address, refetch }: Props) {
+  const toast = useToast();
+  const { data: hash, writeContract, status } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    });
   const [price, setPrice] = useState(nft.property.price.toString());
   const isOwner = nft.owner === address;
 
   useEffect(() => {
-    if (updatePrice.status === "error") {
-      setPrice(nft.property.price.toString());
+    if (isConfirmed) {
+      toast({
+        title: "Price updated",
+        description: "The price has been updated",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+      setTimeout(refetch, 3000);
     }
-  }, [updatePrice.status]);
+
+    if (isConfirming) {
+      toast({
+        title: "Updating price",
+        description: "The price is being updated",
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+
+    if (status === "pending") {
+      toast({
+        title: "Updating price",
+        description: "Please confirm on Metamask",
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+
+    if (status === "error") {
+      setPrice(nft.property.price.toString());
+      toast({
+        title: "Rejection updating price",
+        description: "Updating price has been rejected",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }, [status, isConfirming, isConfirmed]);
 
   return (
     <Stat>
       <StatLabel>Property Price</StatLabel>
       <StatNumber display={"flex"} flexDirection={"row"} alignItems={"center"}>
-        <FaEthereum size={20} />
+        <Image src={Polygon} alt="logo" height={5} width={5} mr={2} />
         {isOwner ? (
-          <HStack>
-            <Editable
-              defaultValue={nft.property.price.toString()}
-              value={price.toString()}
-              onChange={(e) => setPrice(e)}
-              onSubmit={() => {
-                if (parseFloat(price) === nft.property.price) return;
-                updatePrice.mutate({
-                  address,
-                  id: nft.property.propertyId,
-                  price: parseFloat(price),
+          <Editable
+            defaultValue={nft.property.price.toString()}
+            value={price.toString()}
+            onChange={(e) => setPrice(e)}
+            onSubmit={() => {
+              if (parseFloat(price) === nft.property.price) return;
+              if (parseFloat(price) <= 0) {
+                toast({
+                  title: "Error updating price",
+                  description: "Price cannot be non positive",
+                  status: "error",
+                  duration: 5000,
+                  isClosable: true,
                 });
-              }}
-            >
-              <EditablePreview />
-              <EditableInput />
-            </Editable>
-            <Tooltip label = 'Click on the price to adjust it' placement='right'>
-              <span><VscInfo size = '20' /></span>
-            </Tooltip>
-          </HStack>
+                return;
+              }
+
+              writeContract({
+                address: contractAddress.ListingContractProxy as `0x${string}`,
+                abi: marketplaceArtifact.abi,
+                functionName: "setPrice",
+                args: [nft.property.propertyId, ethers.parseEther(price)],
+              });
+            }}
+          >
+            <EditablePreview />
+            <EditableInput />
+          </Editable>
         ) : (
           nft.property.price.toString()
         )}

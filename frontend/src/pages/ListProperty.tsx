@@ -5,14 +5,22 @@ import {
   FormLabel,
   Input,
   useToast,
-  Text,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import contractAddress from "../contracts/contract-address.json";
+import marketplaceArtifact from "../contracts/ListingContract.json";
+import {
+  useAccount,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 import Dropzone from "../components/form/Dropzone";
 
-import { pinataImage } from "../queries/pinata";
-import { useAddProperty } from "../hooks/marketplace/useProperty";
+import { pinataImage, pinataJson } from "../queries/pinata";
 
 import { PinataContent } from "../types/property";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +28,8 @@ import "../../../fonts/IBMPlexSansCondensed-Regular.ttf";
 import "../../../fonts/IBMPlexSans-Regular.ttf";
 import "../../../fonts/JosefinSans-Regular.ttf";
 import "../App.css";
+import { CHAIN_ID } from "../types/constant";
+import { ethers } from "ethers";
 
 const formFields = [
   {
@@ -89,21 +99,17 @@ const formFields = [
     propName: "additionalFeatures",
     isRequired: false,
   },
-  {
-    id: "price",
-    label: "Price",
-    placeholder: "Price of the property",
-    propName: "price",
-    isRequired: true,
-    isNumber: true,
-  },
 ];
 
 export default function ListProperty() {
   const toast = useToast();
   const navigate = useNavigate();
-  const addProperty = useAddProperty();
-  const { address, isConnected } = useAccount();
+  const { data: hash, writeContract, status } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    });
+  const { address, chainId, isConnected } = useAccount();
   const [pinataContent, setPinataContent] = useState<PinataContent>({
     streetAddress: "",
     city: "",
@@ -114,50 +120,59 @@ export default function ListProperty() {
     bathrooms: 0,
     parkingSpots: 0,
     addititonalFeatures: "",
-    price: 0,
     images: [],
   });
+  const [price, setPrice] = useState<number>(0);
   const date = new Date().getTime();
 
   useEffect(() => {
     // When the mutation is loading, show a toast
-    if (addProperty.isLoading) {
+    if (status === "pending") {
       toast({
-        status: "loading",
-        title: "Property NFT pending",
-        description: "Please confirm on Metamask",
-      });
-    }
-
-    // When the mutation fails, show a toast
-    if (addProperty.isError) {
-      toast({
-        status: "error",
-        title: "Property NFT rejected",
-        description: "Something wrong",
+        status: "info",
+        title: "Confirm transaction",
+        description: "Please confirm on wallet",
         duration: 5000,
       });
     }
 
-    // When the mutation is successful, show a toast
-    if (addProperty.isSuccess) {
+    // When the mutation fails, show a toast
+    if (status === "error") {
+      toast({
+        status: "error",
+        title: "Rejected",
+        description: "Action rejected",
+        duration: 5000,
+      });
+    }
+
+    if (isConfirming) {
+      toast({
+        status: "info",
+        title: "Minting Property",
+        description: "Property is being minted",
+        duration: 5000,
+      });
+    }
+
+    if (isConfirmed) {
       toast({
         status: "success",
-        title: "Property NFT minted",
-        description: "Looks great, redirecting you...",
-        duration: 10000,
+        title: "Property Minted",
+        description: "Property has been minted. Redirecting ...",
+        duration: 5000,
       });
       setTimeout(() => {
         navigate("/profile");
-      }, 10000);
+      }, 5000);
     }
-  }, [addProperty]);
+  }, [isConfirming, isConfirmed, status]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     // Prevent the default form submission behavior
     e.preventDefault();
 
-    if (isConnected) {
+    if (isConnected && address) {
       const pinataMetadata = {
         name: "ETHStates Property " + date.toString(),
         keyvalues: {
@@ -165,7 +180,20 @@ export default function ListProperty() {
         },
       };
 
-      addProperty.mutate({ address, pinataContent, pinataMetadata });
+      // addProperty.mutate({ address, pinataContent, pinataMetadata, price });
+      pinataJson
+        .post("/pinning/pinJSONToIPFS", {
+          pinataContent,
+          pinataMetadata,
+        })
+        .then(({ data }) =>
+          writeContract({
+            address: contractAddress.ListingContractProxy as `0x${string}`,
+            abi: marketplaceArtifact.abi,
+            functionName: "addProperty",
+            args: [data.IpfsHash, ethers.parseEther(price.toString())],
+          })
+        );
     }
   }
 
@@ -209,7 +237,7 @@ export default function ListProperty() {
           height="90vh"
           maxWidth="container.lg"
         >
-          <Text fontSize={"3xl"} color={"gray.500"} fontFamily="Josefin Sans">
+          <Text fontSize={"3xl"} color={"gray.500"}>
             Connect to your wallet first!
           </Text>
         </Container>
@@ -237,15 +265,24 @@ export default function ListProperty() {
                   setPinataContent({
                     ...pinataContent,
                     [field.propName]: field.isNumber
-                      ? field.propName === "price"
-                        ? parseFloat(e.target.value)
-                        : parseInt(e.target.value)
+                      ? parseInt(e.target.value)
                       : e.target.value,
                   })
                 }
               />
             </FormControl>
           ))}
+
+          <FormControl id="price" isRequired mt={3}>
+            <FormLabel>Price</FormLabel>
+            <Input
+              type="number"
+              step="0.01"
+              placeholder="Price of the property"
+              onChange={(e) => setPrice(parseFloat(e.target.value))}
+            />
+          </FormControl>
+
           <Dropzone onUpload={handleUpload} />
 
           <Button my={4} colorScheme="teal" type="submit" alignItems={'center'} justifyContent={'center'} position = 'relative'>

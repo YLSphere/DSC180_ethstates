@@ -1,11 +1,19 @@
 export interface LoanResult {
-  0: bigint; // lender
+  0: `0x${string}`; // lender
   1: bigint; // annualInterestRate
+  2: bigint; // maxDurationInMonths
 }
 
 export enum LoanResultIndex {
   LENDER,
   ANNUAL_INTEREST_RATE,
+  MAX_DURATION_IN_MONTHS
+}
+
+export interface Loan {
+  lender: `0x${string}`;
+  annualInterestRate: number;
+  maxDurationInMonths: number;
 }
 
 enum FinancingStatus {
@@ -48,7 +56,7 @@ export interface Financing {
 }
 
 export interface FinancingProps {
-  address: `0x${string}` | undefined;
+  address: `0x${string}`;
   financingId: number;
   propertyId: number;
   loaner?: string;

@@ -8,7 +8,7 @@ import Loaners from "./pages/Loaners";
 import ListLoaner from "./pages/ListLoaner";
 // import PropertyBid from "./pages/PropertyBid";
 import Profile from "./pages/Profile";
-// import NotFound from "./pages/NotFound";
+import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 import ScrollToTop from "./components/ScrollToTop";
 import {useEffect, useState} from "react";
@@ -40,15 +40,13 @@ function App() {
       bgPosition={"calc(50% - 50px) 45%"} h="100%">
         <NavBar />
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/marketplace" element={<Marketplace />} />
+          {/* <Route path="/" element={<Home />} /> */}
+          <Route path="/" element={<Marketplace />} />
           <Route path="/listProperty" element={<ListProperty />} />
           <Route path="/property" element={<PropertyItem />} />
           {/* <Route path="/property/bids" element={<PropertyBid />} /> */}
           <Route path="/profile" element={<Profile />} />
-          {/* <Route path="/loaners" element={<Loaners />} /> */}
-          <Route path="/forInvestors" element={<ListLoaner />} />
-          {/* <Route path="*" element={<NotFound />}/> */}
+          <Route path="*" element={<NotFound />}/>
         </Routes>
       </Container>
     </div>

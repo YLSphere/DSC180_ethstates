@@ -3,12 +3,10 @@ import {
   Container,
   Heading,
   Spinner,
-  Flex,
   FormControl,
   FormLabel,
   Input,
   Text,
-  Box,
 } from "@chakra-ui/react";
 import NftCard from "../components/property/NftCard";
 import NftCollection from "../components/property/NftCollection";
@@ -21,9 +19,10 @@ import "../../../fonts/IBMPlexSansCondensed-Regular.ttf";
 import "../../../fonts/IBMPlexSans-Regular.ttf";
 import "../../../fonts/JosefinSans-Regular.ttf";
 import "../App.css";
+import { CHAIN_ID } from "../types/constant";
 
 export default function Marketplace() {
-  const { address, isConnected } = useAccount();
+  const { address, chain, isConnected } = useAccount();
   const [nfts, setNfts] = useState<Nft[] | undefined>([]);
   const { isLoading, data } = useGetAllListings(address);
   const [filters, setFilters] = useState({
@@ -35,11 +34,10 @@ export default function Marketplace() {
   });
 
   useEffect(() => {
-    if (isConnected && !isLoading) {
-      console.log(data);
+    if (!isLoading) {
       setNfts(data);
     }
-  }, [isConnected, isLoading, data]);
+  }, [isLoading, data]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -65,8 +63,8 @@ export default function Marketplace() {
         nft.pinataContent.zipCode.includes(filters.zipCode))
   );
 
-  // Wallet not connected
-  if (!isConnected) {
+  // Wrong network
+  if (isConnected && chain?.id !== CHAIN_ID) {
     return (
       <main>
         <Container
@@ -77,7 +75,7 @@ export default function Marketplace() {
           maxWidth="container.lg"
         >
           <Text fontSize={"3xl"} color={"gray.500"}>
-            Connect to your wallet first!
+            Connect to polygon mumbai testnet!
           </Text>
         </Container>
       </main>
@@ -116,8 +114,8 @@ export default function Marketplace() {
             {nfts?.length}
           </Badge>
         </Heading>
-        <Flex wrap="wrap" justifyContent="space-between" my={5}>
-          <FormControl w="200px" mr={2}>
+        <SimpleGrid columns={{ base: 1, sm: 4 }} spacing={3} my={5}>
+          <FormControl>
             <FormLabel>Bedrooms</FormLabel>
             <Input
               name="bedrooms"
@@ -127,7 +125,7 @@ export default function Marketplace() {
               borderColor={'gray.700'}
             />
           </FormControl>
-          <FormControl w="200px" mr={2}>
+          <FormControl>
             <FormLabel>City</FormLabel>
             <Input
               name="city"
@@ -138,8 +136,8 @@ export default function Marketplace() {
             />
           </FormControl>
 
-          <FormControl w="200px" mr={2} >
-            <FormLabel >State</FormLabel>
+          <FormControl w="200px" mr={2}>
+            <FormLabel>State</FormLabel>
             <Input
               name="state"
               onChange={handleFilterChange}
@@ -149,7 +147,7 @@ export default function Marketplace() {
             />
           </FormControl>
 
-          <FormControl w="200px" mr={2}>
+          <FormControl>
             <FormLabel>Zip Code</FormLabel>
             <Input
               name="zipCode"
@@ -159,7 +157,7 @@ export default function Marketplace() {
               borderColor={'gray.700'}
             />
           </FormControl>
-        </Flex>
+        </SimpleGrid>
 
         <NftCollection>
           {filteredNfts?.map((nft, i) => (
@@ -169,7 +167,7 @@ export default function Marketplace() {
               beds={nft.pinataContent.bedrooms}
               baths={nft.pinataContent.bathrooms}
               streetAddress={nft.pinataContent.streetAddress}
-              price={nft?.property.price.toString()}
+              price={nft?.property.price.toFixed(2).toString()}
               imageUrl={
                 nft.pinataContent.images[0]
                   ? `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${
@@ -177,6 +175,7 @@ export default function Marketplace() {
                     }`
                   : ""
               }
+              bidders={nft.listing?.bids?.length}
             />
           ))}
         </NftCollection>

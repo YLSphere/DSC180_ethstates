@@ -11,13 +11,26 @@ export function useBid() {
       id,
       bidPrice,
     }: {
-      address: `0x${string}` | undefined;
+      address: `0x${string}`;
       id: number;
       bidPrice: number;
     }) => {
       const dapp = await getMarketplaceContract(address);
       const parsedBidPrice = ethers.parseEther(bidPrice.toString());
       return dapp.bid(BigInt(id), parsedBidPrice);
+    },
+  });
+}
+
+export function useUnbid() {
+  return useMutation({
+    mutationKey: ["dapp", "unbid"],
+    mutationFn: async ({ address, id }: {
+      address: `0x${string}`;
+      id: number;
+    }) => {
+      const dapp = await getMarketplaceContract(address);
+      return dapp.unbid(BigInt(id));
     },
   });
 }

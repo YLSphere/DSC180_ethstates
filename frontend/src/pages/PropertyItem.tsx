@@ -22,47 +22,52 @@ import PropertyApproval from "../components/property/PropertyApproval";
 import PropertyDetail from "../components/property/PropertyDetail";
 import BiddingPool from "../components/property/BiddingPool";
 import FinancingStatus from "../components/property/FinancingStatus";
+import { CHAIN_ID } from "../types/constant";
+import { PropertyRemoval } from "../components/property/PropertyRemoval";
+import { EditButton } from "../components/property/buttons/EditButton";
 
 export default function PropertyItem() {
   const location = useLocation();
   const id = location.state.id;
 
-  const { address, isConnected } = useAccount();
-  const { isFetched, data } = useParticularProperty(address, id);
+  const { address, chain, isConnected } = useAccount();
+  const { isFetched, data, refetch } = useParticularProperty(address, id);
   const [nft, setNft] = useState<Nft | undefined>();
 
   const [containerHeight, setContainerHeight] = useState("100vh");
+  const shouldDisplay =
+    nft &&
+    (nft.owner === address || // current address is the owner
+      nft.listing?.propertyId === nft.property.propertyId); // or the property is listed
+
   useEffect(() => {
-    function handleResize() {
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const newHeight = documentHeight > windowHeight ? '100%' : '100vh';
-      setContainerHeight(newHeight);
-    }
-
-    // Add event listener for window resize
-    window.addEventListener('resize', handleResize);
-    if (isConnected && isFetched) {
+    if (data && isFetched) {
       setNft(data);
-      setTimeout(function(){
-        handleResize();
-      }, 1000);
-    
     }
-    // Clean up event listener
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isConnected, isFetched]);
+  }, [isFetched, data]);
 
-  
-
-  const importantStyle: CSSObject = {
-    maxW: 'max-content !important' ,
-    my: 3,
+  // Wrong network
+  if (isConnected && chain?.id !== CHAIN_ID) {
+    return (
+      <main>
+        <Container
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="90vh"
+          maxWidth="container.lg"
+        >
+          <Text fontSize={"3xl"} color={"gray.500"}>
+            Connect to polygon mumbai testnet!
+          </Text>
+        </Container>
+      </main>
+    );
   }
 
-  return (
-    <main style ={{height: containerHeight}}>
-      {!isFetched ? (
+  if (!nft) {
+    return (
+      <main>
         <Box
           display="flex"
           justifyContent="center"
@@ -70,30 +75,50 @@ export default function PropertyItem() {
         >
           <Spinner size="xl" color="green" />
         </Box>
-      ) : nft && address ? (
-          <Container sx = {importantStyle}>
-            <Heading as="h1" size="xl" noOfLines={1} mb={3}>
-              {nft.pinataContent.streetAddress}
-            </Heading>
+      </main>
+    );
+  } else if (shouldDisplay) {
+    return (
+      <main>
+        <Container maxW={"max-content"} my={3}>
+          <Heading as="h1" size="xl" noOfLines={1} mb={3}>
+            {nft.pinataContent.streetAddress}
+          </Heading>
 
             <Center>
               <Slideshow images={nft.pinataContent.images} />
             </Center>
 
-            <HStack mt={5}>
-              <PropertyPrice address={address} nft={nft} />
-              <PropertyListing address={address} nft={nft} />
-              <PropertyBidding address={address} nft={nft} />
-              <PropertyApproval address={address} nft={nft} />
-            </HStack>
+          <HStack mt={5}>
+            <PropertyPrice address={address} nft={nft} refetch={refetch} />
+            <PropertyListing address={address} nft={nft} refetch={refetch} />
+            <PropertyBidding address={address} nft={nft} refetch={refetch} />
+            <PropertyApproval address={address} nft={nft} refetch={refetch} />
+            <EditButton nft={nft} address={address} refetch={refetch} />
+            <PropertyRemoval address={address} nft={nft} />
+          </HStack>
 
-            <PropertyDetail nft={nft} />
-            <BiddingPool address={address} nft={nft} />
-            <FinancingStatus nft={nft} />
-          </Container>
-      ) : (
-        <Text>Connect to your wallet first!</Text>
-      )}
-    </main>
-  );
+          <PropertyDetail nft={nft} />
+          <BiddingPool address={address} nft={nft} refetch={refetch} />
+          <FinancingStatus nft={nft} />
+        </Container>
+      </main>
+    );
+  } else {
+    return (
+      <main>
+        <Container
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="90vh"
+          maxWidth="container.lg"
+        >
+          <Text fontSize={"3xl"} color={"gray.500"}>
+            You are not allowed to view this property
+          </Text>
+        </Container>
+      </main>
+    );
+  }
 }

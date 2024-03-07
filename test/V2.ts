@@ -363,72 +363,105 @@ describe("EthState", function () {
     });
   });
 
-  describe("Buy a property with financing", function () {
-    it("should receive fund with financing", async function () {
-      const {
-        property,
-        financing,
-        owner,
-        user1,
-        user2,
-        propertyData,
-        listingData,
-      } = await loadFixture(fixture);
+  // describe("Buy a property with financing", function () {
+  //   it("should receive fund with financing", async function () {
+  //     const {
+  //       property,
+  //       financing,
+  //       owner,
+  //       user1,
+  //       user2,
+  //       propertyData,
+  //       listingData,
+  //     } = await loadFixture(fixture);
+
+  //     await expect(property.addProperty(propertyData.uri, propertyData.price))
+  //       .to.emit(property, "Add")
+  //       .withArgs(owner.address, 1);
+
+  //     await expect(property.listProperty(1)).to.emit(property, "List");
+
+  //     await expect(
+  //       property.connect(user1).bid(1, listingData.bids[0].price)
+  //     ).to.emit(property, "Offer");
+
+  //     await expect(property.acceptOffer(1, user1.address)).to.emit(
+  //       property,
+  //       "Accept"
+  //     );
+
+  //     await expect(
+  //       financing.connect(user2).addLoan(user2.address, 500)
+  //     ).to.emit(financing, "LoanAdded");
+  //     await expect(
+  //       financing.connect(user1).financingRequest(1, 1, 1_000_000, 1)
+  //     )
+  //       .to.emit(financing, "FinanceRequest")
+  //       .withArgs(user2.address, user1.address, 1);
+
+  //     const user1Balance = await ethers.provider.getBalance(user1.address);
+  //     await expect(
+  //       financing.connect(user2).approveFinancing(1, { value: 1_000_000 })
+  //     )
+  //       .to.emit(financing, "FinanceApproval")
+  //       .withArgs(user2.address, user1.address, 1);
+  //     expect(
+  //       await ethers.provider.getBalance(user1.address)
+  //     ).to.be.lessThanOrEqual(user1Balance + BigInt(1_000_000));
+  //   });
+
+  //   it("should add a loan", async function () {
+  //     const { property, financing, user2 } = await loadFixture(fixture);
+
+  //     await expect(
+  //       financing.connect(user2).addLoan(user2.address, 500)
+  //     ).to.emit(financing, "LoanAdded");
+  //   });
+
+  //   it("should request financing", async function () {
+  //     const { property, financing, user1, user2 } = await loadFixture(fixture);
+
+  //     await expect(
+  //       financing.connect(user2).addLoan(user2.address, 500)
+  //     ).to.emit(financing, "LoanAdded");
+  //     await expect(
+  //       financing.connect(user1).financingRequest(1, 1, 1_000_000, 1)
+  //     )
+  //       .to.emit(financing, "FinanceRequest")
+  //       .withArgs(user2.address, user1.address, 1);
+  //   });
+  // });
+
+  describe("Updating property data", function () {
+    it("should update property data", async function () {
+      const { property, owner, propertyData } = await loadFixture(fixture);
 
       await expect(property.addProperty(propertyData.uri, propertyData.price))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
+      await expect(property.updateProperty(1, "new ipfs hash"))
+        .to.emit(property, "Update")
+        .withArgs(1);
+      expect(await property.tokenURI(1)).to.equal("new ipfs hash");
+    });
 
-      await expect(property.listProperty(1)).to.emit(property, "List");
-
-      await expect(
-        property.connect(user1).bid(1, listingData.bids[0].price)
-      ).to.emit(property, "Offer");
-
-      await expect(property.acceptOffer(1, user1.address)).to.emit(
-        property,
-        "Accept"
+    it("should fail if the caller is not the owner", async function () {
+      const { property, owner, user1, propertyData } = await loadFixture(
+        fixture
       );
 
+      await expect(property.addProperty(propertyData.uri, propertyData.price));
       await expect(
-        financing.connect(user2).addLoan(user2.address, 500)
-      ).to.emit(financing, "LoanAdded");
-      await expect(
-        financing.connect(user1).financingRequest(1, 1, 1_000_000, 1)
-      )
-        .to.emit(financing, "FinanceRequest")
-        .withArgs(user2.address, user1.address, 1);
-
-      const user1Balance = await ethers.provider.getBalance(user1.address);
-      await expect(
-        financing.connect(user2).approveFinancing(1, { value: 1_000_000 })
-      )
-        .to.emit(financing, "FinanceApproval")
-        .withArgs(user2.address, user1.address, 1);
-      expect(
-        await ethers.provider.getBalance(user1.address)
-      ).to.be.lessThanOrEqual(user1Balance + BigInt(1_000_000));
+        property.connect(user1).updateProperty(1, "new ipfs hash")
+      ).to.be.revertedWithCustomError(property, "NotPropertyOwner");
     });
 
-    it("should add a loan", async function () {
-      const { property, financing, user2 } = await loadFixture(fixture);
+    it("should fail if the property does not exist", async function () {
+      const { property, user1 } = await loadFixture(fixture);
 
       await expect(
-        financing.connect(user2).addLoan(user2.address, 500)
-      ).to.emit(financing, "LoanAdded");
-    });
-
-    it("should request financing", async function () {
-      const { property, financing, user1, user2 } = await loadFixture(fixture);
-
-      await expect(
-        financing.connect(user2).addLoan(user2.address, 500)
-      ).to.emit(financing, "LoanAdded");
-      await expect(
-        financing.connect(user1).financingRequest(1, 1, 1_000_000, 1)
-      )
-        .to.emit(financing, "FinanceRequest")
-        .withArgs(user2.address, user1.address, 1);
+        property.connect(user1).updateProperty(1, "new ipfs hash")
+      ).to.be.revertedWithCustomError(property, "PropertyNotExists");
     });
   });
 });

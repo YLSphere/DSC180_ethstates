@@ -7,18 +7,12 @@ import App from "./App.tsx";
 import "@rainbow-me/rainbowkit/styles.css";
 import {
   RainbowKitProvider,
-  getDefaultWallets,
-  connectorsForWallets,
   darkTheme,
+  connectorsForWallets,
+  getDefaultWallets,
 } from "@rainbow-me/rainbowkit";
-import {
-  argentWallet,
-  trustWallet,
-  ledgerWallet,
-} from "@rainbow-me/rainbowkit/wallets";
-import { configureChains, createConfig, WagmiConfig } from "wagmi";
-import { polygon, polygonMumbai, hardhat } from "wagmi/chains";
-import { publicProvider } from "wagmi/providers/public";
+import { WagmiProvider, createConfig, http } from "wagmi";
+import { polygonMumbai } from "wagmi/chains";
 
 import "./height.css"
 
@@ -28,60 +22,47 @@ import { ChakraProvider } from "@chakra-ui/react";
 // import `react-query` components
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [polygon, polygonMumbai, hardhat],
-  [publicProvider()]
-);
-
-const projectId = "70398219d86559f5f2abee2f75af0c41";
-
-const { wallets } = getDefaultWallets({
-  appName: "EthStates",
-  projectId,
-  chains,
-});
-
 const demoAppInfo = {
   appName: "EthStates",
+  projectId: "70398219d86559f5f2abee2f75af0c41",
 };
 
-const connectors = connectorsForWallets([
-  ...wallets,
-  {
-    groupName: "Other",
-    wallets: [
-      argentWallet({ projectId, chains }),
-      trustWallet({ projectId, chains }),
-      ledgerWallet({ projectId, chains }),
-    ],
-  },
-]);
+const { wallets } = getDefaultWallets({
+  projectId: demoAppInfo.projectId,
+  appName: demoAppInfo.appName,
+});
 
-const wagmiConfig = createConfig({
-  autoConnect: true,
+const connectors = connectorsForWallets(wallets, {
+  projectId: demoAppInfo.projectId,
+  appName: demoAppInfo.appName,
+});
+
+const config = createConfig({
+  chains: [polygonMumbai],
   connectors,
-  publicClient,
-  webSocketPublicClient,
+  transports: {
+    [polygonMumbai.id]: http(import.meta.env.VITE_ALCHEMY_MUMBAI_URL),
+  },
 });
 
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider
-        theme={darkTheme()}
-        chains={chains}
-        appInfo={demoAppInfo}
-      >
-        <QueryClientProvider client={queryClient}>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider
+          theme={darkTheme()}
+          initialChain={polygonMumbai}
+          appInfo={demoAppInfo}
+        >
           <ChakraProvider>
             <BrowserRouter>
               <App />
             </BrowserRouter>
           </ChakraProvider>
-        </QueryClientProvider>
-      </RainbowKitProvider>
-    </WagmiConfig>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   </React.StrictMode>
 );
