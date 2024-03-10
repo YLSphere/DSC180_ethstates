@@ -28,7 +28,7 @@ export function AcceptButton({ isAccepted, propertyId, bidder, refetch }: Props)
         duration: 5000,
         isClosable: true,
       });
-      refetch();
+      setTimeout(refetch, 5000);
     }
 
     if (isConfirming) {

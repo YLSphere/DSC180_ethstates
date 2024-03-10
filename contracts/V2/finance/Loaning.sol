@@ -7,6 +7,7 @@ contract LoaningContract {
         address lender;
         uint256 annualInterestRate; // in percentage (e.g 4.56% = 456)
         uint256 maxDurationInMonths; // in months
+        uint256 loanId;
     }
 
     uint256 public loanCount; // total number of lenders
@@ -25,6 +26,10 @@ contract LoaningContract {
         _;
     }
 
+    function __LoaningContract_init() internal {
+        loanCount = 0;
+    }
+
     // Add loan to lenders array
     function addLoan(
         address _lender,
@@ -35,7 +40,8 @@ contract LoaningContract {
         loans[loanCount] = Loan({
             lender: _lender,
             annualInterestRate: _annualInterestRate,
-            maxDurationInMonths: _maxDurationInMonths
+            maxDurationInMonths: _maxDurationInMonths,
+            loanId: loanCount
         });
         emit LoanAdded(loanCount);
     }

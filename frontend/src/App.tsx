@@ -9,6 +9,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 import ScrollToTop from "./components/ScrollToTop";
+import { Loan } from "./pages/Loan";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/property" element={<PropertyItem />} />
           {/* <Route path="/property/bids" element={<PropertyBid />} /> */}
           <Route path="/profile" element={<Profile />} />
+          <Route path='/loans/:propertyId' element={<Loan />} />
           <Route path="*" element={<NotFound />}/>
         </Routes>
       </Container>

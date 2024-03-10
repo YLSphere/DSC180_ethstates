@@ -30,7 +30,7 @@ export default function PropertyApproval({ nft, address, refetch }: Props) {
         duration: 5000,
         isClosable: true,
       });
-      setTimeout(refetch, 5000);
+      refetch();
     }
 
     if (isConfirming) {
@@ -64,29 +64,23 @@ export default function PropertyApproval({ nft, address, refetch }: Props) {
     }
   }, [isConfirmed, isConfirming, status]);
 
-  if (
-    address &&
-    nft.listing?.propertyId === nft.property.propertyId && // is listed
-    nft.listing?.acceptedBid?.bidder === address && // is the accepted bidder
-    nft.listing?.sellerApproved === true && // seller approved
-    nft.listing?.buyerApproved === false // buyer not approved
-  ) {
-    return (
-      <Button
-        colorScheme="green"
-        onClick={() =>
-          writeContract({
-            address: contractAddress.ListingContractProxy as `0x${string}`,
-            abi: marketplaceArtifact.abi,
-            functionName: "approveTransferAsBuyer",
-            args: [BigInt(nft.property.propertyId)],
-            value: ethers.parseEther(nft.listing!.acceptedBid!.bidPrice.toString()),
-          })
-        }
-      >
-        Approve
-      </Button>
-    );
-  }
-  return <></>;
+  return (
+    <Button
+      colorScheme="green"
+      onClick={() =>
+        writeContract({
+          address: contractAddress.ListingContractProxy as `0x${string}`,
+          abi: marketplaceArtifact.abi,
+          functionName: "approveTransferAsBuyer",
+          args: [BigInt(nft.property.propertyId)],
+          value: ethers.parseEther(
+            nft.listing!.acceptedBid!.bidPrice.toString()
+          ),
+          account: address,
+        })
+      }
+    >
+      Approve
+    </Button>
+  );
 }

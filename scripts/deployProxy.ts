@@ -27,7 +27,7 @@ async function main(): Promise<void> {
     marketplaceName
   );
   const marketplaceProxy = await upgrades.deployProxy(Marketplace, [
-    financingAddress,
+    await financingProxy.getAddress(),
   ]);
   await marketplaceProxy.waitForDeployment();
   const marketplaceAddress = await upgrades.erc1967.getImplementationAddress(

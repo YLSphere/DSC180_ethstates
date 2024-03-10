@@ -18,13 +18,14 @@ import Slideshow from "../components/property/Slideshow";
 import PropertyPrice from "../components/property/PropertyPrice";
 import PropertyListing from "../components/property/PropertyListing";
 import PropertyBidding from "../components/property/PropertyBidding";
-import PropertyApproval from "../components/property/PropertyApproval";
+// import PropertyApproval from "../components/property/PropertyApproval";
 import PropertyDetail from "../components/property/PropertyDetail";
 import BiddingPool from "../components/property/BiddingPool";
 import FinancingStatus from "../components/property/FinancingStatus";
 import { CHAIN_ID } from "../types/constant";
 import { PropertyRemoval } from "../components/property/PropertyRemoval";
 import { EditButton } from "../components/property/buttons/EditButton";
+import { FinancingButton } from "../components/financing/FinancingButton";
 
 export default function PropertyItem() {
   const location = useLocation();
@@ -93,7 +94,8 @@ export default function PropertyItem() {
             <PropertyPrice address={address} nft={nft} refetch={refetch} />
             <PropertyListing address={address} nft={nft} refetch={refetch} />
             <PropertyBidding address={address} nft={nft} refetch={refetch} />
-            <PropertyApproval address={address} nft={nft} refetch={refetch} />
+            {/* <PropertyApproval address={address} nft={nft} refetch={refetch} /> */}
+            <FinancingButton address={address} nft={nft} refetch={refetch} />
             <EditButton nft={nft} address={address} refetch={refetch} />
             <PropertyRemoval address={address} nft={nft} />
           </HStack>

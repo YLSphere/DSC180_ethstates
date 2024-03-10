@@ -3,6 +3,7 @@ import { getFinancingContract } from "../../queries/dapp";
 import { Loan, LoanResult, LoanResultIndex } from "../../types/financing";
 
 export function useGetLoans(address: `0x${string}` | undefined) {
+  address = address || import.meta.env.VITE_MARKETPLACE_DEFAULT_ADDRESS;
   return useQuery({
     queryKey: ["dapp", "getLoans", address],
     queryFn: async (): Promise<Loan[]> => {

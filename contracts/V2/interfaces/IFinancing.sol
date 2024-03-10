@@ -4,7 +4,9 @@ pragma solidity ^0.8.23;
 interface IFinancing {
     struct Loan {
         address lender;
-        uint256 annualInterestRate;
+        uint256 annualInterestRate; // in percentage (e.g 4.56% = 456)
+        uint256 maxDurationInMonths; // in months
+        uint256 loanId;
     }
 
     enum FinancingStatus {
@@ -51,6 +53,7 @@ interface IFinancing {
     );
 
     function financingRequest(
+        address _loaner,
         uint256 _loanId,
         uint256 _propertyId,
         uint256 _loanAmount, // in wei

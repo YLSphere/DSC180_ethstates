@@ -16,7 +16,7 @@ export interface Loan {
   maxDurationInMonths: number;
 }
 
-enum FinancingStatus {
+export enum FinancingStatus {
   None,
   Pending,
   Rejected,
