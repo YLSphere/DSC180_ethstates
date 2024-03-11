@@ -19,6 +19,9 @@ const Links = [
   { name: "Marketplace", href: "/marketplace" },
   { name: "List Property", href: "/listProperty" },
   { name: "Profile", href: "/profile" },
+  { name: "Sign Up", href: "/signup"},
+  { name: "Financing Options", href: "/FinanceOptions"},
+  { name: "Investor Sign Up", href: "/investorLogin"},
 ];
 
 const NavLink = (props: Props) => {

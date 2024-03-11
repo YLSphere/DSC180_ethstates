@@ -9,8 +9,11 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Profile from "./pages/Profile";
 import NavBar from "./components/NavBar";
+import DisplayInvestors from "./pages/InvestorDisplay";
+import InvestorSignup from "./pages/InvestorSignUp";
 import { getAuth, onAuthStateChanged,User } from 'firebase/auth';
 import ScrollToTop from "./components/ScrollToTop";
+
 
 
 
@@ -43,6 +46,8 @@ function App() {
                   {/* User is not signed in, show the signup and login routes */}
                   <Route path="/signup" element={<SignUp />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/investorLogin" element={<InvestorSignup/>} />
+                  <Route path="/FinanceOptions" element={<DisplayInvestors/>} />
               {/* Always show the Home route */}
               <Route path="/" element={<Home />} />
             </Routes>
