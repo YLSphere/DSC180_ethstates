@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route,useNavigate } from "react-router-dom";
-import React, { useState, useEffect } from 'react';
 import { Container } from '@chakra-ui/react'
 import Home from "./pages/Home";
 import Marketplace from "./pages/Marketplace";
