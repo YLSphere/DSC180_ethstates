@@ -5,20 +5,30 @@ import {
   Text,
   Stack,
 } from "@chakra-ui/react";
+import "../../../fonts/IBMPlexSansCondensed-Regular.ttf";
+import "../../../fonts/IBMPlexSans-Regular.ttf";
+import "../../../fonts/JosefinSans-Regular.ttf";
+import "../App.css";
 
 export default function Home() {
   return (
-    <>
-      <Container maxW={"3xl"}>
-        <Stack
-          as={Box}
-          textAlign={"center"}
-          spacing={{ base: 8, md: 14 }}
-          py={{ base: 36, md: 48 }}
+    <Box>
+      <Stack
+        as={Box}
+        textAlign={"center"}
+        spacing={{ base: 8, md: 10 }}
+        py={{ base: 36, md: 48 }}
+      >
+        <Heading
+          fontFamily="Josefin Sans"
+          fontWeight={600}
+          fontSize={{ base: "2xl", sm: "4xl", md: "6xl" }}
+          lineHeight={"110%"}
+          
         >
           <Heading
             fontWeight={600}
-            fontSize={{ base: "2xl", sm: "4xl", md: "6xl" }}
+            fontSize={{ base: "4xl", sm: "4xl", md: "6xl" }}
             lineHeight={"110%"}
           >
             List your property on <br />
@@ -26,13 +36,15 @@ export default function Home() {
               EthStates
             </Text>
           </Heading>
-          <Text color={"gray.500"}>
-            Monetize your content by charging your most loyal readers and reward
-            them loyalty points. Give back to your loyal readers by granting
-            them access to your pre-releases and sneak-peaks.
+          <Text fontSize={"larger"} color={"gray.500"}>
+            Real Estate for real people.
           </Text>
-        </Stack>
-      </Container>
-    </>
+        </Heading>
+        <Text color={"gray.800"} fontFamily = "Josefin Sans" fontSize = "md" fontWeight={400}>
+          Real Estate for real people.
+        </Text>
+      </Stack>
+    </Box>
   );
 }
+

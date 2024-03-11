@@ -6,9 +6,11 @@ import {
   useDisclosure,
   useColorModeValue,
   Stack,
+  Image,
 } from "@chakra-ui/react";
 import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import Logo from "../assets/logo.webp";
 
 interface Props {
   href: string;
@@ -16,12 +18,13 @@ interface Props {
 }
 
 const Links = [
-  { name: "Marketplace", href: "/marketplace" },
+  { name: "Marketplace", href: "/" },
   { name: "List Property", href: "/listProperty" },
   { name: "Profile", href: "/profile" },
   { name: "Sign Up", href: "/signup"},
   { name: "Financing Options", href: "/FinanceOptions"},
   { name: "Investor Sign Up", href: "/investorLogin"},
+  { name: "For Investors", href: "/forInvestors" },
 ];
 
 const NavLink = (props: Props) => {
@@ -48,8 +51,8 @@ export default function NavBar() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <Box bg={useColorModeValue("gray.100", "gray.900")} px={4}>
-      <Flex h={16} alignItems={"center"} justifyContent={"space-between"}>
+    <Box bg = 'rgba(0,0,0,0.5)' px={4} fontFamily = 'Josefin Sans' backgroundColor='transparent'>
+      <Flex h={16} alignItems={"center"} justifyContent={"space-between"} >
         <IconButton
           size={"md"}
           icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
@@ -58,7 +61,9 @@ export default function NavBar() {
           onClick={isOpen ? onClose : onOpen}
         />
         <HStack spacing={8} alignItems={"center"}>
-          <Box as="a" href="/">EthStates</Box>
+          <Box as="a" href="/">
+            <Image alt="Logo" src={Logo} w={8} h={8} />
+          </Box>
           <HStack as={"nav"} spacing={4} display={{ base: "none", md: "flex" }}>
             {Links.map((link) => (
               <NavLink key={link.name} href={link.href}>

@@ -3,21 +3,26 @@ import {
   Container,
   Heading,
   Spinner,
-  Flex,
   FormControl,
   FormLabel,
   Input,
   Text,
 } from "@chakra-ui/react";
-import NftCard from "../components/templates/property/NftCard";
-import NftCollection from "../components/templates/property/NftCollection";
-import { useGetAllListings } from "../hooks/dapp/useListing";
+import NftCard from "../components/property/NftCard";
+import NftCollection from "../components/property/NftCollection";
+import { useGetAllListings } from "../hooks/marketplace/useListing";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
-import { Nft } from "../types/dapp";
+import { Nft } from "../types/listing";
+
+import "../../../fonts/IBMPlexSansCondensed-Regular.ttf";
+import "../../../fonts/IBMPlexSans-Regular.ttf";
+import "../../../fonts/JosefinSans-Regular.ttf";
+import "../App.css";
+import { CHAIN_ID } from "../types/constant";
 
 export default function Marketplace() {
-  const { address, isConnected } = useAccount();
+  const { address, chain, isConnected } = useAccount();
   const [nfts, setNfts] = useState<Nft[] | undefined>([]);
   const { isLoading, data } = useGetAllListings(address);
   const [filters, setFilters] = useState({
@@ -29,11 +34,10 @@ export default function Marketplace() {
   });
 
   useEffect(() => {
-    if (isConnected && !isLoading) {
-      console.log(data);
+    if (!isLoading) {
       setNfts(data);
     }
-  }, [isConnected, isLoading, data]);
+  }, [isLoading, data]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,18 +48,23 @@ export default function Marketplace() {
   const filteredNfts = nfts?.filter(
     (nft) =>
       (filters.bedrooms === "" ||
-        nft.bedrooms === parseInt(filters.bedrooms)) &&
+        nft.pinataContent.bedrooms === parseInt(filters.bedrooms)) &&
       (filters.bathrooms === "" ||
-        nft.bathrooms === parseInt(filters.bathrooms)) &&
+        nft.pinataContent.bathrooms === parseInt(filters.bathrooms)) &&
       (filters.city === "" ||
-        nft.city.toLowerCase().includes(filters.city.toLowerCase())) &&
+        nft.pinataContent.city
+          .toLowerCase()
+          .includes(filters.city.toLowerCase())) &&
       (filters.state === "" ||
-        nft.state.toLowerCase().includes(filters.state.toLowerCase())) &&
-      (filters.zipCode === "" || nft.zipCode.includes(filters.zipCode))
+        nft.pinataContent.state
+          .toLowerCase()
+          .includes(filters.state.toLowerCase())) &&
+      (filters.zipCode === "" ||
+        nft.pinataContent.zipCode.includes(filters.zipCode))
   );
 
-  // Wallet not connected
-  if (!isConnected) {
+  // Wrong network
+  if (isConnected && chain?.id !== CHAIN_ID) {
     return (
       <main>
         <Container
@@ -66,7 +75,7 @@ export default function Marketplace() {
           maxWidth="container.lg"
         >
           <Text fontSize={"3xl"} color={"gray.500"}>
-            Connect to your wallet first!
+            Connect to polygon mumbai testnet!
           </Text>
         </Container>
       </main>
@@ -92,8 +101,8 @@ export default function Marketplace() {
 
   // NFTs are loaded
   return (
-    <main>
-      <Container maxWidth="container.lg" my={5}>
+    <Box className = 'font-body'>
+      <Container maxWidth="container.lg" my={5} >
         <Heading as="h1" size="xl" mt={8}>
           Marketplace{" "}
           <Badge
@@ -105,21 +114,25 @@ export default function Marketplace() {
             {nfts?.length}
           </Badge>
         </Heading>
-        <Flex wrap="wrap" justifyContent="space-between" my={5}>
-          <FormControl w="200px" mr={2}>
+        <SimpleGrid columns={{ base: 1, sm: 4 }} spacing={3} my={5}>
+          <FormControl>
             <FormLabel>Bedrooms</FormLabel>
             <Input
               name="bedrooms"
               onChange={handleFilterChange}
               placeholder="Filter by Bedrooms"
+              borderWidth={'2px'}
+              borderColor={'gray.700'}
             />
           </FormControl>
-          <FormControl w="200px" mr={2}>
+          <FormControl>
             <FormLabel>City</FormLabel>
             <Input
               name="city"
               onChange={handleFilterChange}
               placeholder="Filter by City"
+              borderWidth={'2px'}
+              borderColor={'gray.700'}
             />
           </FormControl>
 
@@ -129,43 +142,44 @@ export default function Marketplace() {
               name="state"
               onChange={handleFilterChange}
               placeholder="Filter by State"
+              borderWidth={'2px'}
+              borderColor={'gray.700'}
             />
           </FormControl>
 
-          <FormControl w="200px" mr={2}>
+          <FormControl>
             <FormLabel>Zip Code</FormLabel>
             <Input
               name="zipCode"
               onChange={handleFilterChange}
               placeholder="Filter by Zip Code"
+              borderWidth={'2px'}
+              borderColor={'gray.700'}
             />
           </FormControl>
-        </Flex>
+        </SimpleGrid>
 
         <NftCollection>
           {filteredNfts?.map((nft, i) => (
             <NftCard
               key={i}
-              propertyId={nft.propertyId}
-              beds={nft.bedrooms}
-              baths={nft.bathrooms}
-              streetAddress={nft.streetAddress}
-              formattedPrice={new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-                maximumFractionDigits: 0,
-              }).format(nft.price)}
+              propertyId={nft.property.propertyId}
+              beds={nft.pinataContent.bedrooms}
+              baths={nft.pinataContent.bathrooms}
+              streetAddress={nft.pinataContent.streetAddress}
+              price={nft?.property.price.toFixed(2).toString()}
               imageUrl={
-                nft.images[0]
+                nft.pinataContent.images[0]
                   ? `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${
-                      nft.images[0]
+                      nft.pinataContent.images[0]
                     }`
                   : ""
               }
+              bidders={nft.listing?.bids?.length}
             />
           ))}
         </NftCollection>
       </Container>
-    </main>
+    </Box>
   );
 }

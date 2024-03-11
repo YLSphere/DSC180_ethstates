@@ -1,18 +1,27 @@
-import { Badge, Container, Heading, Spinner, Text } from "@chakra-ui/react";
+import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  AlertTitle,
+  Badge,
+  Container,
+  Heading,
+  Spinner,
+} from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 
-import NftCard from "../components/templates/property/NftCard";
-import NftCollection from "../components/templates/property/NftCollection";
+import NftCard from "../components/property/NftCard";
+import NftCollection from "../components/property/NftCollection";
 
-import { useGetAllPropertiesByOwner } from "../hooks/dapp/useProperty";
+import { useGetAllPropertiesByOwner } from "../hooks/marketplace/useProperty";
 
-import { Nft } from "../types/dapp";
+import { Nft } from "../types/listing";
+import { CHAIN_ID } from "../types/constant";
 
 export default function Profile() {
   const [nfts, setNfts] = useState<Nft[] | undefined>([]);
-
-  const { address, isConnected } = useAccount();
+  const { address, chain, isConnected } = useAccount();
   const { isFetched, data } = useGetAllPropertiesByOwner(address);
 
   useEffect(() => {
@@ -29,12 +38,59 @@ export default function Profile() {
           display="flex"
           justifyContent="center"
           alignItems="center"
-          height="90vh"
-          maxWidth="container.lg"
+          height="80vh"
+          maxWidth="container.sm"
         >
-          <Text fontSize={"3xl"} color={"gray.500"}>
-            Connect to your wallet first!
-          </Text>
+          <Alert
+            status="error"
+            variant="subtle"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            textAlign="center"
+            height="200px"
+          >
+            <AlertIcon boxSize={10} />
+            <AlertTitle mt={4} mb={1} fontSize="lg">
+              Wallet not found
+            </AlertTitle>
+            <AlertDescription maxWidth="sm">
+              Please connect to your web3 wallet to continue.
+            </AlertDescription>
+          </Alert>
+        </Container>
+      </main>
+    );
+  }
+
+  // Wrong network
+  if (isConnected && chain?.id !== CHAIN_ID) {
+    return (
+      <main>
+        <Container
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="80vh"
+          maxWidth="container.sm"
+        >
+          <Alert
+            status="error"
+            variant="subtle"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            textAlign="center"
+            height="200px"
+          >
+            <AlertIcon boxSize={10} />
+            <AlertTitle mt={4} mb={1} fontSize="lg">
+              Wrong network
+            </AlertTitle>
+            <AlertDescription maxWidth="sm">
+              Please connect to Polygon Mumbai Testnet to continue.
+            </AlertDescription>
+          </Alert>
         </Container>
       </main>
     );
@@ -62,7 +118,7 @@ export default function Profile() {
     <main>
       <Container maxWidth="container.lg">
         <Heading as="h1" size="xl" mt={8}>
-          NFT Collection{" "}
+          Properties Owned{" "}
           <Badge
             borderRadius="full"
             fontSize="x-large"
@@ -75,23 +131,18 @@ export default function Profile() {
 
         <NftCollection>
           {nfts?.map((nft, i) => {
-            // console.log(nft);
             return (
               <NftCard
                 key={i}
-                propertyId={nft.propertyId}
-                beds={nft.bedrooms}
-                baths={nft.bathrooms}
-                streetAddress={nft.streetAddress}
-                formattedPrice={new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                  maximumFractionDigits: 0,
-                }).format(nft.price)}
+                propertyId={nft.property.propertyId}
+                beds={nft.pinataContent.bedrooms}
+                baths={nft.pinataContent.bathrooms}
+                streetAddress={nft.pinataContent.streetAddress}
+                price={nft.property.price.toFixed(2).toString()}
                 imageUrl={
-                  nft.images[0]
+                  nft.pinataContent.images[0]
                     ? `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${
-                        nft.images[0]
+                        nft.pinataContent.images[0]
                       }`
                     : ""
                 }

@@ -4,9 +4,11 @@ import { expect } from "chai";
 
 describe("EthState", function () {
   async function fixture() {
+    const Financing = await ethers.getContractFactory("FinancingContract");
+    const financingAddress = await (await Financing.deploy()).getAddress();
     const Property = await ethers.getContractFactory("EthState");
     const [owner, user1, user2] = await ethers.getSigners();
-    const property = await upgrades.deployProxy(Property);
+    const property = await upgrades.deployProxy(Property, [financingAddress]);
     await property.waitForDeployment();
 
     const propertyData = {
@@ -101,7 +103,7 @@ describe("EthState", function () {
         .withArgs(owner.address, 1, listingData.sellPrice);
       await expect(
         property.listProperty(1, listingData.sellPrice)
-      ).to.be.revertedWith("Property is already listed");
+      ).to.be.revertedWithCustomError(property, "PropertyAlreadyListed");
     });
 
     it("should fail if the property does not exist", async function () {
@@ -116,8 +118,9 @@ describe("EthState", function () {
       await expect(property.addProperty(propertyData.uri))
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
-      await expect(property.listProperty(1, 0)).to.be.revertedWith(
-        "Sell price cannot be zero"
+      await expect(property.listProperty(1, 0)).to.be.revertedWithCustomError(
+        property,
+        "PriceNotMet"
       );
     });
   });
@@ -145,7 +148,7 @@ describe("EthState", function () {
         .withArgs(owner.address, 1);
       await expect(
         property.connect(user1).bid(1, listingData.bids[0].price)
-      ).to.be.revertedWith("Property is not listed");
+      ).to.be.revertedWithCustomError(property, "PropertyNotListed");
     });
 
     it("should fail if the bidder is the owner", async function () {
@@ -177,7 +180,7 @@ describe("EthState", function () {
         .withArgs(user1.address, 1, listingData.bids[0].price);
       await expect(
         property.connect(user1).bid(1, listingData.bids[0].price)
-      ).to.be.revertedWith("Buyer already bid on this property");
+      ).to.be.revertedWithCustomError(property, "BuyerAlreadyBid");
     });
 
     it("should fail if property unlisted while bidding", async function () {
@@ -201,7 +204,7 @@ describe("EthState", function () {
 
       await expect(
         property.connect(user1).bid(1, listingData.bids[0].price)
-      ).to.be.revertedWith("Property is not listed");
+      ).to.be.revertedWithCustomError(property, "PropertyNotListed");
     });
   });
 
@@ -265,9 +268,9 @@ describe("EthState", function () {
         .to.emit(property, "Add")
         .withArgs(owner.address, 1);
 
-      await expect(property.acceptOffer(1, user1.address)).to.be.revertedWith(
-        "Property is not listed"
-      );
+      await expect(
+        property.acceptOffer(1, user1.address)
+      ).to.be.revertedWithCustomError(property, "PropertyNotListed");
     });
 
     it("should fail if the property doesn't exist", async function () {
@@ -290,9 +293,9 @@ describe("EthState", function () {
         .to.emit(property, "List")
         .withArgs(owner.address, 1, listingData.sellPrice);
 
-      await expect(property.acceptOffer(1, user1.address)).to.be.revertedWith(
-        "Buyer not found in bids"
-      );
+      await expect(
+        property.acceptOffer(1, user1.address)
+      ).to.be.revertedWithCustomError(property, "BuyerDidNotBid");
     });
   });
 
@@ -360,7 +363,82 @@ describe("EthState", function () {
         property.connect(owner).approveTransferAsBuyer(1, {
           value: listingData.bids[0].price,
         })
-      ).to.be.revertedWith("Caller is not the buyer of this property");
+      ).to.be.revertedWithCustomError(property, "NotAcceptedBuyer");
+    });
+  });
+
+  describe("Buy a property with financing", function () {
+    it("should receive fund with financing", async function () {
+      const { property, owner, user1, user2, propertyData, listingData } =
+        await loadFixture(fixture);
+
+      await expect(property.addProperty(propertyData.uri))
+        .to.emit(property, "Add")
+        .withArgs(owner.address, 1);
+
+      await expect(property.listProperty(1, listingData.sellPrice))
+        .to.emit(property, "List")
+        .withArgs(owner.address, 1, listingData.sellPrice);
+
+      await expect(property.connect(user1).bid(1, listingData.bids[0].price))
+        .to.emit(property, "Offer")
+        .withArgs(user1.address, 1, listingData.bids[0].price);
+
+      await expect(property.acceptOffer(1, user1.address))
+        .to.emit(property, "Accept")
+        .withArgs(owner.address, 1, listingData.bids[0].price);
+
+      const financing = await ethers.getContractAt(
+        "IFinancing",
+        await property.financingContract()
+      );
+      await expect(
+        financing.connect(user2).addLoan(user2.address, 500)
+      ).to.emit(financing, "LoanAdded");
+      await expect(
+        financing.connect(user1).financingRequest(1, 1, 1_000_000, 1)
+      )
+        .to.emit(financing, "FinanceRequest")
+        .withArgs(user2.address, user1.address, 1);
+
+      const user1Balance = await ethers.provider.getBalance(user1.address);
+      await expect(
+        financing.connect(user2).approveFinancing(1, { value: 1_000_000 })
+      )
+        .to.emit(financing, "FinanceApproval")
+        .withArgs(user2.address, user1.address, 1);
+      expect(
+        await ethers.provider.getBalance(user1.address)
+      ).to.be.lessThanOrEqual(user1Balance + BigInt(1_000_000));
+    });
+
+    it("should add a loan", async function () {
+      const { property, user2 } = await loadFixture(fixture);
+
+      const financing = await ethers.getContractAt(
+        "IFinancing",
+        await property.financingContract()
+      );
+      await expect(
+        financing.connect(user2).addLoan(user2.address, 500)
+      ).to.emit(financing, "LoanAdded");
+    });
+
+    it("should request financing", async function () {
+      const { property, user1, user2 } = await loadFixture(fixture);
+
+      const financing = await ethers.getContractAt(
+        "IFinancing",
+        await property.financingContract()
+      );
+      await expect(
+        financing.connect(user2).addLoan(user2.address, 500)
+      ).to.emit(financing, "LoanAdded");
+      await expect(
+        financing.connect(user1).financingRequest(1, 1, 1_000_000, 1)
+      )
+        .to.emit(financing, "FinanceRequest")
+        .withArgs(user2.address, user1.address, 1);
     });
   });
 });
