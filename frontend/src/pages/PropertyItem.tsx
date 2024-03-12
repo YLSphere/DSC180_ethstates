@@ -1,11 +1,14 @@
 import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  AlertTitle,
   Box,
   Center,
   Container,
   HStack,
   Heading,
   Spinner,
-  Text,
 } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 
@@ -54,17 +57,32 @@ export default function PropertyItem() {
           display="flex"
           justifyContent="center"
           alignItems="center"
-          height="90vh"
-          maxWidth="container.lg"
+          height="80vh"
+          maxWidth="container.sm"
         >
-          <Text fontSize={"3xl"} color={"gray.500"}>
-            Connect to polygon mumbai testnet!
-          </Text>
+          <Alert
+            status="error"
+            variant="subtle"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            textAlign="center"
+            height="200px"
+          >
+            <AlertIcon boxSize={10} />
+            <AlertTitle mt={4} mb={1} fontSize="lg">
+              Wrong network
+            </AlertTitle>
+            <AlertDescription maxWidth="sm">
+              Please connect to Polygon Mumbai Testnet to continue.
+            </AlertDescription>
+          </Alert>
         </Container>
       </main>
     );
   }
 
+  // Loading
   if (!nft) {
     return (
       <main>
@@ -78,7 +96,9 @@ export default function PropertyItem() {
         </Box>
       </main>
     );
-  } else if (shouldDisplay) {
+  }
+  
+  if (shouldDisplay) {
     return (
       <main>
         <Container maxW={"max-content"} my={3}>
@@ -113,12 +133,26 @@ export default function PropertyItem() {
           display="flex"
           justifyContent="center"
           alignItems="center"
-          height="90vh"
-          maxWidth="container.lg"
+          height="80vh"
+          maxWidth="container.sm"
         >
-          <Text fontSize={"3xl"} color={"gray.500"}>
-            You are not allowed to view this property
-          </Text>
+          <Alert
+            status="error"
+            variant="subtle"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            textAlign="center"
+            height="200px"
+          >
+            <AlertIcon boxSize={10} />
+            <AlertTitle mt={4} mb={1} fontSize="lg">
+              Not Authorized
+            </AlertTitle>
+            <AlertDescription maxWidth="sm">
+              You're not authorized to see this NFT.
+            </AlertDescription>
+          </Alert>
         </Container>
       </main>
     );

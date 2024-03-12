@@ -26,7 +26,7 @@ interface Props {
 export default function BiddingPool({ nft, address, refetch }: Props) {
   const isOwner = nft.owner === address;
   const isAccepted = nft.listing?.acceptedBid?.bidPrice !== 0;
-
+  
   if (isOwner) {
     return (
       <Box mt={5}>
@@ -39,7 +39,7 @@ export default function BiddingPool({ nft, address, refetch }: Props) {
               <Tr>
                 <Th>Bidder</Th>
                 <Th isNumeric>Price</Th>
-                <Th>Action</Th>
+                <Th>Actions</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -91,6 +91,7 @@ export default function BiddingPool({ nft, address, refetch }: Props) {
               <Tr>
                 <Th>Bidder</Th>
                 <Th isNumeric>Price</Th>
+                <Th>Actions</Th>
               </Tr>
             </Thead>
             <Tbody>
