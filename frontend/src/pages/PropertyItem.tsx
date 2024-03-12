@@ -13,6 +13,7 @@ import { useAccount } from "wagmi";
 import { useEffect, useState, useRef} from "react";
 import { useParticularProperty } from "../hooks/marketplace/useProperty";
 import { Nft } from "../types/listing";
+import React from "react";
 
 import Slideshow from "../components/property/Slideshow";
 import PropertyPrice from "../components/property/PropertyPrice";

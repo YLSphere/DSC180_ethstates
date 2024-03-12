@@ -9,7 +9,7 @@ import "../../../fonts/IBMPlexSansCondensed-Regular.ttf";
 import "../../../fonts/IBMPlexSans-Regular.ttf";
 import "../../../fonts/JosefinSans-Regular.ttf";
 import "../App.css";
-
+import React from "react";
 export default function Home() {
   return (
     <Box>

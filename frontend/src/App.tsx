@@ -14,6 +14,7 @@ import InvestorSignup from "./pages/InvestorSignUp";
 import { getAuth, onAuthStateChanged,User } from 'firebase/auth';
 import ScrollToTop from "./components/ScrollToTop";
 import {useEffect, useState} from "react";
+import React from "react";
 
 
 

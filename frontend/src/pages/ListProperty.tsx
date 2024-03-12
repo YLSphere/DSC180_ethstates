@@ -19,6 +19,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import Dropzone from "../components/form/Dropzone";
+import React from "react";
 
 import { pinataImage, pinataJson } from "../queries/pinata";
 

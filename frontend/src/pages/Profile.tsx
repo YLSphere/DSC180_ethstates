@@ -10,6 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
+import React from "react";
 
 import NftCard from "../components/property/NftCard";
 import NftCollection from "../components/property/NftCollection";
@@ -141,7 +142,7 @@ export default function Profile() {
                 price={nft.property.price.toFixed(2).toString()}
                 imageUrl={
                   nft.pinataContent.images[0]
-                    ? `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${
+                    ? `${process.env.VITE_PINATA_GATEWAY}/ipfs/${
                         nft.pinataContent.images[0]
                       }`
                     : ""

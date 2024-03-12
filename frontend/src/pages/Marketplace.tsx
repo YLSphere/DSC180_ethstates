@@ -1,5 +1,8 @@
+import React from "react";
 import {
   Badge,
+  Box,
+  SimpleGrid,
   Container,
   Heading,
   Spinner,
@@ -170,7 +173,7 @@ export default function Marketplace() {
               price={nft?.property.price.toFixed(2).toString()}
               imageUrl={
                 nft.pinataContent.images[0]
-                  ? `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${
+                  ? `${process.env.VITE_PINATA_GATEWAY}/ipfs/${
                       nft.pinataContent.images[0]
                     }`
                   : ""

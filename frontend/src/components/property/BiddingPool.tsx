@@ -26,7 +26,7 @@ interface Props {
 export default function BiddingPool({ nft, address, refetch }: Props) {
   const isOwner = nft.owner === address;
   const isAccepted = nft.listing?.acceptedBid?.bidPrice !== 0;
-  const removeBid = useRemoveBid()
+  // const removeBid = useRemoveBid()
   
 
   if (isOwner) {
