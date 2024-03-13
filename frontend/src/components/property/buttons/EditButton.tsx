@@ -133,8 +133,8 @@ export function EditButton({ nft, address, refetch }: Props) {
         duration: 5000,
         isClosable: true,
       });
-      setTimeout(refetch, 3000);
-      setTimeout(onClose, 5000);
+      refetch();
+      onClose();
     }
 
     if (isConfirming) {

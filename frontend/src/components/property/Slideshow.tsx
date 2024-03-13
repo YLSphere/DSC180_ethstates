@@ -27,7 +27,7 @@ export default function Slideshow(props: Props) {
 
   const { images: slides } = props;
   if (slides.length === 0) {
-    slides.push("QmZ6w6DEPXBMtZrzujcNK3AyCSTACc933AW2cbSAk5RD16");
+    slides.push("");
   }
 
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -73,7 +73,11 @@ export default function Slideshow(props: Props) {
                 {sid + 1} / {slidesCount}
               </Text>
               <Image
-                src={`${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${slide}`}
+                src={
+                  slide === ""
+                    ? "https://i.ibb.co/CHQmRsx/pexels-binyamin-mellish-106399.jpg"
+                    : `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${slide}`
+                }
                 objectFit={"contain"}
                 alt="carousel image"
                 boxSize="full"

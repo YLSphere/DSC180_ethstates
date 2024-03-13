@@ -4,15 +4,15 @@ import path from "path";
 import fs from "fs";
 
 // TO DO: Place the address of your proxy here!
-const name = "ListingContract";
-const listingProxyAddress = "0xFa3D231B80FA88Cb293466b892ae5C682A66251D";
+const name = "FinancingContract";
+const proxyAddress = "0x367Cf6cAb7478966f93AcD210f86564AA9d4c057";
 
 async function main(): Promise<void> {
-  const Listing = await ethers.getContractFactory(name);
-  const upgraded = await upgrades.upgradeProxy(listingProxyAddress, Listing);
+  const Contract = await ethers.getContractFactory(name);
+  const upgraded = await upgrades.upgradeProxy(proxyAddress, Contract);
 
   const implementationAddress = await upgrades.erc1967.getImplementationAddress(
-    listingProxyAddress
+    proxyAddress
   );
 
   console.log("The current contract owner is: " + (await upgraded.owner()));
@@ -39,7 +39,7 @@ async function updateImplementationAddress(newAddress: string) {
     const addresses = JSON.parse(data);
 
     // Update the address
-    addresses.ListingContractImplementation = newAddress;
+    addresses.FinancingContractImplementation = newAddress;
 
     // Write the updated JSON back to the file
     await writeFile(

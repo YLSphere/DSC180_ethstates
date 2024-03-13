@@ -7,11 +7,11 @@ interface Props {
 }
 
 export function PropertyRemoval({ nft, address }: Props) {
-  const disableRemove = nft.listing?.acceptedBid?.bidPrice !== 0;
+  const disableRemove = nft.listing?.propertyId !== 0;
 
-  if (!address || nft.owner !== address) {
+  if (!address || nft.owner !== address || disableRemove) {
     return <></>;
   } else {
-    return <RemoveButton propertyId={nft.property.propertyId} isDisabled={disableRemove} />;
+    return <RemoveButton propertyId={nft.property.propertyId} />;
   }
 }

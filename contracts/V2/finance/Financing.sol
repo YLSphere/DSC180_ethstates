@@ -83,11 +83,13 @@ contract FinancingContract is
 
     function initialize() external initializer {
         __Ownable_init();
+        __LoaningContract_init();
         financingCount = 0;
     }
 
     // Lenders shall lend money to the owner of the property
     function financingRequest(
+        address _loaner,
         uint256 _loanId,
         uint256 _propertyId,
         uint256 _loanAmount, // in wei
@@ -95,26 +97,25 @@ contract FinancingContract is
     )
         external
         // Property cannot have active financing with the same loaner
-        cannotFinanceWithSameLoaner(_propertyId, _msgSender())
+        cannotFinanceWithSameLoaner(_propertyId, _loaner)
         returns (uint256)
     {
         Loan storage loan = loans[_loanId];
-        if (loan.lender == address(0)) {
+        if (loan.loanId == 0) {
             revert LoanNotFound();
         }
 
-        address loaner = _msgSender();
         financingCount++;
-        financings[_propertyId] = Financing({
+        financings[financingCount] = Financing({
             propertyId: _propertyId,
-            loaner: loaner,
+            loaner: _loaner,
             loanId: _loanId,
             status: FinancingStatus.Pending,
             loanAmount: _loanAmount,
             durationInMonths: _durationInMonths,
             paidMonths: 0
         });
-        emit FinanceRequest(loan.lender, loaner, _propertyId);
+        emit FinanceRequest(loan.lender, _loaner, _propertyId);
         return financingCount;
     }
 
@@ -132,6 +133,10 @@ contract FinancingContract is
         }
 
         financing.status = FinancingStatus.Active;
+        // transfer the loan amount to the loaner
+        payable(financing.loaner).transfer(financing.loanAmount);
+        // transfer the remaining amount to the lender
+        payable(_msgSender()).transfer(msg.value - financing.loanAmount);
         emit FinanceApproval(
             _msgSender(),
             financing.loaner,
@@ -164,7 +169,8 @@ contract FinancingContract is
         uint256 _propertyId
     ) external view returns (uint256) {
         // TODO: Implement remaining balance
-        Financing storage financing = financings[_propertyId];
+        uint256 financingId = propertyToFinancing[_propertyId];
+        Financing storage financing = financings[financingId];
         if (financing.status != FinancingStatus.Active) {
             return 0;
         }
@@ -175,6 +181,7 @@ contract FinancingContract is
     function payOffFinancing(uint256 _propertyId) external {
         // TODO: Implement pay off financing
         Financing storage financing = financings[_propertyId];
+        financing.status = FinancingStatus.PaidOff;
         emit PaidOff(
             loans[financing.loanId].lender,
             financing.loaner,
@@ -197,6 +204,13 @@ contract FinancingContract is
         uint256 _propertyId
     ) external view returns (uint256) {
         return propertyToFinancing[_propertyId];
+    }
+
+    // Function to get financing with financingId
+    function getFinancingWithId(
+        uint256 _financingId
+    ) external view exists(_financingId) returns (Financing memory) {
+        return financings[_financingId];
     }
 
     function setFinancingId(

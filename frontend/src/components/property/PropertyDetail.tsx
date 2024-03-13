@@ -31,6 +31,10 @@ export default function PropertyDetail({ nft }: Props) {
           </Thead>
           <Tbody>
             <Tr>
+              <Td>Property ID</Td>
+              <Td>{nft.property.propertyId}</Td>
+            </Tr>
+            <Tr>
               <Td>Street Address</Td>
               <Td>{nft.pinataContent.streetAddress}</Td>
             </Tr>

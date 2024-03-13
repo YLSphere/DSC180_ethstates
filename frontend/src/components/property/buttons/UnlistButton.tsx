@@ -27,7 +27,7 @@ export function UnlistButton({ isDisabled, propertyId, refetch }: Props) {
         duration: 5000,
         isClosable: true,
       });
-      setTimeout(refetch, 3000);
+      refetch();
     }
 
     if (isConfirming) {

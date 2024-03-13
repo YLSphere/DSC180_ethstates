@@ -11,7 +11,7 @@ interface Props {
 
 export function ListButton({ propertyId, refetch }: Props) {
   const toast = useToast();
-  const { data: hash, writeContract, status } = useWriteContract();
+  const { data: hash, writeContract, status, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
       hash,
@@ -26,7 +26,7 @@ export function ListButton({ propertyId, refetch }: Props) {
         duration: 5000,
         isClosable: true,
       });
-      setTimeout(refetch, 3000);
+      refetch();
     }
 
     if (isConfirming) {
@@ -57,6 +57,7 @@ export function ListButton({ propertyId, refetch }: Props) {
         duration: 5000,
         isClosable: true,
       });
+      console.log(error);
     }
   }, [isConfirmed, isConfirming, status]);
 

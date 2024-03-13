@@ -28,20 +28,24 @@ export default function FinancingStatus({ nft }: Props) {
               <Tr>
                 <Th>Feature</Th>
                 <Th>Value</Th>
+                <Th>Unit</Th>
               </Tr>
             </Thead>
             <Tbody>
               <Tr>
                 <Td>Loan Amount</Td>
                 <Td isNumeric>{nft.financing?.loanAmount}</Td>
+                <Td>MATIC</Td>
               </Tr>
               <Tr>
                 <Td>Loan Duration</Td>
                 <Td isNumeric>{nft.financing?.durationInMonths}</Td>
+                <Td>Months</Td>
               </Tr>
               <Tr>
                 <Td>Paid Months</Td>
                 <Td isNumeric>{nft.financing?.paidMonths}</Td>
+                <Td>Months</Td>
               </Tr>
             </Tbody>
           </Table>

@@ -218,7 +218,11 @@ contract ListingContract is
             }
         }
 
-        for (uint256 i = bidIndex; i < listings[_propertyId].bids.length - 1; i++) {
+        for (
+            uint256 i = bidIndex;
+            i < listings[_propertyId].bids.length - 1;
+            i++
+        ) {
             listings[_propertyId].bids[i] = listings[_propertyId].bids[i + 1];
         }
         listings[_propertyId].bids.pop();
@@ -299,6 +303,7 @@ contract ListingContract is
         isAcceptedBuyer(_propertyId, _msgSender())
     {
         uint256 financingId = financingContract.financingRequest(
+            _msgSender(),
             _loanId,
             _propertyId,
             _loanAmount,
@@ -339,7 +344,7 @@ contract ListingContract is
         _transfer(seller, buyer, _propertyId); // transfer property nft to buyer
         financingContract.setFinancingId(
             _propertyId,
-            listings[_propertyId].financingId
+            listings[_propertyId].acceptedBid.financingId
         ); // update financing
 
         delete listings[_propertyId]; // remove from sale

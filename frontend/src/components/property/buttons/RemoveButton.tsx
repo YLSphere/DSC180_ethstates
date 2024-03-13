@@ -21,11 +21,10 @@ import contractAddress from "../../../contracts/contract-address.json";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
-  isDisabled: boolean;
   propertyId: number;
 }
 
-export function RemoveButton({ isDisabled, propertyId }: Props) {
+export function RemoveButton({ propertyId }: Props) {
   const toast = useToast();
   const navigate = useNavigate();
   const { data: hash, writeContract, status } = useWriteContract();
@@ -90,7 +89,7 @@ export function RemoveButton({ isDisabled, propertyId }: Props) {
           size="sm"
           colorScheme="gray"
           onClick={onToggle}
-          isDisabled={isConfirming || isDisabled}
+          isDisabled={isConfirming}
         >
           <DeleteIcon />
         </Button>

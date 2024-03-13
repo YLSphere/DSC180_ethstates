@@ -1,11 +1,14 @@
 import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  AlertTitle,
   Box,
   Center,
   Container,
   HStack,
   Heading,
   Spinner,
-  Text,
 } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 
@@ -18,13 +21,14 @@ import Slideshow from "../components/property/Slideshow";
 import PropertyPrice from "../components/property/PropertyPrice";
 import PropertyListing from "../components/property/PropertyListing";
 import PropertyBidding from "../components/property/PropertyBidding";
-import PropertyApproval from "../components/property/PropertyApproval";
+// import PropertyApproval from "../components/property/PropertyApproval";
 import PropertyDetail from "../components/property/PropertyDetail";
 import BiddingPool from "../components/property/BiddingPool";
 import FinancingStatus from "../components/property/FinancingStatus";
 import { CHAIN_ID } from "../types/constant";
 import { PropertyRemoval } from "../components/property/PropertyRemoval";
 import { EditButton } from "../components/property/buttons/EditButton";
+import { FinancingButton } from "../components/financing/FinancingButton";
 
 export default function PropertyItem() {
   const location = useLocation();
@@ -53,17 +57,32 @@ export default function PropertyItem() {
           display="flex"
           justifyContent="center"
           alignItems="center"
-          height="90vh"
-          maxWidth="container.lg"
+          height="80vh"
+          maxWidth="container.sm"
         >
-          <Text fontSize={"3xl"} color={"gray.500"}>
-            Connect to polygon mumbai testnet!
-          </Text>
+          <Alert
+            status="error"
+            variant="subtle"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            textAlign="center"
+            height="200px"
+          >
+            <AlertIcon boxSize={10} />
+            <AlertTitle mt={4} mb={1} fontSize="lg">
+              Wrong network
+            </AlertTitle>
+            <AlertDescription maxWidth="sm">
+              Please connect to Polygon Mumbai Testnet to continue.
+            </AlertDescription>
+          </Alert>
         </Container>
       </main>
     );
   }
 
+  // Loading
   if (!nft) {
     return (
       <main>
@@ -77,7 +96,9 @@ export default function PropertyItem() {
         </Box>
       </main>
     );
-  } else if (shouldDisplay) {
+  }
+  
+  if (shouldDisplay) {
     return (
       <main>
         <Container maxW={"max-content"} my={3}>
@@ -93,7 +114,8 @@ export default function PropertyItem() {
             <PropertyPrice address={address} nft={nft} refetch={refetch} />
             <PropertyListing address={address} nft={nft} refetch={refetch} />
             <PropertyBidding address={address} nft={nft} refetch={refetch} />
-            <PropertyApproval address={address} nft={nft} refetch={refetch} />
+            {/* <PropertyApproval address={address} nft={nft} refetch={refetch} /> */}
+            <FinancingButton address={address} nft={nft} refetch={refetch} />
             <EditButton nft={nft} address={address} refetch={refetch} />
             <PropertyRemoval address={address} nft={nft} />
           </HStack>
@@ -111,12 +133,26 @@ export default function PropertyItem() {
           display="flex"
           justifyContent="center"
           alignItems="center"
-          height="90vh"
-          maxWidth="container.lg"
+          height="80vh"
+          maxWidth="container.sm"
         >
-          <Text fontSize={"3xl"} color={"gray.500"}>
-            You are not allowed to view this property
-          </Text>
+          <Alert
+            status="error"
+            variant="subtle"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            textAlign="center"
+            height="200px"
+          >
+            <AlertIcon boxSize={10} />
+            <AlertTitle mt={4} mb={1} fontSize="lg">
+              Not Authorized
+            </AlertTitle>
+            <AlertDescription maxWidth="sm">
+              You're not authorized to see this NFT.
+            </AlertDescription>
+          </Alert>
         </Container>
       </main>
     );

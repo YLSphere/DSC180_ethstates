@@ -45,6 +45,7 @@ const Dropzone = ({ onUpload }: Props) => {
           {isDragActive
             ? "Drop the images here"
             : "Drag and drop images here, or click to select files"}
+          {" (Max 5 files)"}
         </Text>
       </div>
 

@@ -38,13 +38,20 @@ export default function PropertyBidding({ nft, address, refetch }: Props) {
       setIsDisabled(true);
       return;
     }
+
+    let found = false;
     nft.listing?.bids?.forEach((bid) => {
       if (bid.bidder === address) {
         setIsDisabled(true);
+        found = true;
         return;
       }
     });
-  }, [nft.listing?.bids, address]);
+
+    if (!found) {
+      setIsDisabled(false);
+    }
+  }, [nft, address]);
 
   useEffect(() => {
     if (isConfirmed) {
@@ -113,7 +120,10 @@ export default function PropertyBidding({ nft, address, refetch }: Props) {
             address: contractAddress.ListingContractProxy as `0x${string}`,
             abi: marketplaceArtifact.abi,
             functionName: "bid",
-            args: [BigInt(nft.property.propertyId), ethers.parseEther(bidPrice.toString())],
+            args: [
+              BigInt(nft.property.propertyId),
+              ethers.parseEther(bidPrice.toString()),
+            ],
           });
         }}
       >
@@ -125,9 +135,9 @@ export default function PropertyBidding({ nft, address, refetch }: Props) {
           alignItems={"center"}
           gap={3}
         >
-          <InputGroup>
+          <InputGroup size="sm">
             <InputRightElement pointerEvents="none">
-              <Image src={Polygon} alt="logo" h={5} w={5} color="gray"/>
+              <Image src={Polygon} alt="logo" h={5} w={5} color="gray" />
             </InputRightElement>
             <NumberInput precision={2}>
               <NumberInputField
@@ -136,7 +146,12 @@ export default function PropertyBidding({ nft, address, refetch }: Props) {
               />
             </NumberInput>
           </InputGroup>
-          <Button type="submit" colorScheme="blue" isDisabled={isDisabled}>
+          <Button
+            type="submit"
+            colorScheme="blue"
+            size="sm"
+            isDisabled={isDisabled}
+          >
             Bid
           </Button>
         </FormControl>
