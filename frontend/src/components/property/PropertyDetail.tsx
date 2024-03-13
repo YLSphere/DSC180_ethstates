@@ -51,6 +51,10 @@ export default function PropertyDetail({ nft }: Props) {
               <Td>{nft.pinataContent.zipCode}</Td>
             </Tr>
             <Tr>
+              <Td>Square Footage</Td>
+              <Td isNumeric>{nft.pinataContent.squareFootage}</Td>
+            </Tr>
+            <Tr>
               <Td>Bedrooms</Td>
               <Td isNumeric>{nft.pinataContent.bedrooms}</Td>
             </Tr>
@@ -61,6 +65,10 @@ export default function PropertyDetail({ nft }: Props) {
             <Tr>
               <Td>Parking Spots</Td>
               <Td isNumeric>{nft.pinataContent.parkingSpots}</Td>
+            </Tr>
+            <Tr>
+              <Td>Additional Features</Td>
+              <Td>{nft.pinataContent.additionalFeatures}</Td>
             </Tr>
           </Tbody>
         </Table>
