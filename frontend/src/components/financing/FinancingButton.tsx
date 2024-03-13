@@ -24,7 +24,6 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
   useReadContract,
-  type UseReadContractsReturnType,
 } from "wagmi";
 import contractAddress from "../../contracts/contract-address.json";
 import financingArtifact from "../../contracts/FinancingContract.json";
@@ -48,7 +47,7 @@ interface Financing {
   paidMonths: bigint;
 }
 
-const statusMap = {
+const statusMap: { [key: number]: string } = {
   0: "None",
   1: "Pending",
   2: "Rejected",
@@ -62,13 +61,16 @@ export function FinancingButton({ nft, address, refetch }: Props) {
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const toast = useToast();
   const { data } = useGetLoans(address);
-  const { data: financingData, isFetched, refetch: refetchFinancing } =
-    useReadContract({
-      address: contractAddress.FinancingContractProxy as `0x${string}`,
-      abi: financingArtifact.abi,
-      functionName: "getFinancingWithId",
-      args: [BigInt(nft.listing?.acceptedBid?.financingId as number)],
-    });
+  const {
+    data: financingData,
+    isFetched,
+    refetch: refetchFinancing,
+  } = useReadContract({
+    address: contractAddress.FinancingContractProxy as `0x${string}`,
+    abi: financingArtifact.abi,
+    functionName: "getFinancingWithId",
+    args: [BigInt(nft.listing?.acceptedBid?.financingId as number)],
+  });
   const { data: hash, writeContract, status } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
@@ -136,13 +138,22 @@ export function FinancingButton({ nft, address, refetch }: Props) {
     if (isFetched && financingData) {
       console.log(financingData);
       setFinancing({
-        propertyId: parseInt(financingData.propertyId.toString()),
-        loaner: financingData.loaner,
-        loanId: parseInt(financingData.loanId.toString()),
-        status: statusMap[parseInt(financingData.status.toString())],
-        loanAmount: parseFloat(ethers.formatEther(financingData.loanAmount)),
-        durationInMonths: parseInt(financingData.durationInMonths.toString()),
-        paidMonths: parseInt(financingData.paidMonths.toString()),
+        propertyId: parseInt(
+          (financingData as Financing).propertyId.toString()
+        ),
+        loaner: (financingData as Financing).loaner,
+        loanId: parseInt((financingData as Financing).loanId.toString()),
+        status:
+          statusMap[parseInt((financingData as Financing).status.toString())],
+        loanAmount: parseFloat(
+          ethers.formatEther((financingData as Financing).loanAmount)
+        ),
+        durationInMonths: parseInt(
+          (financingData as Financing).durationInMonths.toString()
+        ),
+        paidMonths: parseInt(
+          (financingData as Financing).paidMonths.toString()
+        ),
       });
     }
   }, [isFetched, financingData]);
