@@ -193,7 +193,7 @@ export function EditButton({ nft, address, refetch }: Props) {
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
-          <DrawerHeader>Create your account</DrawerHeader>
+          <DrawerHeader>Edit Property</DrawerHeader>
 
           <DrawerBody>
             <form
