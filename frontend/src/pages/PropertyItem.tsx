@@ -74,7 +74,7 @@ export default function PropertyItem() {
               Wrong network
             </AlertTitle>
             <AlertDescription maxWidth="sm">
-              Please connect to Polygon Mumbai Testnet to continue.
+              Please connect to Polygon Amony Testnet to continue.
             </AlertDescription>
           </Alert>
         </Container>

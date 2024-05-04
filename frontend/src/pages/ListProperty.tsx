@@ -276,7 +276,7 @@ export default function ListProperty() {
             <AlertIcon boxSize={10}/>
             <AlertTitle mt={4} mb={1} fontSize='lg'>Wrong network</AlertTitle>
             <AlertDescription maxWidth='sm'>
-              Please connect to Polygon Mumbai Testnet to continue.
+              Please connect to Polygon Amony Testnet to continue.
             </AlertDescription>
           </Alert>
         </Container>

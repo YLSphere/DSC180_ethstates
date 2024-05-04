@@ -12,7 +12,7 @@ import {
   getDefaultWallets,
 } from "@rainbow-me/rainbowkit";
 import { WagmiProvider, createConfig, http } from "wagmi";
-import { polygonMumbai } from "wagmi/chains";
+import { polygonAmoy } from "wagmi/chains";
 
 // import `ChakraProvider` component
 import { ChakraProvider } from "@chakra-ui/react";
@@ -36,10 +36,10 @@ const connectors = connectorsForWallets(wallets, {
 });
 
 const config = createConfig({
-  chains: [polygonMumbai],
+  chains: [polygonAmoy],
   connectors,
   transports: {
-    [polygonMumbai.id]: http(import.meta.env.VITE_ALCHEMY_MUMBAI_URL),
+    [polygonAmoy.id]: http(import.meta.env.VITE_ALCHEMY_AMONY_URL),
   },
 });
 
@@ -51,7 +51,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={darkTheme()}
-          initialChain={polygonMumbai}
+          initialChain={polygonAmoy}
           appInfo={demoAppInfo}
         >
           <ChakraProvider>
